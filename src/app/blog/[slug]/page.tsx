@@ -69,8 +69,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
         {[0, 1].map(i => (
           <a key={asins[i]} href={`https://www.amazon.es/dp/${asins[i]}`} target="_blank" rel="nofollow sponsored"
-            className="group rounded-2xl overflow-hidden transition-all duration-500 hover:-translate-y-1 no-underline"
-            style={{ background: 'linear-gradient(135deg, #111827, #0B1120)', border: '1px solid #1E3A5F' }}>
+            className="group rounded-2xl overflow-hidden transition-all duration-500 hover:-translate-y-1 no-underline hover:border-[rgba(0,212,255,0.5)] hover:shadow-[0_0_30px_rgba(0,212,255,0.15)]"
+            style={{ background: 'linear-gradient(135deg, #111827, #0B1120)', border: '1px solid #1E3A5F', transition: 'all 0.5s cubic-bezier(0.4,0,0.2,1)' }}>
             <div className="p-6">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-xs font-bold px-2 py-1 rounded-full"
@@ -129,10 +129,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <div className="space-y-3">
           {[0, 1].map(i => (
             <a key={i} href={`https://www.amazon.es/dp/${asins[i]}`} target="_blank" rel="nofollow sponsored"
-              className="flex items-center justify-between p-4 rounded-xl transition-all duration-300 no-underline group"
-              style={{ background: '#0B1120', border: '1px solid #1E3A5F' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(0,212,255,0.4)'; e.currentTarget.style.background = '#111827' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = '#1E3A5F'; e.currentTarget.style.background = '#0B1120' }}>
+              className="flex items-center justify-between p-4 rounded-xl transition-all duration-300 no-underline group hover:border-[rgba(0,212,255,0.4)] hover:bg-[#111827]"
+              style={{ background: '#0B1120', border: '1px solid #1E3A5F' }}>
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(135deg, #1A2535, rgba(0,212,255,0.05))' }}>
                   <img src={images[i]} alt="" className="w-full h-full object-contain p-1" />
