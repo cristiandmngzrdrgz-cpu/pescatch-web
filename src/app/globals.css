@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* === PesCatch / Mission Control Color System === */
+  --color-navy-950: #0A1326;
+  --color-navy-900: #0F1B2D;
+  --color-navy-800: #152238;
+  --color-navy-700: #1B2A4A;
+  --color-navy-600: #1E3A5F;
+  --color-navy-500: #243B6A;
+  --color-navy-400: #2D4A7A;
+  --color-navy-300: #3A5A8C;
+  --color-navy-200: #6B8BBE;
+  --color-navy-100: #A3B8D9;
+  --color-navy-50: #E8EEF6;
+
+  --color-aqua-900: #042F2E;
+  --color-aqua-800: #064E4D;
+  --color-aqua-700: #0D6B6A;
+  --color-aqua-600: #0F7B7A;
+  --color-aqua-500: #0D9488;
+  --color-aqua-400: #14B8A6;
+  --color-aqua-300: #2DD4BF;
+  --color-aqua-200: #5EEAD4;
+  --color-aqua-100: #99F6E4;
+  --color-aqua-50: #E6FFFA;
+
+  --color-gold-500: #F59E0B;
+  --color-gold-600: #D97706;
+  --color-gold-400: #FBBF24;
+
+  /* Mission Control core */
+  --color-mc-bg: #0B1120;
+  --color-mc-surface: #111827;
+  --color-mc-surface-hover: #1A2535;
+  --color-mc-surface-active: #1E3A5F;
+  --color-mc-border: #1E3A5F;
+  --color-mc-border-subtle: #162035;
+  --color-mc-amber: #FFB800;
+  --color-mc-cyan: #00D4FF;
+  --color-mc-alert: #FF4757;
+  --color-mc-warning: #FF9F43;
+  --color-mc-success: #26DE81;
+  --color-mc-text: #E8F0FE;
+  --color-mc-text-secondary: #8BA3C7;
+  --color-mc-text-tertiary: #4A6080;
+  --color-mc-card-border: #1E3A5F;
+
+  /* Design Tokens */
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+}
+
+:root {
+  --background: #0B1120;
+  --foreground: #E8F0FE;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer base {
+  * {
+    border-color: #1E3A5F;
+  }
+}
+
+/* === Mission Control Glow & Effects === */
+
+@keyframes pulse-glow-cyan {
+  0%, 100% { box-shadow: 0 0 8px rgba(0,212,255,0.2); }
+  50% { box-shadow: 0 0 20px rgba(0,212,255,0.4); }
+}
+
+@keyframes pulse-glow-amber {
+  0%, 100% { box-shadow: 0 0 8px rgba(255,184,0,0.2); }
+  50% { box-shadow: 0 0 20px rgba(255,184,0,0.4); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Utility classes for glow-on-hover */
+.glow-cyan {
+  transition: all 0.3s ease;
+}
+.glow-cyan:hover {
+  box-shadow: 0 0 20px rgba(0,212,255,0.3), 0 0 40px rgba(0,212,255,0.1);
+  border-color: rgba(0,212,255,0.5);
+}
+
+.glow-amber {
+  transition: all 0.3s ease;
+}
+.glow-amber:hover {
+  box-shadow: 0 0 20px rgba(255,184,0,0.3), 0 0 40px rgba(255,184,0,0.08);
+  border-color: rgba(255,184,0,0.5);
+}
+
+.glow-cta {
+  transition: all 0.3s ease;
+}
+.glow-cta:hover {
+  box-shadow: 0 0 25px rgba(0,212,255,0.5), 0 0 50px rgba(0,212,255,0.2);
+  transform: translateY(-2px);
+}
+
+/* Glass morphism */
+.glass {
+  background: rgba(17,24,39,0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.glass-light {
+  background: rgba(27,42,74,0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0B1120;
+}
+::-webkit-scrollbar-thumb {
+  background: #1E3A5F;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00D4FF;
+}
+
+/* Selection */
+::selection {
+  background: rgba(0,212,255,0.25);
+  color: #E8F0FE;
+}
+
+/* Focus ring glow */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0,212,255,0.4);
+}
+
+/* Hide scrollbar for scrollable sections but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
