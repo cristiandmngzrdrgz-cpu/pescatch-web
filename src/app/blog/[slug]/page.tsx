@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation'
 import { getPostBySlug } from '@/data/blog-queries'
-import { getDeals } from '@/data/queries'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
@@ -13,13 +12,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     if (!post) return {}
     return { title: `${post.title} | PesCatch Blog`, description: post.excerpt }
   } catch { return {} }
-}
-
-async function findDealByAsin(asin: string) {
-  try {
-    const deals = await getDeals()
-    return deals.find(d => d.affiliateUrl.includes(asin)) || null
-  } catch { return null }
 }
 
 function ScoreBar({ value, label }: { value: number; label: string }) {
@@ -42,10 +34,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const post = await getPostBySlug(slug)
   if (!post) notFound()
 
-  const relatedProducts = await Promise.all(post.relatedAsins.map(async asin => {
-    const deal = await findDealByAsin(asin)
-    if (deal) return { ...deal, asin }
-    return { asin, title: `Ver en Amazon`, salePrice: 0, rating: 0, reviewCount: 0, imageUrl: '', affiliateUrl: `https://www.amazon.es/dp/${asin}`, store: { name: 'Amazon' } }
+  const relatedProducts: Array<{asin: string; title: string; salePrice: number; rating: number; reviewCount: number; imageUrl: string; affiliateUrl: string; store: {name: string}}> = post.relatedAsins.map(asin => ({
+    asin, title: `Ver en Amazon`, salePrice: 0, rating: 0, reviewCount: 0, imageUrl: '', affiliateUrl: `https://www.amazon.es/dp/${asin}`, store: { name: 'Amazon' }
   }))
 
   const articleSchema = {
