@@ -86,6 +86,23 @@ export async function initSchema() {
     'CREATE INDEX IF NOT EXISTS idx_deals_discount ON deals(discountPercent)',
     'CREATE INDEX IF NOT EXISTS idx_price_history_deal ON price_history(dealId)',
     'CREATE INDEX IF NOT EXISTS idx_comments_deal ON comments(dealId)',
+    `CREATE TABLE IF NOT EXISTS posts (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      excerpt TEXT NOT NULL DEFAULT '',
+      content TEXT NOT NULL DEFAULT '',
+      featuredImage TEXT NOT NULL DEFAULT '',
+      author TEXT NOT NULL DEFAULT 'PesCatch',
+      category TEXT NOT NULL DEFAULT '',
+      tags TEXT NOT NULL DEFAULT '[]',
+      relatedAsins TEXT NOT NULL DEFAULT '[]',
+      publishedAt TEXT NOT NULL DEFAULT (datetime('now')),
+      createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+      updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_posts_slug ON posts(slug)',
+    'CREATE INDEX IF NOT EXISTS idx_posts_published ON posts(publishedAt)',
   ])
 }
 

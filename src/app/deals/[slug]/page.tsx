@@ -28,7 +28,36 @@ export default async function DealDetailPage({
   const related = await getRelatedDeals(deal)
   const category = CATEGORIES.find(c => c.id === deal.category)
 
+  const dealSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: deal.title,
+    description: deal.description,
+    image: deal.imageUrl,
+    offers: {
+      '@type': 'Offer',
+      price: deal.salePrice,
+      priceCurrency: 'EUR',
+      availability: deal.stockStatus === 'in_stock' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      url: deal.affiliateUrl,
+      priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    },
+    brand: { '@type': 'Brand', name: deal.store.name },
+    sku: deal.id,
+    aggregateRating: deal.rating ? {
+      '@type': 'AggregateRating',
+      ratingValue: deal.rating,
+      reviewCount: deal.reviewCount,
+    } : undefined,
+  }
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(dealSchema) }}
+      />
+
     <div className="mx-auto max-w-7xl px-4 py-8">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm mb-8 overflow-x-auto whitespace-nowrap" style={{ color: '#4A6080' }}>
@@ -344,5 +373,6 @@ export default async function DealDetailPage({
         </section>
       )}
     </div>
+    </>
   )
 }

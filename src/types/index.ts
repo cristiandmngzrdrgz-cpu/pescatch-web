@@ -157,6 +157,22 @@ export const CATEGORIES: Category[] = [
   },
 ]
 
+export interface BlogPost {
+  id: string
+  title: string
+  slug: string
+  excerpt: string
+  content: string
+  featuredImage: string
+  author: string
+  category: string
+  tags: string[]
+  relatedAsins: string[]
+  publishedAt: string
+  createdAt: string
+  updatedAt: string
+}
+
 export const STORES: Store[] = [
   { id: 'amazon', slug: 'amazon', name: 'Amazon', reputation: 'good', url: 'https://amazon.es', commissionRate: 0.05 },
   { id: 'aliexpress', slug: 'aliexpress', name: 'AliExpress', reputation: 'neutral', url: 'https://aliexpress.com', commissionRate: 0.08 },
