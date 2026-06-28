@@ -80,6 +80,10 @@ export function Navbar() {
               )}
             </div>
           ))}
+          <Link href="/blog" className="text-[0.925rem] font-medium transition-colors duration-200 hover:text-[#00D4FF]"
+            style={{ color: '#8BA3C7' }}>
+            Blog
+          </Link>
           <Link href="/search" className="text-[0.925rem] font-medium transition-colors duration-200 hover:text-[#00D4FF]"
             style={{ color: '#8BA3C7' }}>
             Buscar
