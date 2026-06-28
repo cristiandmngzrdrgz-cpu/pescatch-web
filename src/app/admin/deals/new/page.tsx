@@ -45,47 +45,50 @@ export default function NewDealPage() {
     e.preventDefault()
     setSaving(true)
 
-    const originalPrice = parseFloat(form.originalPrice)
-    const salePrice = parseFloat(form.salePrice)
-    const discountPercent = Math.round(((originalPrice - salePrice) / originalPrice) * 100)
+    const store = STORES.find(s => s.id === form.store)
 
-    const deal = {
+    const body = {
       title: form.title,
       slug: form.slug,
       description: form.description,
-      originalPrice,
-      salePrice,
+      originalPrice: parseFloat(form.originalPrice),
+      salePrice: parseFloat(form.salePrice),
       shippingCost: parseFloat(form.shippingCost),
-      discountPercent,
-      currency: '€',
       imageUrl: form.imageUrl,
       images: form.imageUrl ? [form.imageUrl] : [],
-      store: STORES.find(s => s.id === form.store) || STORES[0],
+      storeId: store?.id || '',
+      storeName: store?.name || '',
+      storeUrl: store?.url || '',
+      storeReputation: store?.reputation || 'good',
+      storeCommissionRate: store?.commissionRate || 0,
       affiliateUrl: form.affiliateUrl,
       category: form.category,
       subcategory: form.subcategory || '',
       tags: [],
-      stockStatus: form.stockStatus as 'in_stock' | 'limited' | 'out_of_stock',
+      stockStatus: form.stockStatus,
       rating: 0,
       reviewCount: 0,
       technicalSpecs: {},
       review: form.review,
       pros: [],
       cons: [],
-      votesUp: 0,
-      votesDown: 0,
-      priceHistory: [{ date: new Date().toISOString().split('T')[0], price: salePrice }],
-      publishedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
       featured: false,
       commission: 0,
     }
 
-    await new Promise(r => setTimeout(r, 500))
-    alert(`Chollo creado (simulado):\n\n${deal.title}\n${deal.slug}\n\nEn producción se guardaría en la base de datos.`)
-    setSaving(false)
-    router.push('/admin/deals')
+    try {
+      const res = await fetch('/api/deals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) throw new Error('Error al crear el chollo')
+      router.push('/admin/deals')
+    } catch (err) {
+      alert('Error al guardar: ' + (err as Error).message)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const selectedCategory = CATEGORIES.find(c => c.id === form.category)

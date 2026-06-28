@@ -1,41 +1,111 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { CATEGORIES, STORES } from '@/types'
-import { ChevronLeft, Save, Pencil } from 'lucide-react'
+import { ChevronLeft, Save, Pencil, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { sampleDeals } from '@/data/deals'
+
+interface DealData {
+  id: string; title: string; slug: string; description: string;
+  originalPrice: number; salePrice: number; shippingCost: number;
+  imageUrl: string; category: string; subcategory: string;
+  store: { id: string; name?: string; url?: string; reputation?: string; commissionRate?: number };
+  affiliateUrl: string; stockStatus: string; review: string;
+}
 
 export default function EditDealPage() {
   const router = useRouter()
   const params = useParams()
   const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
 
   const id = params.id as string
-  const existingDeal = sampleDeals.find(d => d.id === id)
 
   const [form, setForm] = useState({
-    title: existingDeal?.title || '',
-    slug: existingDeal?.slug || '',
-    description: existingDeal?.description || '',
-    originalPrice: existingDeal?.originalPrice.toString() || '',
-    salePrice: existingDeal?.salePrice.toString() || '',
-    shippingCost: existingDeal?.shippingCost.toString() || '0',
-    imageUrl: existingDeal?.imageUrl || '',
-    category: existingDeal?.category || '',
-    subcategory: existingDeal?.subcategory || '',
-    store: existingDeal?.store.id || '',
-    affiliateUrl: existingDeal?.affiliateUrl || '',
-    stockStatus: existingDeal?.stockStatus || 'in_stock',
-    review: existingDeal?.review || '',
+    title: '', slug: '', description: '',
+    originalPrice: '', salePrice: '', shippingCost: '0',
+    imageUrl: '', category: '', subcategory: '',
+    store: '', affiliateUrl: '', stockStatus: 'in_stock', review: '',
   })
 
-  if (!existingDeal) {
+  const [originalDeal, setOriginalDeal] = useState<DealData | null>(null)
+
+  useEffect(() => {
+    fetch(`/api/deals/${id}`)
+      .then(async r => {
+        if (!r.ok) { setNotFound(true); setLoading(false); return }
+        const data: DealData = await r.json()
+        setOriginalDeal(data)
+        setForm({
+          title: data.title, slug: data.slug, description: data.description,
+          originalPrice: data.originalPrice.toString(), salePrice: data.salePrice.toString(),
+          shippingCost: data.shippingCost.toString(), imageUrl: data.imageUrl || '',
+          category: data.category, subcategory: data.subcategory || '',
+          store: data.store?.id || '', affiliateUrl: data.affiliateUrl || '',
+          stockStatus: data.stockStatus, review: data.review || '',
+        })
+        setLoading(false)
+      })
+      .catch(() => { setNotFound(true); setLoading(false) })
+  }, [id])
+
+  const updateField = (key: string, value: string | null) => {
+    if (value === null) return
+    setForm(prev => ({ ...prev, [key]: value }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+
+    const store = STORES.find(s => s.id === form.store)
+
+    const body = {
+      title: form.title, slug: form.slug, description: form.description,
+      originalPrice: parseFloat(form.originalPrice), salePrice: parseFloat(form.salePrice),
+      shippingCost: parseFloat(form.shippingCost), imageUrl: form.imageUrl,
+      images: form.imageUrl ? [form.imageUrl] : [],
+      storeId: store?.id || '', storeName: store?.name || '',
+      storeUrl: store?.url || '', storeReputation: store?.reputation || 'good',
+      storeCommissionRate: store?.commissionRate || 0,
+      affiliateUrl: form.affiliateUrl, category: form.category,
+      subcategory: form.subcategory || '', tags: [], stockStatus: form.stockStatus,
+      rating: 0, reviewCount: 0, technicalSpecs: {}, review: form.review,
+      pros: [], cons: [], featured: false, commission: 0,
+    }
+
+    try {
+      const res = await fetch(`/api/deals/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) throw new Error('Error al actualizar')
+      router.push('/admin/deals')
+    } catch (err) {
+      alert('Error: ' + (err as Error).message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const selectedCategory = CATEGORIES.find(c => c.id === form.category)
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#00D4FF' }} />
+      </div>
+    )
+  }
+
+  if (notFound) {
     return (
       <div className="text-center py-16">
         <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: '#1A2535' }}>
@@ -47,22 +117,6 @@ export default function EditDealPage() {
     )
   }
 
-  const updateField = (key: string, value: string | null) => {
-    if (value === null) return
-    setForm(prev => ({ ...prev, [key]: value }))
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSaving(true)
-    await new Promise(r => setTimeout(r, 500))
-    alert('Chollo actualizado (simulado). En producción se guardaría en la base de datos.')
-    setSaving(false)
-    router.push('/admin/deals')
-  }
-
-  const selectedCategory = CATEGORIES.find(c => c.id === form.category)
-
   return (
     <div>
       <div className="flex items-center gap-3 mb-8">
@@ -73,7 +127,7 @@ export default function EditDealPage() {
         </Link>
         <div>
           <h1 className="text-2xl font-extrabold" style={{ color: '#E8F0FE' }}>Editar chollo</h1>
-          <p className="text-sm" style={{ color: '#8BA3C7' }}>Modificando: {existingDeal.title}</p>
+          <p className="text-sm" style={{ color: '#8BA3C7' }}>Modificando: {originalDeal?.title}</p>
         </div>
       </div>
 

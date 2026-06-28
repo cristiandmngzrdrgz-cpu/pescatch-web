@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# sqlite db (auto-generated)
+data/
+
 # temp files
 .playwright-mcp/
 .od-designs/

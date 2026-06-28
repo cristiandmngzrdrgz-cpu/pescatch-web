@@ -45,6 +45,8 @@ export interface Store {
   slug: string
   logo?: string
   reputation: 'good' | 'neutral' | 'poor'
+  url?: string
+  commissionRate?: number
 }
 
 export interface Category {
@@ -156,7 +158,7 @@ export const CATEGORIES: Category[] = [
 ]
 
 export const STORES: Store[] = [
-  { id: 'amazon', slug: 'amazon', name: 'Amazon', reputation: 'good' },
-  { id: 'aliexpress', slug: 'aliexpress', name: 'AliExpress', reputation: 'neutral' },
-  { id: 'decathlon', slug: 'decathlon', name: 'Decathlon', reputation: 'good' },
+  { id: 'amazon', slug: 'amazon', name: 'Amazon', reputation: 'good', url: 'https://amazon.es', commissionRate: 0.05 },
+  { id: 'aliexpress', slug: 'aliexpress', name: 'AliExpress', reputation: 'neutral', url: 'https://aliexpress.com', commissionRate: 0.08 },
+  { id: 'decathlon', slug: 'decathlon', name: 'Decathlon', reputation: 'good', url: 'https://decathlon.es', commissionRate: 0.03 },
 ]
