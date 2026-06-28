@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { formatPrice } from '@/lib/utils'
 import { Clock, Store, Truck, ChevronUp } from 'lucide-react'
 import type { Deal } from '@/types'
@@ -31,12 +30,11 @@ export function DealCard({ deal }: DealCardProps) {
       >
         <div className="relative h-48 flex items-center justify-center overflow-hidden"
           style={{ background: 'linear-gradient(135deg, #1A2535, rgba(0,212,255,0.05))' }}>
-          <Image
+          <img
             src={deal.imageUrl}
             alt={deal.title}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            loading="lazy"
+            className="absolute inset-0 object-cover group-hover:scale-105 transition-transform duration-500 w-full h-full"
           />
           {/* Image overlay glow on hover */}
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"

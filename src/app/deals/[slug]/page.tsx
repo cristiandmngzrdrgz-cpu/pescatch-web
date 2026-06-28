@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
 import { getDealBySlug, getRelatedDeals } from '@/data/queries'
 import { formatPrice, formatDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -49,12 +48,11 @@ export default async function DealDetailPage({
         <div className="lg:col-span-3">
           <div className="relative aspect-[4/3] rounded-2xl overflow-hidden group"
             style={{ background: 'linear-gradient(135deg, #1A2535, rgba(0,212,255,0.05))' }}>
-            <Image
+            <img
               src={deal.imageUrl}
               alt={deal.title}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-700"
-              sizes="(max-width: 1024px) 100vw, 60vw"
+              loading="lazy"
+              className="absolute inset-0 object-cover group-hover:scale-105 transition-transform duration-700 w-full h-full"
             />
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
               style={{ boxShadow: 'inset 0 0 60px rgba(0,212,255,0.1)' }} />
@@ -91,7 +89,7 @@ export default async function DealDetailPage({
                     border: '2px solid transparent',
                     background: 'linear-gradient(135deg, #1A2535, rgba(0,212,255,0.05))',
                   }}>
-                  <Image src={img} alt={`${deal.title} ${i + 1}`} fill className="object-cover" sizes="80px" />
+                  <img src={img} alt={`${deal.title} ${i + 1}`} loading="lazy" className="object-cover w-full h-full" />
                 </div>
               ))}
             </div>
