@@ -47,7 +47,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const prices = ['189,99€', '56,30€']
   const ratings = [4.7, 4.5]
   const images = [
-    'https://m.media-amazon.com/images/I/41V-9WQRBCL._AC_SX679_.jpg',
+    'https://m.media-amazon.com/images/I/6193eJsBaKL._AC_SX679_.jpg',
     'https://m.media-amazon.com/images/I/61+Evme+0DL._AC_SX679_.jpg',
   ]
   const titles = ['Shimano Stradic FL', 'Daiwa Ninja LT']
