@@ -1,4 +1,5 @@
 import { getPosts } from '@/data/blog-queries'
+import type { BlogPost } from '@/types'
 import Link from 'next/link'
 import { Calendar, Tag, ArrowRight } from 'lucide-react'
 
@@ -10,7 +11,7 @@ export const metadata = {
 }
 
 export default async function BlogPage() {
-  let posts = []
+  let posts: BlogPost[] = []
   try {
     posts = await getPosts(20, 0)
   } catch (e) {
