@@ -205,10 +205,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                       {product.salePrice > 0 && (
                         <span className="font-bold text-lg" style={{ color: '#FFB800' }}>{product.salePrice.toFixed(2).replace('.', ',')}€</span>
                       )}
-                      {product.rating > 0 && (
+                      {(product.rating ?? 0) > 0 && (
                         <span className="flex items-center gap-0.5 text-xs" style={{ color: '#4A6080' }}>
                           <Star className="h-3 w-3" style={{ color: '#FFB800', fill: '#FFB800' }} />
-                          {product.rating}
+                          {product.rating ?? ''}
                         </span>
                       )}
                     </div>
