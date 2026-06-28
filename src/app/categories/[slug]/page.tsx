@@ -4,6 +4,8 @@ import { CATEGORIES } from '@/types'
 import Link from 'next/link'
 import { Fish } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function CategoryPage({
   params,
 }: {

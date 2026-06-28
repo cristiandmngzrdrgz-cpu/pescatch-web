@@ -4,6 +4,8 @@ import { Fish, TrendingDown, Store, Tag, ArrowRight, Clock, Zap, Star } from 'lu
 import Link from 'next/link'
 import { CATEGORIES } from '@/types'
 
+export const dynamic = 'force-dynamic'
+
 export default async function HomePage() {
   const featured = await getFeaturedDeals()
   const latest = await getDeals({ sortBy: 'newest' })

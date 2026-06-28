@@ -2,6 +2,8 @@ import { getDeals } from '@/data/queries'
 import { DealCard } from '@/components/deals/deal-card'
 import { Search, SlidersHorizontal } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Más recientes' },
   { value: 'discount', label: 'Mayor descuento' },

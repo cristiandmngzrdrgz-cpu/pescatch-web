@@ -4,6 +4,8 @@ import { CATEGORIES } from '@/types'
 import Link from 'next/link'
 import { Fish } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function CategoriesPage() {
   const categoryDeals = new Map<string, Awaited<ReturnType<typeof getDeals>>>()
   for (const cat of CATEGORIES) {

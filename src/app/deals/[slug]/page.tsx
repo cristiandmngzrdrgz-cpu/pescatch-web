@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation'
 import { getDealBySlug, getRelatedDeals } from '@/data/queries'
 import { formatPrice, formatDate } from '@/lib/utils'
+
+export const dynamic = 'force-dynamic'
 import { Badge } from '@/components/ui/badge'
 import { BadgeCheck, Store, Truck, Package, BarChart3, Tag, Share2, ArrowRight, Star, Clock, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
