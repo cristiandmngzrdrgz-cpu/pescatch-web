@@ -4,7 +4,12 @@ import { CATEGORIES } from '@/types'
 import Link from 'next/link'
 import { Fish } from 'lucide-react'
 
-export default function CategoriesPage() {
+export default async function CategoriesPage() {
+  const categoryDeals = new Map<string, Awaited<ReturnType<typeof getDeals>>>()
+  for (const cat of CATEGORIES) {
+    categoryDeals.set(cat.slug, await getDeals({ category: cat.slug }))
+  }
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="text-center mb-12">
@@ -19,7 +24,7 @@ export default function CategoriesPage() {
 
       <div className="space-y-16">
         {CATEGORIES.map((cat) => {
-          const catDeals = getDeals({ category: cat.slug })
+          const catDeals = categoryDeals.get(cat.slug) || []
 
           return (
             <section key={cat.id}>

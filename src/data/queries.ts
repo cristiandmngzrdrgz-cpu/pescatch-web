@@ -1,7 +1,7 @@
 import type { Deal, DealFilters, Store } from '@/types'
 import { getDb } from '@/lib/db'
 import { seedDatabase } from '@/lib/seed'
-import { sampleDeals } from './deals'
+import type { InValue } from '@libsql/client'
 
 function mapRowToDeal(row: Record<string, unknown>): Deal {
   const store: Store = {
@@ -47,17 +47,44 @@ function mapRowToDeal(row: Record<string, unknown>): Deal {
   }
 }
 
-function loadPriceHistory(dealId: string) {
+async function loadPriceHistory(dealId: string): Promise<{ date: string; price: number }[]> {
   const db = getDb()
-  return db.prepare('SELECT date, price FROM price_history WHERE dealId = ? ORDER BY date ASC').all(dealId) as { date: string; price: number }[]
+  const result = await db.execute({
+    sql: 'SELECT date, price FROM price_history WHERE dealId = ? ORDER BY date ASC',
+    args: [dealId],
+  })
+  return result.rows as unknown as { date: string; price: number }[]
 }
 
-export function getDeals(filters?: DealFilters): Deal[] {
+async function loadDeals(sql: string, params: InValue[] = []): Promise<Deal[]> {
   const db = getDb()
-  seedDatabase()
+  await seedDatabase()
 
+  const result = await db.execute({ sql, args: params })
+  const deals = result.rows.map(r => mapRowToDeal(r as Record<string, unknown>))
+
+  for (const deal of deals) {
+    deal.priceHistory = await loadPriceHistory(deal.id)
+  }
+
+  return deals
+}
+
+async function loadDeal(sql: string, params: InValue[]): Promise<Deal | undefined> {
+  const db = getDb()
+  await seedDatabase()
+
+  const result = await db.execute({ sql, args: params })
+  if (result.rows.length === 0) return undefined
+
+  const deal = mapRowToDeal(result.rows[0] as Record<string, unknown>)
+  deal.priceHistory = await loadPriceHistory(deal.id)
+  return deal
+}
+
+export async function getDeals(filters?: DealFilters): Promise<Deal[]> {
   let sql = 'SELECT * FROM deals WHERE 1=1'
-  const params: unknown[] = []
+  const params: InValue[] = []
 
   if (filters) {
     if (filters.category) {
@@ -94,96 +121,57 @@ export function getDeals(filters?: DealFilters): Deal[] {
     sql += ' ORDER BY publishedAt DESC'
   }
 
-  const rows = db.prepare(sql).all(...params) as Record<string, unknown>[]
-  const deals = rows.map(mapRowToDeal)
-
-  for (const deal of deals) {
-    deal.priceHistory = loadPriceHistory(deal.id)
-  }
-
-  return deals
+  return loadDeals(sql, params)
 }
 
-export function getDealBySlug(slug: string): Deal | undefined {
+export async function getDealBySlug(slug: string): Promise<Deal | undefined> {
+  return loadDeal('SELECT * FROM deals WHERE slug = ?', [slug])
+}
+
+export async function getDealById(id: string): Promise<Deal | undefined> {
+  return loadDeal('SELECT * FROM deals WHERE id = ?', [id])
+}
+
+export async function getFeaturedDeals(): Promise<Deal[]> {
+  return loadDeals('SELECT * FROM deals WHERE featured = 1 ORDER BY publishedAt DESC')
+}
+
+export async function getCategories(): Promise<string[]> {
   const db = getDb()
-  seedDatabase()
+  await seedDatabase()
 
-  const row = db.prepare('SELECT * FROM deals WHERE slug = ?').get(slug) as Record<string, unknown> | undefined
-  if (!row) return undefined
-
-  const deal = mapRowToDeal(row)
-  deal.priceHistory = loadPriceHistory(deal.id)
-  return deal
+  const result = await db.execute('SELECT DISTINCT category FROM deals ORDER BY category')
+  return result.rows.map(r => r.category as string)
 }
 
-export function getDealById(id: string): Deal | undefined {
+export async function getSubcategories(category: string): Promise<string[]> {
   const db = getDb()
-  seedDatabase()
+  await seedDatabase()
 
-  const row = db.prepare('SELECT * FROM deals WHERE id = ?').get(id) as Record<string, unknown> | undefined
-  if (!row) return undefined
-
-  const deal = mapRowToDeal(row)
-  deal.priceHistory = loadPriceHistory(deal.id)
-  return deal
+  const result = await db.execute({
+    sql: "SELECT DISTINCT subcategory FROM deals WHERE category = ? AND subcategory != '' ORDER BY subcategory",
+    args: [category],
+  })
+  return result.rows.map(r => r.subcategory as string)
 }
 
-export function getFeaturedDeals(): Deal[] {
-  const db = getDb()
-  seedDatabase()
-
-  const rows = db.prepare('SELECT * FROM deals WHERE featured = 1 ORDER BY publishedAt DESC').all() as Record<string, unknown>[]
-  const deals = rows.map(mapRowToDeal)
-
-  for (const deal of deals) {
-    deal.priceHistory = loadPriceHistory(deal.id)
-  }
-
-  return deals
+export async function getRelatedDeals(deal: Deal, limit = 4): Promise<Deal[]> {
+  return loadDeals(
+    `SELECT * FROM deals
+     WHERE id != ? AND (category = ? OR tags LIKE ?)
+     ORDER BY discountPercent DESC
+     LIMIT ?`,
+    [deal.id, deal.category, `%${deal.tags[0] || ''}%`, limit],
+  )
 }
 
-export function getCategories(): string[] {
-  const db = getDb()
-  seedDatabase()
-
-  const rows = db.prepare('SELECT DISTINCT category FROM deals ORDER BY category').all() as { category: string }[]
-  return rows.map(r => r.category)
-}
-
-export function getSubcategories(category: string): string[] {
-  const db = getDb()
-  seedDatabase()
-
-  const rows = db.prepare('SELECT DISTINCT subcategory FROM deals WHERE category = ? AND subcategory != \'\' ORDER BY subcategory').all(category) as { subcategory: string }[]
-  return rows.map(r => r.subcategory)
-}
-
-export function getRelatedDeals(deal: Deal, limit = 4): Deal[] {
-  const db = getDb()
-  seedDatabase()
-
-  const rows = db.prepare(`
-    SELECT * FROM deals
-    WHERE id != ? AND (category = ? OR tags LIKE ?)
-    ORDER BY discountPercent DESC
-    LIMIT ?
-  `).all(deal.id, deal.category, `%${deal.tags[0] || ''}%`, limit) as Record<string, unknown>[]
-
-  const deals = rows.map(mapRowToDeal)
-  for (const d of deals) {
-    d.priceHistory = loadPriceHistory(d.id)
-  }
-
-  return deals
-}
-
-export function searchDeals(query: string): Deal[] {
+export async function searchDeals(query: string): Promise<Deal[]> {
   return getDeals({ search: query })
 }
 
-export function createDeal(data: Record<string, unknown>): Deal {
+export async function createDeal(data: Record<string, unknown>): Promise<Deal> {
   const db = getDb()
-  seedDatabase()
+  await seedDatabase()
 
   const id = `deal_${Date.now()}`
   const now = new Date().toISOString()
@@ -192,8 +180,30 @@ export function createDeal(data: Record<string, unknown>): Deal {
   const salePrice = Number(data.salePrice) || 0
   const discountPercent = Math.round(((originalPrice - salePrice) / (originalPrice || 1)) * 100)
 
-  db.prepare(`
-    INSERT INTO deals (
+  const str = (v: unknown, fallback = ''): string => (v as string) || fallback
+  const num = (v: unknown, fallback = 0): number => Number(v) || fallback
+  const json = (v: unknown): string => JSON.stringify(v || [])
+
+  const insertArgs: InValue[] = [
+    id,
+    str(data.title), str(data.slug), str(data.description),
+    originalPrice, salePrice, num(data.shippingCost),
+    discountPercent, '€', str(data.imageUrl),
+    json(data.images),
+    str(data.storeId), str(data.storeName), str(data.storeUrl),
+    str(data.storeReputation, 'good'), num(data.storeCommissionRate),
+    str(data.affiliateUrl), str(data.category), str(data.subcategory),
+    json(data.tags),
+    str(data.stockStatus, 'in_stock'), num(data.stockCount),
+    num(data.rating), num(data.reviewCount),
+    JSON.stringify(data.technicalSpecs || {}), str(data.review),
+    json(data.pros), json(data.cons),
+    0, 0, data.featured ? 1 : 0, num(data.commission),
+    now, now, now,
+  ]
+
+  await db.execute({
+    sql: `INSERT INTO deals (
       id, title, slug, description, originalPrice, salePrice, shippingCost,
       discountPercent, currency, imageUrl, images,
       storeId, storeName, storeUrl, storeReputation, storeCommissionRate,
@@ -202,69 +212,50 @@ export function createDeal(data: Record<string, unknown>): Deal {
       technicalSpecs, review, pros, cons,
       votesUp, votesDown, featured, commission,
       publishedAt, createdAt, updatedAt
-    ) VALUES (
-      ?, ?, ?, ?, ?, ?, ?,
-      ?, ?, ?, ?,
-      ?, ?, ?, ?, ?,
-      ?, ?, ?, ?,
-      ?, ?, ?, ?,
-      ?, ?, ?, ?,
-      ?, ?, ?, ?,
-      ?, ?, ?
-    )
-  `).run(
-    id,
-    data.title || '',
-    data.slug || '',
-    data.description || '',
-    originalPrice,
-    salePrice,
-    Number(data.shippingCost) || 0,
-    discountPercent,
-    '€',
-    data.imageUrl || '',
-    JSON.stringify(data.images || []),
-    data.storeId || '',
-    data.storeName || '',
-    data.storeUrl || '',
-    data.storeReputation || 'good',
-    Number(data.storeCommissionRate) || 0,
-    data.affiliateUrl || '',
-    data.category || '',
-    data.subcategory || '',
-    JSON.stringify(data.tags || []),
-    data.stockStatus || 'in_stock',
-    Number(data.stockCount) || 0,
-    Number(data.rating) || 0,
-    Number(data.reviewCount) || 0,
-    JSON.stringify(data.technicalSpecs || {}),
-    data.review || '',
-    JSON.stringify(data.pros || []),
-    JSON.stringify(data.cons || []),
-    0, 0,
-    data.featured ? 1 : 0,
-    Number(data.commission) || 0,
-    now, now, now,
-  )
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: insertArgs,
+  })
 
-  // Add initial price history
-  db.prepare('INSERT INTO price_history (dealId, date, price) VALUES (?, ?, ?)').run(id, now.split('T')[0], salePrice)
+  await db.execute({
+    sql: 'INSERT INTO price_history (dealId, date, price) VALUES (?, ?, ?)',
+    args: [id, now.split('T')[0], salePrice] as InValue[],
+  })
 
-  return getDealById(id)!
+  return (await getDealById(id))!
 }
 
-export function updateDeal(id: string, data: Record<string, unknown>): Deal | undefined {
+export async function updateDeal(id: string, data: Record<string, unknown>): Promise<Deal | undefined> {
   const db = getDb()
-  const existing = db.prepare('SELECT * FROM deals WHERE id = ?').get(id)
-  if (!existing) return undefined
+
+  const check = await db.execute({ sql: 'SELECT id FROM deals WHERE id = ?', args: [id] })
+  if (check.rows.length === 0) return undefined
 
   const originalPrice = Number(data.originalPrice) || 0
   const salePrice = Number(data.salePrice) || 0
   const discountPercent = Math.round(((originalPrice - salePrice) / (originalPrice || 1)) * 100)
   const now = new Date().toISOString()
 
-  db.prepare(`
-    UPDATE deals SET
+  const str = (v: unknown, fallback = ''): string => (v as string) || fallback
+  const num = (v: unknown, fallback = 0): number => Number(v) || fallback
+
+  const updateArgs: InValue[] = [
+    str(data.title), str(data.slug), str(data.description), originalPrice, salePrice,
+    num(data.shippingCost), discountPercent, str(data.imageUrl),
+    JSON.stringify(data.images || []),
+    str(data.storeId), str(data.storeName), str(data.storeUrl), str(data.storeReputation, 'good'),
+    num(data.storeCommissionRate),
+    str(data.affiliateUrl), str(data.category), str(data.subcategory),
+    JSON.stringify(data.tags || []),
+    str(data.stockStatus, 'in_stock'), num(data.stockCount),
+    num(data.rating), num(data.reviewCount),
+    JSON.stringify(data.technicalSpecs || {}), str(data.review),
+    JSON.stringify(data.pros || []), JSON.stringify(data.cons || []),
+    data.featured ? 1 : 0, num(data.commission),
+    now, id,
+  ]
+
+  await db.execute({
+    sql: `UPDATE deals SET
       title = ?, slug = ?, description = ?, originalPrice = ?, salePrice = ?,
       shippingCost = ?, discountPercent = ?, imageUrl = ?, images = ?,
       storeId = ?, storeName = ?, storeUrl = ?, storeReputation = ?, storeCommissionRate = ?,
@@ -272,39 +263,33 @@ export function updateDeal(id: string, data: Record<string, unknown>): Deal | un
       stockStatus = ?, stockCount = ?, rating = ?, reviewCount = ?,
       technicalSpecs = ?, review = ?, pros = ?, cons = ?,
       featured = ?, commission = ?, updatedAt = ?
-    WHERE id = ?
-  `).run(
-    data.title, data.slug, data.description, originalPrice, salePrice,
-    Number(data.shippingCost) || 0, discountPercent, data.imageUrl,
-    JSON.stringify(data.images || []),
-    data.storeId, data.storeName, data.storeUrl, data.storeReputation,
-    Number(data.storeCommissionRate) || 0,
-    data.affiliateUrl, data.category, data.subcategory,
-    JSON.stringify(data.tags || []),
-    data.stockStatus, Number(data.stockCount) || 0,
-    Number(data.rating) || 0, Number(data.reviewCount) || 0,
-    JSON.stringify(data.technicalSpecs || {}), data.review,
-    JSON.stringify(data.pros || []), JSON.stringify(data.cons || []),
-    data.featured ? 1 : 0, Number(data.commission) || 0,
-    now, id,
-  )
+    WHERE id = ?`,
+    args: updateArgs,
+  })
 
   return getDealById(id)
 }
 
-export function deleteDeal(id: string): boolean {
+export async function deleteDeal(id: string): Promise<boolean> {
   const db = getDb()
-  const result = db.prepare('DELETE FROM deals WHERE id = ?').run(id)
-  return result.changes > 0
+  const result = await db.execute({ sql: 'DELETE FROM deals WHERE id = ?', args: [id] })
+  return result.rowsAffected > 0
 }
 
-export function getComments(dealId: string) {
+export async function getComments(dealId: string) {
   const db = getDb()
-  return db.prepare('SELECT * FROM comments WHERE dealId = ? ORDER BY createdAt DESC').all(dealId)
+  const result = await db.execute({
+    sql: 'SELECT * FROM comments WHERE dealId = ? ORDER BY createdAt DESC',
+    args: [dealId],
+  })
+  return result.rows
 }
 
-export function addComment(dealId: string, author: string, content: string) {
+export async function addComment(dealId: string, author: string, content: string) {
   const db = getDb()
-  db.prepare('INSERT INTO comments (dealId, author, content, createdAt) VALUES (?, ?, ?, datetime(\'now\'))').run(dealId, author, content)
+  await db.execute({
+    sql: "INSERT INTO comments (dealId, author, content, createdAt) VALUES (?, ?, ?, datetime('now'))",
+    args: [dealId, author, content],
+  })
   return getComments(dealId)
 }

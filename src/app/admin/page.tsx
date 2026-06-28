@@ -2,8 +2,8 @@ import { getDeals } from '@/data/queries'
 import Link from 'next/link'
 import { TrendingDown, Tag, ThumbsUp, Star, Plus, Pencil } from 'lucide-react'
 
-export default function AdminDashboard() {
-  const deals = getDeals()
+export default async function AdminDashboard() {
+  const deals = await getDeals()
   const featured = deals.filter(d => d.featured)
   const avgDiscount = Math.round(deals.reduce((sum, d) => sum + d.discountPercent, 0) / deals.length)
   const totalVotes = deals.reduce((sum, d) => sum + d.votesUp + d.votesDown, 0)

@@ -26,7 +26,7 @@ export default async function SubcategoryPage({
     )
   }
 
-  const deals = getDeals({ category: category.slug, subcategory: sub })
+  const deals = await getDeals({ category: category.slug, subcategory: sub })
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">

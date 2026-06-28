@@ -4,8 +4,8 @@ import { formatPrice, formatDate } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Plus, Pencil } from 'lucide-react'
 
-export default function AdminDealsPage() {
-  const deals = getDeals({ sortBy: 'newest' })
+export default async function AdminDealsPage() {
+  const deals = await getDeals({ sortBy: 'newest' })
 
   return (
     <div>

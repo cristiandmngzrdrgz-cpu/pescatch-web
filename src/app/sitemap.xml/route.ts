@@ -4,7 +4,7 @@ import { CATEGORIES } from '@/types'
 const BASE_URL = 'https://pescatch.es'
 
 export async function GET() {
-  const deals = getDeals({ sortBy: 'newest' })
+  const deals = await getDeals({ sortBy: 'newest' })
 
   const urls = [
     { loc: '/', priority: '1.0', changefreq: 'daily' },

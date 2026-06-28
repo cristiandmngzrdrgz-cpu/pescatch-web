@@ -20,7 +20,7 @@ export default async function SearchPage({
   const categoryFilter = sp.category || ''
   const sortBy = (sp.sortBy as string) || 'newest'
 
-  const deals = getDeals({
+  const deals = await getDeals({
     search: query,
     category: categoryFilter || undefined,
     sortBy: sortBy as 'newest' | 'discount' | 'price_asc' | 'price_desc' | 'popular',

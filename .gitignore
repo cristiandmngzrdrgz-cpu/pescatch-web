@@ -39,6 +39,10 @@ yarn-error.log*
 # sqlite db (auto-generated)
 data/
 
+# possible stale db files from dev
+pescatch.db
+pescatch.db-wal
+
 # temp files
 .playwright-mcp/
 .od-designs/

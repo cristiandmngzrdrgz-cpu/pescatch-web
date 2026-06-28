@@ -4,14 +4,14 @@ import { Fish, TrendingDown, Store, Tag, ArrowRight, Clock, Zap, Star } from 'lu
 import Link from 'next/link'
 import { CATEGORIES } from '@/types'
 
-function getCategoryDealCount(slug: string): number {
-  return getDeals({ category: slug }).length
-}
-
-export default function HomePage() {
-  const featured = getFeaturedDeals()
-  const latest = getDeals({ sortBy: 'newest' })
-  const topDiscounts = getDeals({ sortBy: 'discount' }).slice(0, 5)
+export default async function HomePage() {
+  const featured = await getFeaturedDeals()
+  const latest = await getDeals({ sortBy: 'newest' })
+  const topDiscounts = (await getDeals({ sortBy: 'discount' })).slice(0, 5)
+  const categoryDealCounts = new Map<string, number>()
+  for (const cat of CATEGORIES) {
+    categoryDealCounts.set(cat.slug, (await getDeals({ category: cat.slug })).length)
+  }
 
   return (
     <div>
@@ -157,7 +157,7 @@ export default function HomePage() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {CATEGORIES.map((cat) => {
-              const dealCount = getCategoryDealCount(cat.slug)
+              const dealCount = categoryDealCounts.get(cat.slug) || 0
               return (
                 <Link key={cat.id} href={`/categories/${cat.slug}`}
                   className="group relative overflow-hidden p-7 text-center rounded-2xl transition-all duration-300 hover:-translate-y-1"

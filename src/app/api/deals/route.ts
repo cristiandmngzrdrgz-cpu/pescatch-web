@@ -12,12 +12,12 @@ export async function GET(request: NextRequest) {
     maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
   }
 
-  const deals = getDeals(filters)
+  const deals = await getDeals(filters)
   return NextResponse.json(deals)
 }
 
 export async function POST(request: NextRequest) {
   const data = await request.json()
-  const deal = createDeal(data)
+  const deal = await createDeal(data)
   return NextResponse.json(deal, { status: 201 })
 }

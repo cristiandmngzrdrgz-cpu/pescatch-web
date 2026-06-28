@@ -20,11 +20,11 @@ export default async function DealDetailPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const deal = getDealBySlug(slug)
+  const deal = await getDealBySlug(slug)
 
   if (!deal) notFound()
 
-  const related = getRelatedDeals(deal)
+  const related = await getRelatedDeals(deal)
   const category = CATEGORIES.find(c => c.id === deal.category)
 
   return (

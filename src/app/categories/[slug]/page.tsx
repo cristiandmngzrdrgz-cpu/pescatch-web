@@ -25,7 +25,7 @@ export default async function CategoryPage({
     )
   }
 
-  const deals = getDeals({ category: category.slug })
+  const deals = await getDeals({ category: category.slug })
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
