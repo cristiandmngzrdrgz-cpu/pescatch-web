@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { formatPrice } from '@/lib/utils'
 import { Clock, Store, Truck, ChevronUp } from 'lucide-react'
+import { CATEGORIES } from '@/types'
 import type { Deal } from '@/types'
 
 interface DealCardProps {
@@ -78,7 +79,7 @@ export function DealCard({ deal }: DealCardProps) {
         </div>
         <div className="p-5">
           <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#00D4FF' }}>
-            {deal.category}
+            {CATEGORIES.find(c => c.id === deal.category)?.name || deal.category}
           </div>
           <div className="flex items-center gap-1 text-xs mb-2" style={{ color: '#4A6080' }}>
             <Store className="h-3 w-3" />

@@ -3,6 +3,7 @@ import { getDeals } from '@/data/queries'
 import { formatPrice, formatDate } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Plus, Pencil } from 'lucide-react'
+import { CATEGORIES } from '@/types'
 
 export default async function AdminDealsPage() {
   const deals = await getDeals({ sortBy: 'newest' })
@@ -59,7 +60,7 @@ export default async function AdminDealsPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-3.5" style={{ color: '#8BA3C7' }}>{deal.category}</td>
+                  <td className="px-5 py-3.5" style={{ color: '#8BA3C7' }}>{CATEGORIES.find(c => c.id === deal.category)?.name || deal.category}</td>
                   <td className="px-5 py-3.5" style={{ color: '#8BA3C7' }}>{deal.store.name}</td>
                   <td className="px-5 py-3.5 text-right font-bold" style={{ color: '#FFB800' }}>{formatPrice(deal.salePrice)}</td>
                   <td className="px-5 py-3.5 text-right">

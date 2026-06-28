@@ -214,7 +214,7 @@ export default async function HomePage() {
                       <Clock className="h-3.5 w-3.5" />
                       {hoursAgo < 1 ? 'Hace minutos' : hoursAgo < 24 ? `Hace ${hoursAgo} horas` : `Hace ${Math.floor(hoursAgo / 24)} días`}
                       <span className="mx-1.5" style={{ color: '#1E3A5F' }}>·</span>
-                      <span className="font-semibold uppercase tracking-wider text-[0.65rem]" style={{ color: '#00D4FF' }}>{deal.category}</span>
+                      <span className="font-semibold uppercase tracking-wider text-[0.65rem]" style={{ color: '#00D4FF' }}>{CATEGORIES.find(c => c.id === deal.category)?.name || deal.category}</span>
                     </div>
                     <h3 className="font-semibold text-sm mt-1.5 line-clamp-2 group-hover:text-[#00D4FF] transition-colors duration-300" style={{ color: '#E8F0FE' }}>
                       {deal.title}
