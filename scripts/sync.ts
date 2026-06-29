@@ -47,18 +47,23 @@ async function processRow(
     // 1. Match or create product
     let matched: { id: string; exists: boolean } | null = null
     let isNew = false
+    const slug = slugify(row.name)
 
     if (ean) {
       matched = await matchByEan(ean)
     }
 
     if (!matched) {
-      const slug = await generateUniqueSlug(row.name)
-      const productId = ean ? `prod_${ean}` : `prod_${slug}`
+      matched = await matchBySlug(slug)
+    }
+
+    if (!matched) {
+      const uniqueSlug = await generateUniqueSlug(row.name)
+      const productId = ean ? `prod_${ean}` : `prod_${uniqueSlug}`
       isNew = true
       await insertProduct(
         productId,
-        row.name, slug, ean, row.brand || '',
+        row.name, uniqueSlug, ean, row.brand || '',
         row.category || '', row.subcategory || '',
         row.imageUrl || '',
         row.description || '',
@@ -66,10 +71,10 @@ async function processRow(
       )
       matched = { id: productId, exists: false }
     } else {
-      const slug = await generateUniqueSlug(row.name, matched.id)
+      const uniqueSlug = await generateUniqueSlug(row.name, matched.id)
       await updateProduct(
         matched.id,
-        row.name, slug, row.brand || '',
+        row.name, uniqueSlug, row.brand || '',
         row.category || '', row.subcategory || '',
         row.imageUrl || '',
         row.description || '',
