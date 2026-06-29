@@ -39,7 +39,7 @@
 ### Contenido
 - [x] 1 artículo sembrado: "Las 5 mejores cañas de spinning de 2026"
 - [x] Google Sheet con 10 productos
-- [x] 13 productos en DB (sync exitoso)
+- [x] 27 productos en DB (sync exitoso)
 - [x] Reader-sheets reescrito para usar API de Google Sheets
 - [x] 3 EANs encontrados y escritos (Vicloon, Shimano, Penn)
 
@@ -58,6 +58,10 @@
 - [x] Productos genéricos reemplazados (Rapala, Sweepfire, Sick Braid)
 - [x] Daiwa Saltist reemplazado por Shimano FX XT 2.10m (bestseller #1 cañas) — ASIN B0846PNXKM
 - [x] 4 productos añadidos: Mitchell Mx1, Abu Garcia Cardinal X, Abu Garcia Tormentor2, TRUSCEND Kit (13 total)
+- [x] 14 productos Decathlon añadidos (27 total)
+- [ ] Buscar ASINs Amazon para los 14 productos Decathlon
+- [ ] Añadir más señuelos y accesorios (categorías flojas)
+- [ ] Rediseño hero, CTA, badges, pruebas sociales, navegación
 - [ ] Buscar equivalentes Decathlon para cada producto
 
 ### Sync — Importar todos los productos
