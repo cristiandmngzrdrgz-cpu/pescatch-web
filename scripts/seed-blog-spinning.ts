@@ -1,93 +1,10 @@
-import { getDb, initSchema } from './db'
-import { sampleDeals } from '@/data/deals'
+import { getDb, initSchema } from '../src/lib/db'
 
-let seeded = false
-
-export async function seedDatabase() {
-  if (seeded) return
-
+async function seedBlogPost() {
   const db = getDb()
   await initSchema()
 
-  const result = await db.execute('SELECT COUNT(*) as count FROM deals')
-  const hasDeals = Number(result.rows[0]?.count) > 0
-
-  if (!hasDeals) {
-  for (const deal of sampleDeals) {
-    await db.execute({
-      sql: `INSERT INTO deals (
-        id, title, slug, description, originalPrice, salePrice, shippingCost,
-        discountPercent, currency, imageUrl, images,
-        storeId, storeName, storeUrl, storeReputation, storeCommissionRate,
-        affiliateUrl, category, subcategory, tags,
-        stockStatus, stockCount, rating, reviewCount,
-        technicalSpecs, review, pros, cons,
-        votesUp, votesDown, featured, commission,
-        publishedAt, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [
-        deal.id, deal.title, deal.slug, deal.description,
-        deal.originalPrice, deal.salePrice, deal.shippingCost,
-        deal.discountPercent, '€', deal.imageUrl,
-        JSON.stringify(deal.images || []),
-        deal.store?.id || '', deal.store?.name || '', deal.store?.url || '',
-        deal.store?.reputation || 'good', deal.store?.commissionRate || 0,
-        deal.affiliateUrl || '', deal.category, deal.subcategory || '',
-        JSON.stringify(deal.tags || []),
-        deal.stockStatus, deal.stockCount || 0, deal.rating || 0,
-        deal.reviewCount || 0,
-        JSON.stringify(deal.technicalSpecs || {}), deal.review || '',
-        JSON.stringify(deal.pros || []), JSON.stringify(deal.cons || []),
-        deal.votesUp || 0, deal.votesDown || 0,
-        deal.featured ? 1 : 0, deal.commission || 0,
-        deal.publishedAt, deal.createdAt || deal.publishedAt,
-        deal.updatedAt || deal.publishedAt,
-      ],
-    })
-
-    if (deal.priceHistory) {
-      for (const point of deal.priceHistory) {
-        try {
-          await db.execute({
-            sql: 'INSERT OR IGNORE INTO price_history (dealId, date, price) VALUES (?, ?, ?)',
-            args: [deal.id, point.date, point.price],
-          })
-        } catch {}
-      }
-    }
-  }
-
-  // Seed sample comments
-  const comments = [
-    { dealId: sampleDeals[0].id, author: 'Carlos', content: 'Buen chollo, lo compré la semana pasada y llegó en 2 días.', createdAt: '2026-06-25' },
-    { dealId: sampleDeals[0].id, author: 'Miguel', content: 'Alguien sabe si este carrete trae rodamientos de serie?', createdAt: '2026-06-26' },
-    { dealId: sampleDeals[1].id, author: 'Ana', content: 'La caña es una pasada, la uso para surfcasting y aguanta perfecta.', createdAt: '2026-06-24' },
-  ]
-
-  for (const c of comments) {
-    try {
-      await db.execute({
-        sql: 'INSERT OR IGNORE INTO comments (dealId, author, content, createdAt) VALUES (?, ?, ?, ?)',
-        args: [c.dealId, c.author, c.content, c.createdAt],
-      })
-    } catch {}
-  }
-
-  } // end if (!hasDeals)
-
-  // Seed blog posts
-  await seedBlogPosts()
-
-  seeded = true
-  console.log('✅ Database seeded successfully')
-}
-
-async function seedBlogPosts() {
-  const db = getDb()
-
-  const existing = await db.execute({ sql: 'SELECT COUNT(*) as count FROM posts WHERE slug = ?', args: ['mejores-canas-spinning-2026'] })
-  if (Number(existing.rows[0]?.count) > 0) return
-
+  const slug = 'mejores-canas-spinning-2026'
   const now = new Date().toISOString()
 
   const content = [
@@ -229,32 +146,97 @@ async function seedBlogPosts() {
   ].join('\n')
 
   const productsData = JSON.stringify([
-    { asin: 'B077RLWCBR', title: 'Daiwa Morethan Branzino AGS', price: '651€', rating: 4.8, image: 'https://picsum.photos/seed/spinrod1/400/400', scores: { Construcción: 98, Sensibilidad: 99, Ligereza: 98, 'Calidad/Precio': 60, 'Resistencia salada': 95 } },
-    { asin: 'B0BRBVJ91D', title: 'Shimano Dialuna Inshore S100MH', price: '349€', rating: 4.6, image: 'https://picsum.photos/seed/spinrod2/400/400', scores: { Construcción: 90, Sensibilidad: 88, Ligereza: 85, 'Calidad/Precio': 75, 'Resistencia salada': 92 } },
-    { asin: 'B08VHVLWJP', title: 'Hart Bloody Marine UL 84', price: '159€', rating: 4.5, image: 'https://picsum.photos/seed/spinrod3/400/400', scores: { Construcción: 82, Sensibilidad: 88, Ligereza: 90, 'Calidad/Precio': 95, 'Resistencia salada': 78 } },
-    { asin: 'B09812WXBY', title: 'Daiwa Legalis Seabass 902HFS', price: '99€', rating: 4.3, image: 'https://picsum.photos/seed/spinrod4/400/400', scores: { Construcción: 78, Sensibilidad: 72, Ligereza: 70, 'Calidad/Precio': 88, 'Resistencia salada': 80 } },
-    { asin: 'B096W4WKXB', title: 'Daiwa Ninja Spinning', price: '49€', rating: 4.0, image: 'https://picsum.photos/seed/spinrod5/400/400', scores: { Construcción: 65, Sensibilidad: 55, Ligereza: 72, 'Calidad/Precio': 92, 'Resistencia salada': 60 } },
+    {
+      asin: 'B077RLWCBR',
+      title: 'Daiwa Morethan Branzino AGS',
+      price: '651€',
+      rating: 4.8,
+      image: 'https://m.media-amazon.com/images/I/41XUZO4rM1L._AC_SX679_.jpg',
+      scores: { Construcción: 98, Sensibilidad: 99, Ligereza: 98, 'Calidad/Precio': 60, 'Resistencia salada': 95 },
+    },
+    {
+      asin: 'B0BRBVJ91D',
+      title: 'Shimano Dialuna Inshore S100MH',
+      price: '349€',
+      rating: 4.6,
+      image: 'https://m.media-amazon.com/images/I/41qSMFgbOPL._AC_SX679_.jpg',
+      scores: { Construcción: 90, Sensibilidad: 88, Ligereza: 85, 'Calidad/Precio': 75, 'Resistencia salada': 92 },
+    },
+    {
+      asin: 'B08VHVLWJP',
+      title: 'Hart Bloody Marine UL 84',
+      price: '159€',
+      rating: 4.5,
+      image: 'https://m.media-amazon.com/images/I/31ELwLq68lL._AC_SX679_.jpg',
+      scores: { Construcción: 82, Sensibilidad: 88, Ligereza: 90, 'Calidad/Precio': 95, 'Resistencia salada': 78 },
+    },
+    {
+      asin: 'B09812WXBY',
+      title: 'Daiwa Legalis Seabass 902HFS',
+      price: '99€',
+      rating: 4.3,
+      image: 'https://m.media-amazon.com/images/I/31+1yPRjRGL._AC_SX679_.jpg',
+      scores: { Construcción: 78, Sensibilidad: 72, Ligereza: 70, 'Calidad/Precio': 88, 'Resistencia salada': 80 },
+    },
+    {
+      asin: 'B096W4WKXB',
+      title: 'Daiwa Ninja Spinning',
+      price: '49€',
+      rating: 4.0,
+      image: 'https://m.media-amazon.com/images/I/31LctPFrprL._AC_SX679_.jpg',
+      scores: { Construcción: 65, Sensibilidad: 55, Ligereza: 72, 'Calidad/Precio': 92, 'Resistencia salada': 60 },
+    },
   ])
 
   const fullContent = content + `\n\n<!-- PRODUCTS_DATA: ${productsData} -->`
 
-  await db.execute({
-    sql: `INSERT INTO posts (id, title, slug, excerpt, content, featuredImage, author, category, tags, relatedAsins, publishedAt, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    args: [
-      `post_${Date.now()}`,
-      'Las 5 mejores cañas de spinning de 2026: comparativa y guía de compra',
-      'mejores-canas-spinning-2026',
-      '¿Buscas una caña de spinning? Analizamos y comparamos los mejores modelos de 2026: Daiwa Morethan Branzino AGS, Shimano Dialuna, Hart Bloody Marine UL, Daiwa Legalis Seabass y Ninja Spinning.',
-      fullContent,
-      '',
-      'PesCatch',
-      'Cañas',
-      JSON.stringify(['cañas spinning', 'spinning', 'cañas pesca', 'rankings', 'guias compra']),
-      JSON.stringify(['B077RLWCBR', 'B0BRBVJ91D', 'B08VHVLWJP', 'B09812WXBY', 'B096W4WKXB']),
-      now, now, now,
-    ],
+  const existing = await db.execute({
+    sql: 'SELECT id FROM posts WHERE slug = ?',
+    args: [slug],
   })
 
-  console.log('✅ Blog post seeded: mejores-canas-spinning-2026')
+  if (existing.rows.length > 0) {
+    const id = existing.rows[0].id as string
+    await db.execute({
+      sql: `UPDATE posts SET title = ?, excerpt = ?, content = ?, featuredImage = ?,
+        author = ?, category = ?, tags = ?, relatedAsins = ?, updatedAt = ?
+        WHERE id = ?`,
+      args: [
+        'Las 5 mejores cañas de spinning de 2026: comparativa y guía de compra',
+        '¿Buscas una caña de spinning? Analizamos y comparamos los mejores modelos de 2026: Daiwa Morethan Branzino AGS, Shimano Dialuna, Hart Bloody Marine UL, Daiwa Legalis Seabass y Ninja Spinning.',
+        fullContent,
+        '',
+        'PesCatch',
+        'Cañas',
+        JSON.stringify(['cañas spinning', 'spinning', 'cañas pesca', 'rankings', 'guias compra']),
+        JSON.stringify(['B077RLWCBR', 'B0BRBVJ91D', 'B08VHVLWJP', 'B09812WXBY', 'B096W4WKXB']),
+        now,
+        id,
+      ],
+    })
+    console.log(`✅ Blog post updated: ${slug}`)
+  } else {
+    await db.execute({
+      sql: `INSERT INTO posts (id, title, slug, excerpt, content, featuredImage, author, category, tags, relatedAsins, publishedAt, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        `post_${Date.now()}`,
+        'Las 5 mejores cañas de spinning de 2026: comparativa y guía de compra',
+        slug,
+        '¿Buscas una caña de spinning? Analizamos y comparamos los mejores modelos de 2026: Daiwa Morethan Branzino AGS, Shimano Dialuna, Hart Bloody Marine UL, Daiwa Legalis Seabass y Ninja Spinning.',
+        fullContent,
+        '',
+        'PesCatch',
+        'Cañas',
+        JSON.stringify(['cañas spinning', 'spinning', 'cañas pesca', 'rankings', 'guias compra']),
+        JSON.stringify(['B077RLWCBR', 'B0BRBVJ91D', 'B08VHVLWJP', 'B09812WXBY', 'B096W4WKXB']),
+        now,
+        now,
+        now,
+      ],
+    })
+    console.log(`✅ Blog post created: ${slug}`)
+  }
 }
+
+seedBlogPost().catch(console.error)
