@@ -60,6 +60,16 @@ export async function updateRowByIndex(rowIndex: number, header: string, value: 
   await updateCell(rowIndex + 1, colIndex, value) // +1 for header offset
 }
 
+export async function appendRow(values: (string | number | boolean)[]) {
+  const sheets = await getClient()
+  await sheets.append({
+    spreadsheetId: SHEET_ID,
+    range: `${SHEET_NAME}!A1`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: { values: [values] },
+  })
+}
+
 export async function ensureHeaders(headers: string[]) {
   const { headers: existing } = await readAllRows()
   const missing = headers.filter(h => !existing.includes(h))
