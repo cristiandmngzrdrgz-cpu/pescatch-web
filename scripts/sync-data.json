@@ -1,0 +1,56 @@
+[
+  {
+    "ean": "4960683184755",
+    "name": "DAIWA 23 Ninja LT - Carrete de Pesca Spinning 3000C",
+    "brand": "Daiwa",
+    "category": "carretes",
+    "subcategory": "spinning",
+    "imageUrl": "https://picsum.photos/seed/ninja-lt/600/400",
+    "description": "Carrete spinning ligero y equilibrado de la Serie Ninja LT. Cuerpo Zaion V, rotor Air Rotor y sistema de freno Ultimate Tournament Drag.",
+    "featured": true,
+    "amazonPrice": 54.53,
+    "amazonUrl": "https://amazon.es/dp/example-ninja?tag=pescatch-21",
+    "amazonStock": "in_stock",
+    "decathlonPrice": 49.99,
+    "decathlonUrl": "https://decathlon.es/p/example-ninja",
+    "decathlonStock": "in_stock"
+  },
+  {
+    "ean": "4960683184756",
+    "name": "Abu Garcia Devil 562UL 10-30g - Caña de Spinning",
+    "brand": "Abu Garcia",
+    "category": "canas",
+    "subcategory": "spinning",
+    "imageUrl": "https://picsum.photos/seed/abu-devil/600/400",
+    "description": "Caña de spinning ultraligera con blank de carbono IM-6. Acción rápida y gran sensibilidad para señuelos ligeros.",
+    "amazonPrice": 29.99,
+    "amazonUrl": "https://amazon.es/dp/example-devil?tag=pescatch-21",
+    "amazonStock": "in_stock",
+    "amazonShipping": 2.99
+  },
+  {
+    "ean": "",
+    "name": "Vicloon Kit Señuelos Pesca 120 Piezas - Set Completo con Caja",
+    "brand": "Vicloon",
+    "category": "senuelos",
+    "subcategory": "spinning",
+    "imageUrl": "https://picsum.photos/seed/vicloon-kit/600/400",
+    "description": "Set completo de 120 piezas de pesca: señuelos, anzuelos, plomos y accesorios en caja organizadora.",
+    "amazonPrice": 16.99,
+    "amazonUrl": "https://amazon.es/dp/example-vicloon?tag=pescatch-21",
+    "amazonStock": "in_stock"
+  },
+  {
+    "ean": "",
+    "name": "Carrete Shimano Stradic FL 2500",
+    "brand": "Shimano",
+    "category": "carretes",
+    "subcategory": "spinning",
+    "imageUrl": "https://picsum.photos/seed/stradic-fl/600/400",
+    "description": "Carrete de spinning de gama media-alta con cuerpo de magnesio.",
+    "featured": true,
+    "amazonPrice": 179.99,
+    "amazonUrl": "https://amazon.es/dp/example-stradic?tag=pescatch-21",
+    "amazonStock": "in_stock"
+  }
+]
