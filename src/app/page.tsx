@@ -94,14 +94,12 @@ export default async function HomePage() {
 
             {/* Hero floating cards */}
             <div className="hidden lg:flex flex-col gap-4">
-              {[
-                { title: 'Carrete Shimano Stradic FL', discount: '-42%', price: '109,99\u20AC' },
-                { title: 'Ca\u00F1a Daiwa Tatula XT', discount: '-35%', price: '104,50\u20AC' },
-                { title: 'Rapala X-Rap 10cm', discount: '-30%', price: '13,99\u20AC' },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-4 p-5 rounded-2xl transition-all cursor-pointer glass"
+              {topDiscounts.slice(0, 3).map((deal, i) => (
+                <Link key={deal.id} href={`/deals/${deal.slug}`}
+                  className="flex items-center gap-4 p-5 rounded-2xl transition-all hover:-translate-y-0.5 no-underline group"
                   style={{
                     border: '1px solid rgba(30,58,95,0.5)',
+                    background: 'rgba(17,24,39,0.6)',
                     animation: `fadeInUp 0.6s ease-out ${i * 0.15}s both`,
                   }}>
                   <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -109,14 +107,14 @@ export default async function HomePage() {
                     <Fish className="h-6 w-6" style={{ color: 'rgba(255,255,255,0.9)' }} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm truncate" style={{ color: '#E8F0FE' }}>{item.title}</div>
-                    <div className="text-xs mt-1" style={{ color: '#4A6080' }}>desde {item.price}</div>
+                    <div className="font-semibold text-sm truncate group-hover:text-[#00D4FF] transition-colors" style={{ color: '#E8F0FE' }}>{deal.title}</div>
+                    <div className="text-xs mt-1" style={{ color: '#4A6080' }}>desde {deal.salePrice.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</div>
                   </div>
                   <span className="font-bold text-xs px-3 py-1.5 rounded-full flex-shrink-0"
                     style={{ background: '#FFB800', color: '#0B1120', boxShadow: '0 0 12px rgba(255,184,0,0.3)' }}>
-                    {item.discount}
+                    -{deal.discountPercent}%
                   </span>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
