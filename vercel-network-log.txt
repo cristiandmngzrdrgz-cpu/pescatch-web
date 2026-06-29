@@ -1,0 +1,4 @@
+17. [GET] https://www.pescatch.es/blog?_rsc=zdZlU8M8ugyWq6sS => [200] 
+24. [GET] https://www.pescatch.es/blog?_rsc=c9flE-YsVCfJKrAR => [200] 
+
+Note: 16 static requests not shown, run with "static" option to see them.

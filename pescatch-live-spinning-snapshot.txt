@@ -1,0 +1,392 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "PesCatch" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - generic [ref=e12]: PesCatch
+      - navigation [ref=e13]:
+        - link "Inicio" [ref=e14] [cursor=pointer]:
+          - /url: /
+          - text: Inicio
+        - link "Carretes" [ref=e16] [cursor=pointer]:
+          - /url: /categories/carretes
+          - text: Carretes
+          - img [ref=e17]
+        - link "Cañas" [ref=e20] [cursor=pointer]:
+          - /url: /categories/canas
+          - text: Cañas
+          - img [ref=e21]
+        - link "Señuelos" [ref=e24] [cursor=pointer]:
+          - /url: /categories/senuelos
+          - text: Señuelos
+          - img [ref=e25]
+        - link "Blog" [ref=e27] [cursor=pointer]:
+          - /url: /blog
+        - link "Buscar" [ref=e28] [cursor=pointer]:
+          - /url: /search
+      - generic [ref=e30]:
+        - img [ref=e31]
+        - textbox "Buscar chollos..." [ref=e34]
+      - button "Modo oscuro" [ref=e35]:
+        - img [ref=e36]
+      - link "Admin" [ref=e38] [cursor=pointer]:
+        - /url: /admin
+        - button "Admin" [ref=e39]
+  - main [ref=e40]:
+    - generic [ref=e41]:
+      - navigation [ref=e42]:
+        - link "Inicio" [ref=e43] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e44]: /
+        - link "Blog" [ref=e45] [cursor=pointer]:
+          - /url: /blog
+        - generic [ref=e46]: /
+        - generic [ref=e47]: "Las 5 mejores cañas de spinning de 2026: comparativa y guía de compra"
+      - 'heading "Las 5 mejores cañas de spinning de 2026: comparativa y guía de compra" [level=1] [ref=e48]'
+      - paragraph [ref=e49]: "¿Buscas una caña de spinning? Analizamos y comparamos los mejores modelos de 2026: Daiwa Morethan Branzino AGS, Shimano Dialuna, Hart Bloody Marine UL, Daiwa Legalis Seabass y Ninja Spinning."
+      - generic [ref=e50]:
+        - link "Nuestra elección Shimano Stradic FL Shimano Stradic FL 189,99€ 4.7 Ver oferta" [ref=e51] [cursor=pointer]:
+          - /url: https://www.amazon.es/dp/B07XWJDZMM
+          - generic [ref=e52]:
+            - generic [ref=e54]: Nuestra elección
+            - img "Shimano Stradic FL" [ref=e56]
+            - heading "Shimano Stradic FL" [level=3] [ref=e57]
+            - text: 189,99€
+            - generic [ref=e58]:
+              - img [ref=e59]
+              - img [ref=e61]
+              - img [ref=e63]
+              - img [ref=e65]
+              - img [ref=e67]
+              - generic [ref=e69]: "4.7"
+            - generic [ref=e71]:
+              - text: Ver oferta
+              - img [ref=e72]
+        - link "Alternativa Daiwa Ninja LT Daiwa Ninja LT 56,30€ 4.5 Ver oferta" [ref=e74] [cursor=pointer]:
+          - /url: https://www.amazon.es/dp/B0CH15QHMD
+          - generic [ref=e75]:
+            - generic [ref=e77]: Alternativa
+            - img "Daiwa Ninja LT" [ref=e79]
+            - heading "Daiwa Ninja LT" [level=3] [ref=e80]
+            - text: 56,30€
+            - generic [ref=e81]:
+              - img [ref=e82]
+              - img [ref=e84]
+              - img [ref=e86]
+              - img [ref=e88]
+              - img [ref=e90]
+              - generic [ref=e92]: "4.5"
+            - generic [ref=e94]:
+              - text: Ver oferta
+              - img [ref=e95]
+      - generic [ref=e98]:
+        - paragraph [ref=e99]: Elegir la caña de spinning adecuada puede marcar la diferencia entre una jornada de pesca memorable y una frustrante. Hemos probado y comparado los modelos más destacados del mercado para ayudarte a encontrar la caña perfecta según tu presupuesto y estilo de pesca.
+        - paragraph
+        - heading "TL;DR — Para los que tienen prisa" [level=2] [ref=e102]
+        - paragraph
+        - paragraph [ref=e103]:
+          - strong [ref=e104]: Daiwa Morethan Branzino AGS
+          - text: es la mejor caña de spinning del mercado sin discusión. Si buscas calidad-precio, el
+          - strong [ref=e105]: Hart Bloody Marine UL
+          - text: te sorprenderá. Para empezar con garantías, el
+          - strong [ref=e106]: Daiwa Legalis Seabass
+          - text: es imbatible en su rango. Y si tu presupuesto es ajustado, el
+          - strong [ref=e107]: Daiwa Ninja Spinning
+          - text: cumple sobradamente.
+        - paragraph
+        - separator [ref=e108]
+        - paragraph
+        - paragraph
+        - heading "1. Daiwa Morethan Branzino AGS — La mejor en general" [level=2] [ref=e111]
+        - paragraph
+        - paragraph [ref=e112]:
+          - text: La
+          - strong [ref=e113]: Daiwa Morethan Branzino AGS
+          - text: es, sin duda, la caña de spinning más avanzada que puedes comprar. Fabricada con carbono SVF Compile-X Nanoplus, pesa apenas 129 gramos y monta las exclusivas anillas AGS de carbono, que son un 30% más ligeras que las convencionales.
+        - paragraph [ref=e114]: Su acción de punta permite trabajar todo tipo de señuelos con una precisión milimétrica. Desde vinilos de 5 gramos hasta paseantes de 30 gramos, la caña responde con una sensibilidad extrema. Notarás cada vibración del fondo marino en tu mano.
+        - paragraph [ref=e115]:
+          - text: "-"
+          - strong [ref=e116]: "Peso:"
+          - text: 129g |
+          - strong [ref=e117]: "Longitud:"
+          - text: 240cm |
+          - strong [ref=e118]: "Acción:"
+          - text: "14-42g - Ideal para spinning medio y ligero en costa y embarcación - Perfecta para lubina, dorada, anjova, palometón y bonito - Lo mejor: Sensibilidad absoluta, peso pluma, construcción premium"
+        - paragraph [ref=e119]: Ideal para el pescador experimentado que busca lo mejor sin compromisos.
+        - paragraph
+        - separator [ref=e120]
+        - paragraph
+        - paragraph
+        - heading "2. Shimano Dialuna Inshore S100MH — Gama alta versátil" [level=2] [ref=e123]
+        - paragraph
+        - paragraph [ref=e124]:
+          - text: La
+          - strong [ref=e125]: Shimano Dialuna Inshore
+          - text: representa el equilibrio perfecto entre potencia y ligereza. Con 176 gramos y 305 cm de longitud, está diseñada para lances largos en costa con señuelos de 10 a 50 gramos. Su tecnología Spiral X Plus y Hi-Power X eliminan torsiones y proporcionan una acción ultra-rápida.
+        - paragraph [ref=e126]: Es una caña que aguanta bien el agua salada y ofrece una potencia brutal en el tercio inferior para clavar y controlar peces grandes.
+        - paragraph [ref=e127]:
+          - text: "-"
+          - strong [ref=e128]: "Peso:"
+          - text: 176g |
+          - strong [ref=e129]: "Longitud:"
+          - text: 305cm |
+          - strong [ref=e130]: "Acción:"
+          - text: "10-50g - Ideal para spinning pesado y shore jigging - Perfecta para lubinas grandes, bacoretas y depredadores marinos - Lo mejor: Potencia, alcance en el lance, construcción robusta"
+        - paragraph [ref=e131]: Recomendada para pescadores que buscan una caña larga y potente para surfcasting ligero o spinning de orilla.
+        - paragraph
+        - separator [ref=e132]
+        - paragraph
+        - paragraph
+        - heading "3. Hart Bloody Marine UL 84 — La mejor calidad-precio" [level=2] [ref=e135]
+        - paragraph
+        - paragraph [ref=e136]:
+          - text: La
+          - strong [ref=e137]: Hart Bloody Marine UL
+          - text: es un auténtico best-seller en España. Por unos 150€ recibes una caña de carbono de 40 toneladas con anillas Fuji K Alconite y portacarretes Fuji Skeleton. Su acción progresiva de 5 a 28 gramos la hace perfecta para spinning ligero y ultraligero.
+        - paragraph [ref=e138]: Es sorprendentemente sensible para su precio, con un blank que transmite cada picada. Perfecta para pescar desde roca o espigón con señuelos ligeros.
+        - paragraph [ref=e139]:
+          - text: "-"
+          - strong [ref=e140]: "Peso:"
+          - text: 130g |
+          - strong [ref=e141]: "Longitud:"
+          - text: 255cm |
+          - strong [ref=e142]: "Acción:"
+          - text: "5-28g - Ideal para spinning ligero y rockfishing - Perfecta para lubina, serrátidos, dorada y pesca fina - Lo mejor: Relación calidad-precio brutal, ligereza, acción progresiva"
+        - paragraph [ref=e143]: La elección inteligente para el pescador que quiere calidad sin gastar una fortuna.
+        - paragraph
+        - separator [ref=e144]
+        - paragraph
+        - paragraph
+        - heading "4. Daiwa Legalis Seabass 902HFS — La mejor para empezar" [level=2] [ref=e147]
+        - paragraph
+        - paragraph [ref=e148]:
+          - text: La
+          - strong [ref=e149]: Daiwa Legalis Seabass
+          - text: es la puerta de entrada al spinning de calidad. Por unos 100€ tienes una caña fabricada en carbono HVF con anillas Fuji O-Ring y portacarretes Fuji DPS. Pesada pero robusta, ofrece una acción rápida de punta que facilita el aprendizaje.
+        - paragraph [ref=e150]: Aguanta bien la salinidad, los golpes y el uso intensivo. Es una caña que te durará años si la cuidas, y te permitirá progresar sin sentir que necesitas cambiar de equipo.
+        - paragraph [ref=e151]:
+          - text: "-"
+          - strong [ref=e152]: "Peso:"
+          - text: 181g |
+          - strong [ref=e153]: "Longitud:"
+          - text: 274cm |
+          - strong [ref=e154]: "Acción:"
+          - text: "14-42g - Ideal para iniciación al spinning de costa - Perfecta para lubina, anjova, palometón y pesca variada - Lo mejor: Precio contenido, durabilidad, versatilidad"
+        - paragraph [ref=e155]: Para el que empieza o quiere una caña de batalla para usar sin miedo.
+        - paragraph
+        - separator [ref=e156]
+        - paragraph
+        - paragraph
+        - heading "5. Daiwa Ninja Spinning — La más económica que funciona" [level=2] [ref=e159]
+        - paragraph
+        - paragraph [ref=e160]:
+          - text: La
+          - strong [ref=e161]: Daiwa Ninja Spinning
+          - text: demuestra que no hace falta gastar 200€ para tener una caña decente. Por unos 50€, recibes una caña de carbono con acción progresiva fuerte, anillas de óxido de aluminio y portacarretes de grafito. Pesa 138 gramos y está disponible en múltiples medidas.
+        - paragraph [ref=e162]: No esperes la sensibilidad de una caña de 600€, pero para pescar con vinilos, cucharillas y señuelos de hasta 30 gramos cumple perfectamente. Es la caña ideal para tener siempre en el coche por si surge la oportunidad de pescar.
+        - paragraph [ref=e163]:
+          - text: "-"
+          - strong [ref=e164]: "Peso:"
+          - text: 138g |
+          - strong [ref=e165]: "Longitud:"
+          - text: 240cm |
+          - strong [ref=e166]: "Acción:"
+          - text: "10-30g - Ideal para pescadores ocasionales o presupuesto ajustado - Perfecta para principiantes, pesca en río y embalse - Lo mejor: Precio imbatible, polivalente, variedad de modelos"
+        - paragraph [ref=e167]: La mejor opción si necesitas una caña funcional sin gastar casi nada.
+        - paragraph
+        - separator [ref=e168]
+        - paragraph
+        - paragraph
+        - heading "Tabla comparativa rápida" [level=2] [ref=e171]
+        - paragraph
+        - paragraph [ref=e172]:
+          - strong [ref=e173]: Daiwa Morethan Branzino AGS
+          - text: — 651€ — 129g — Carbono SVF — Acción punta — ★★★★★
+          - strong [ref=e174]: Shimano Dialuna Inshore
+          - text: — ~350€ — 176g — Carbono Spiral X — Acción rápida — ★★★★☆
+          - strong [ref=e175]: Hart Bloody Marine UL
+          - text: — 159€ — 130g — Carbono 40T — Acción progresiva — ★★★★☆
+          - strong [ref=e176]: Daiwa Legalis Seabass
+          - text: — ~100€ — 181g — Carbono HVF — Acción punta — ★★★★☆
+          - strong [ref=e177]: Daiwa Ninja Spinning
+          - text: — ~50€ — 138g — Carbono — Acción progresiva — ★★★☆☆
+        - paragraph
+        - separator [ref=e178]
+        - paragraph
+        - paragraph
+        - heading "Cómo elegir tu caña de spinning" [level=2] [ref=e181]
+        - paragraph
+        - paragraph
+        - heading "1. Define tu presupuesto" [level=3] [ref=e182]
+        - text: El dinero que estés dispuesto a invertir marcará las tecnologías a las que puedas acceder. Con 50-100€ tendrás una caña funcional. De 100-200€ encuentras calidad-precio excelente. A partir de 300€ entras en el terreno de la alta gama con carbono de módulo ultralto y componentes premium.
+        - paragraph
+        - paragraph
+        - heading "2. Elige la acción y potencia adecuadas" [level=3] [ref=e183]
+        - text: El rango de gramos de la caña debe coincidir con los señuelos que vas a usar. Para spinning ligero (vinilos, pequeños paseantes) busca acciones de 5-28g. Para spinning medio (jigs, popping) busca 14-50g. Para pesado (shore jigging) necesitas más de 40g.
+        - paragraph
+        - paragraph
+        - heading "3. Longitud según tu escenario" [level=3] [ref=e184]
+        - text: Cañas de 210-240cm ideales para roca y espacios reducidos. Cañas de 250-300cm perfectas para playa y lances largos. Las cañas más largas ofrecen más distancia pero pesan más y son menos manejables en espacios cerrados.
+        - paragraph
+        - paragraph
+        - heading "4. Anillas y portacarretes" [level=3] [ref=e185]
+        - text: Las anillas Fuji (K, Alconite, SiC) son el estándar de calidad. Las anillas de óxido de aluminio son correctas para gama baja. El portacarretes debe ser firme y de material resistente a la corrosión.
+        - paragraph
+        - paragraph
+        - heading "5. Peso de la caña" [level=3] [ref=e186]
+        - text: Una caña ligera reduce la fatiga en jornadas largas. El carbono de alto módulo permite cañas más ligeras sin perder potencia. Busca siempre el menor peso posible dentro de tu presupuesto.
+        - paragraph
+        - paragraph
+        - separator [ref=e187]
+        - paragraph
+        - paragraph
+        - heading "Preguntas frecuentes" [level=2] [ref=e190]
+        - paragraph
+        - paragraph
+        - heading "¿Qué diferencia hay entre una caña de spinning y una de surfcasting?" [level=3] [ref=e191]
+        - text: Las cañas de spinning son más cortas (210-300cm) y están diseñadas para lanzar señuelos artificiales. Las de surfcasting son más largas (350-500cm) y se usan para lanzar plomos y cebo natural a larga distancia.
+        - paragraph
+        - paragraph
+        - heading "¿Qué carrete le pongo a mi caña de spinning?" [level=3] [ref=e192]
+        - text: "Para cañas de acción ligera (hasta 28g) usa carretes tamaño 1000-2500. Para acción media (10-42g) usa tamaño 3000-4000. La caña y el carrete deben estar equilibrados: sujeta la caña con el carrete montado y debe sentirse equilibrada, no caer hacia la punta ni hacia el mango."
+        - paragraph
+        - paragraph
+        - heading "¿Las cañas de spinning valen para agua salada?" [level=3] [ref=e193]
+        - text: Sí, pero deben tener componentes resistentes a la corrosión. Busca anillas Fuji, portacarretes de aluminio o acero inoxidable, y blanks sellados. Todas las cañas de esta guía valen para agua salada con los cuidados adecuados (aclarar con agua dulce después de usar).
+        - paragraph
+        - paragraph
+        - heading "¿Merece la pena gastar 600€ en una caña?" [level=3] [ref=e194]
+        - text: Depende de tu nivel. Si pescas 3-4 veces al año, no. Si pescas cada semana y quieres sentir cada picada, sí. La diferencia entre una caña de 150€ y una de 600€ está en la sensibilidad, el peso y la precisión en el lance.
+        - paragraph
+        - paragraph
+        - separator [ref=e195]
+        - paragraph
+        - paragraph
+        - heading "Veredicto final" [level=2] [ref=e198]
+        - paragraph
+        - paragraph [ref=e199]:
+          - text: La
+          - strong [ref=e200]: Daiwa Morethan Branzino AGS
+          - text: es, sin duda, la mejor caña de spinning que puedes comprar en 2026. Su combinación de ligereza, sensibilidad y construcción es imbatible. Pero la realidad es que la mayoría de los pescadores no necesitan una caña de 650€.
+        - paragraph [ref=e201]:
+          - text: Si pescas con frecuencia, el
+          - strong [ref=e202]: Hart Bloody Marine UL
+          - text: te dará el 85% de la experiencia por el 25% del precio. Y si estás empezando, el
+          - strong [ref=e203]: Daiwa Legalis Seabass
+          - text: o el
+          - strong [ref=e204]: Ninja Spinning
+          - text: te permitirán disfrutar sin arruinarte.
+        - paragraph [ref=e205]: Elige según tu presupuesto y frecuencia de pesca. Cualquier caña de esta lista te hará disfrutar más de tus jornadas de spinning.
+        - paragraph
+      - generic [ref=e206]:
+        - heading "Puntuaciones" [level=2] [ref=e207]
+        - generic [ref=e208]:
+          - generic [ref=e209]:
+            - generic [ref=e212]:
+              - generic [ref=e213]: Shimano Stradic FL
+              - generic [ref=e214]: 189,99€
+            - generic [ref=e216]:
+              - generic [ref=e217]: Construcción
+              - generic [ref=e218]: 95/100
+            - generic [ref=e222]:
+              - generic [ref=e223]: Suavidad
+              - generic [ref=e224]: 95/100
+            - generic [ref=e228]:
+              - generic [ref=e229]: Durabilidad
+              - generic [ref=e230]: 90/100
+            - generic [ref=e234]:
+              - generic [ref=e235]: Calidad/Precio
+              - generic [ref=e236]: 70/100
+            - generic [ref=e240]:
+              - generic [ref=e241]: Resistencia salada
+              - generic [ref=e242]: 90/100
+          - generic [ref=e245]:
+            - generic [ref=e248]:
+              - generic [ref=e249]: Daiwa Ninja LT
+              - generic [ref=e250]: 56,30€
+            - generic [ref=e252]:
+              - generic [ref=e253]: Construcción
+              - generic [ref=e254]: 75/100
+            - generic [ref=e258]:
+              - generic [ref=e259]: Suavidad
+              - generic [ref=e260]: 70/100
+            - generic [ref=e264]:
+              - generic [ref=e265]: Durabilidad
+              - generic [ref=e266]: 65/100
+            - generic [ref=e270]:
+              - generic [ref=e271]: Calidad/Precio
+              - generic [ref=e272]: 95/100
+            - generic [ref=e276]:
+              - generic [ref=e277]: Resistencia salada
+              - generic [ref=e278]: 55/100
+      - generic [ref=e281]:
+        - heading "Comparativa de precios" [level=2] [ref=e282]
+        - generic [ref=e283]:
+          - link "Shimano Stradic FL 189,99€ Comprar" [ref=e284] [cursor=pointer]:
+            - /url: https://www.amazon.es/dp/B07XWJDZMM
+            - generic [ref=e288]: Shimano Stradic FL
+            - generic [ref=e289]:
+              - generic [ref=e290]: 189,99€
+              - generic [ref=e291]:
+                - text: Comprar
+                - img [ref=e292]
+          - link "Daiwa Ninja LT 56,30€ Comprar" [ref=e294] [cursor=pointer]:
+            - /url: https://www.amazon.es/dp/B0CH15QHMD
+            - generic [ref=e298]: Daiwa Ninja LT
+            - generic [ref=e299]:
+              - generic [ref=e300]: 56,30€
+              - generic [ref=e301]:
+                - text: Comprar
+                - img [ref=e302]
+      - paragraph [ref=e305]: Publicidad
+  - contentinfo [ref=e306]:
+    - generic [ref=e307]:
+      - generic [ref=e308]:
+        - generic [ref=e309]:
+          - generic [ref=e310]:
+            - img [ref=e312]
+            - generic [ref=e318]: PesCatch
+          - paragraph [ref=e319]: La plataforma líder en chollos de pesca en España. Buscamos, verificamos y publicamos las mejores ofertas en material de pesca para que ahorres en tu pasión.
+          - generic [ref=e320]:
+            - generic [ref=e321]: Recibe los mejores chollos en tu email
+            - generic [ref=e322]:
+              - textbox "tu@email.com" [ref=e323]
+              - button "Suscribir" [ref=e324]
+        - generic [ref=e325]:
+          - heading "Enlaces" [level=3] [ref=e326]
+          - list [ref=e327]:
+            - listitem [ref=e328]:
+              - link "Buscar Ofertas" [ref=e329] [cursor=pointer]:
+                - /url: /search
+            - listitem [ref=e330]:
+              - link "Categorías" [ref=e331] [cursor=pointer]:
+                - /url: /categories
+            - listitem [ref=e332]:
+              - link "Sobre Nosotros" [ref=e333] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=e334]:
+              - link "Contacto" [ref=e335] [cursor=pointer]:
+                - /url: /
+        - generic [ref=e336]:
+          - heading "Legal" [level=3] [ref=e337]
+          - list [ref=e338]:
+            - listitem [ref=e339]:
+              - link "Privacidad" [ref=e340] [cursor=pointer]:
+                - /url: /privacy
+            - listitem [ref=e341]:
+              - link "Términos" [ref=e342] [cursor=pointer]:
+                - /url: /terms
+            - listitem [ref=e343]:
+              - link "Cookies" [ref=e344] [cursor=pointer]:
+                - /url: /cookies
+            - listitem [ref=e345]:
+              - link "Afiliados" [ref=e346] [cursor=pointer]:
+                - /url: /affiliate
+      - generic [ref=e347]:
+        - paragraph [ref=e348]: © 2026 PesCatch. Todos los derechos reservados.
+        - paragraph [ref=e349]:
+          - text: En calidad de Afiliado de Amazon, obtenemos ingresos por las compras adscritas que cumplen los requisitos aplicables.
+          - link "Más info" [ref=e350] [cursor=pointer]:
+            - /url: /affiliate
+  - alert [ref=e351]

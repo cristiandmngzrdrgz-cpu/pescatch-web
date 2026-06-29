@@ -1,0 +1,366 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "PesCatch" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - generic [ref=e12]: PesCatch
+      - navigation [ref=e13]:
+        - link "Inicio" [ref=e14] [cursor=pointer]:
+          - /url: /
+          - text: Inicio
+        - link "Carretes" [ref=e16] [cursor=pointer]:
+          - /url: /categories/carretes
+          - text: Carretes
+          - img [ref=e17]
+        - link "Cañas" [ref=e20] [cursor=pointer]:
+          - /url: /categories/canas
+          - text: Cañas
+          - img [ref=e21]
+        - link "Señuelos" [ref=e24] [cursor=pointer]:
+          - /url: /categories/senuelos
+          - text: Señuelos
+          - img [ref=e25]
+        - link "Buscar" [ref=e27] [cursor=pointer]:
+          - /url: /search
+      - generic [ref=e29]:
+        - img [ref=e30]
+        - textbox "Buscar chollos..." [ref=e33]
+      - button "Modo oscuro" [ref=e34]:
+        - img [ref=e35]
+      - link "Admin" [ref=e37] [cursor=pointer]:
+        - /url: /admin
+        - button "Admin" [ref=e38]
+  - main [ref=e39]:
+    - generic [ref=e40]:
+      - generic [ref=e43]:
+        - generic [ref=e44]:
+          - generic [ref=e49]: Chollos verificados en tiempo real
+          - heading "Los Mejores Chollos de Pesca" [level=1] [ref=e50]
+          - paragraph [ref=e51]: Ahorra hasta un 50% en material de pesca de calidad. Todas las ofertas verificadas manualmente por pescadores como tú.
+          - generic [ref=e52]:
+            - link "Ver Ofertas" [ref=e53] [cursor=pointer]:
+              - /url: /search
+              - text: Ver Ofertas
+              - img [ref=e54]
+            - link "Categorías" [ref=e56] [cursor=pointer]:
+              - /url: /categories
+          - generic [ref=e57]:
+            - generic [ref=e58]:
+              - img [ref=e59]
+              - text: Precio mínimo garantizado
+            - generic [ref=e62]:
+              - img [ref=e63]
+              - text: 8 tiendas verificadas
+            - generic [ref=e67]:
+              - img [ref=e68]
+              - text: 3 chollos activos
+        - generic [ref=e71]:
+          - generic [ref=e72] [cursor=pointer]:
+            - img [ref=e74]
+            - generic [ref=e80]:
+              - generic [ref=e81]: Carrete Shimano Stradic FL
+              - generic [ref=e82]: desde 109,99€
+            - generic [ref=e83]: "-42%"
+          - generic [ref=e84] [cursor=pointer]:
+            - img [ref=e86]
+            - generic [ref=e92]:
+              - generic [ref=e93]: Caña Daiwa Tatula XT
+              - generic [ref=e94]: desde 104,50€
+            - generic [ref=e95]: "-35%"
+          - generic [ref=e96] [cursor=pointer]:
+            - img [ref=e98]
+            - generic [ref=e104]:
+              - generic [ref=e105]: Rapala X-Rap 10cm
+              - generic [ref=e106]: desde 13,99€
+            - generic [ref=e107]: "-30%"
+      - generic [ref=e109]:
+        - generic [ref=e110]:
+          - generic [ref=e111]:
+            - img [ref=e112]
+            - text: Destacados
+          - heading "Chollos Destacados" [level=2] [ref=e114]
+          - paragraph [ref=e115]: Las mejores ofertas seleccionadas por nuestro equipo
+        - generic [ref=e116]:
+          - link [ref=e117] [cursor=pointer]:
+            - /url: /deals/mitchell-mx-surf-carrete-surfcasting-8000
+            - article [ref=e118]:
+              - generic [ref=e119]:
+                - img "Mitchell MX Surf - Carrete Surfcasting 10BB 8000" [ref=e120]
+                - generic [ref=e122]: "-23%"
+              - generic [ref=e123]:
+                - generic [ref=e124]: carretes
+                - generic [ref=e125]:
+                  - img [ref=e126]
+                  - generic [ref=e130]: Amazon
+                - heading "Mitchell MX Surf - Carrete Surfcasting 10BB 8000" [level=3] [ref=e131]
+                - generic [ref=e132]:
+                  - generic [ref=e133]: 84,99€
+                  - generic [ref=e134]: 109,99€
+                - generic [ref=e135]:
+                  - generic [ref=e136]:
+                    - img [ref=e137]
+                    - generic [ref=e142]: Envío gratis
+                  - generic [ref=e143]:
+                    - img [ref=e144]
+                    - generic [ref=e146]: En stock
+          - link [ref=e147] [cursor=pointer]:
+            - /url: /deals/daiwa-23-ninja-lt-carrete-spinning-3000c
+            - article [ref=e148]:
+              - generic [ref=e149]:
+                - img "DAIWA 23 Ninja LT - Carrete de Pesca Spinning 3000C" [ref=e150]
+                - generic [ref=e152]: "-25%"
+              - generic [ref=e153]:
+                - generic [ref=e154]: carretes
+                - generic [ref=e155]:
+                  - img [ref=e156]
+                  - generic [ref=e160]: Amazon
+                - heading "DAIWA 23 Ninja LT - Carrete de Pesca Spinning 3000C" [level=3] [ref=e161]
+                - generic [ref=e162]:
+                  - generic [ref=e163]: 56,30€
+                  - generic [ref=e164]: 74,99€
+                - generic [ref=e165]:
+                  - generic [ref=e166]:
+                    - img [ref=e167]
+                    - generic [ref=e172]: "Envío: 3,99€"
+                  - generic [ref=e173]:
+                    - img [ref=e174]
+                    - generic [ref=e176]: En stock
+          - link [ref=e177] [cursor=pointer]:
+            - /url: /deals/mitchell-adventure-2-cana-surfcasting-39m
+            - article [ref=e178]:
+              - generic [ref=e179]:
+                - img "Mitchell Adventure 2 - Cañas de Pescar para Surf 3.9m 80-150g" [ref=e180]
+                - generic [ref=e182]: "-32%"
+              - generic [ref=e183]:
+                - generic [ref=e184]: canas
+                - generic [ref=e185]:
+                  - img [ref=e186]
+                  - generic [ref=e190]: Amazon
+                - heading "Mitchell Adventure 2 - Cañas de Pescar para Surf 3.9m 80-150g" [level=3] [ref=e191]
+                - generic [ref=e192]:
+                  - generic [ref=e193]: 24,49€
+                  - generic [ref=e194]: 35,99€
+                - generic [ref=e195]:
+                  - generic [ref=e196]:
+                    - img [ref=e197]
+                    - generic [ref=e202]: Envío gratis
+                  - generic [ref=e203]:
+                    - img [ref=e204]
+                    - generic [ref=e206]: En stock
+      - generic [ref=e208]:
+        - generic [ref=e209]:
+          - generic [ref=e210]:
+            - img [ref=e211]
+            - text: Explora
+          - heading "Categorías" [level=2] [ref=e217]
+          - paragraph [ref=e218]: Explora los chollos por tipo de material de pesca
+        - generic [ref=e219]:
+          - link "Carretes 4 chollos" [ref=e220] [cursor=pointer]:
+            - /url: /categories/carretes
+            - generic [ref=e221]:
+              - img [ref=e223]
+              - heading "Carretes" [level=3] [ref=e229]
+              - paragraph [ref=e230]: 4 chollos
+          - link "Cañas 4 chollos" [ref=e231] [cursor=pointer]:
+            - /url: /categories/canas
+            - generic [ref=e232]:
+              - img [ref=e234]
+              - heading "Cañas" [level=3] [ref=e240]
+              - paragraph [ref=e241]: 4 chollos
+          - link "Señuelos 3 chollos" [ref=e242] [cursor=pointer]:
+            - /url: /categories/senuelos
+            - generic [ref=e243]:
+              - img [ref=e245]
+              - heading "Señuelos" [level=3] [ref=e251]
+              - paragraph [ref=e252]: 3 chollos
+          - link "Accesorios 1 chollo" [ref=e253] [cursor=pointer]:
+            - /url: /categories/accesorios
+            - generic [ref=e254]:
+              - img [ref=e256]
+              - heading "Accesorios" [level=3] [ref=e262]
+              - paragraph [ref=e263]: 1 chollo
+          - link "Ropa 1 chollo" [ref=e264] [cursor=pointer]:
+            - /url: /categories/ropa
+            - generic [ref=e265]:
+              - img [ref=e267]
+              - heading "Ropa" [level=3] [ref=e273]
+              - paragraph [ref=e274]: 1 chollo
+          - link "Náutica 0 chollos" [ref=e275] [cursor=pointer]:
+            - /url: /categories/nautica
+            - generic [ref=e276]:
+              - img [ref=e278]
+              - heading "Náutica" [level=3] [ref=e284]
+              - paragraph [ref=e285]: 0 chollos
+      - generic [ref=e287]:
+        - generic [ref=e288]:
+          - generic [ref=e289]:
+            - img [ref=e290]
+            - text: Nuevos
+          - heading "Últimos Chollos" [level=2] [ref=e293]
+          - paragraph [ref=e294]: Las ofertas más recientes añadidas a PesCatch
+        - generic [ref=e295]:
+          - link "Hace 1 horas · ropa Fjallraven Chaqueta Skogsö Acolchada - Hombre 160,39 € 312,00 € -49%" [ref=e296] [cursor=pointer]:
+            - /url: /deals/chaqueta-impermeable-pesca-skogso
+            - img [ref=e298]
+            - generic [ref=e304]:
+              - generic [ref=e305]:
+                - img [ref=e306]
+                - text: Hace 1 horas
+                - generic [ref=e309]: ·
+                - generic [ref=e310]: ropa
+              - heading "Fjallraven Chaqueta Skogsö Acolchada - Hombre" [level=3] [ref=e311]
+              - generic [ref=e312]:
+                - generic [ref=e313]: 160,39 €
+                - generic [ref=e314]: 312,00 €
+                - generic [ref=e315]: "-49%"
+          - link "Hace 1 horas · carretes Outinhao Carrete Spinning 12BB 3000 - Alta Velocidad 14,39 € 19,99 € -28%" [ref=e316] [cursor=pointer]:
+            - /url: /deals/outinhao-carrete-spinning-12bb-3000
+            - img [ref=e318]
+            - generic [ref=e324]:
+              - generic [ref=e325]:
+                - img [ref=e326]
+                - text: Hace 1 horas
+                - generic [ref=e329]: ·
+                - generic [ref=e330]: carretes
+              - heading "Outinhao Carrete Spinning 12BB 3000 - Alta Velocidad" [level=3] [ref=e331]
+              - generic [ref=e332]:
+                - generic [ref=e333]: 14,39 €
+                - generic [ref=e334]: 19,99 €
+                - generic [ref=e335]: "-28%"
+          - link "Hace 1 horas · canas Shakespeare Caña Salt Surf Lowrider 4.2m 4-8oz 89,99 € 129,99 € -31%" [ref=e336] [cursor=pointer]:
+            - /url: /deals/shakespeare-salt-surf-lowrider-cana-42m
+            - img [ref=e338]
+            - generic [ref=e344]:
+              - generic [ref=e345]:
+                - img [ref=e346]
+                - text: Hace 1 horas
+                - generic [ref=e349]: ·
+                - generic [ref=e350]: canas
+              - heading "Shakespeare Caña Salt Surf Lowrider 4.2m 4-8oz" [level=3] [ref=e351]
+              - generic [ref=e352]:
+                - generic [ref=e353]: 89,99 €
+                - generic [ref=e354]: 129,99 €
+                - generic [ref=e355]: "-31%"
+          - link "Hace 1 horas · carretes Mitchell Mx1 - Carrete Spinning 5500 Agua Salada 39,99 € 49,99 € -20%" [ref=e356] [cursor=pointer]:
+            - /url: /deals/mitchell-mx1-carrete-spinning-5500
+            - img [ref=e358]
+            - generic [ref=e364]:
+              - generic [ref=e365]:
+                - img [ref=e366]
+                - text: Hace 1 horas
+                - generic [ref=e369]: ·
+                - generic [ref=e370]: carretes
+              - heading "Mitchell Mx1 - Carrete Spinning 5500 Agua Salada" [level=3] [ref=e371]
+              - generic [ref=e372]:
+                - generic [ref=e373]: 39,99 €
+                - generic [ref=e374]: 49,99 €
+                - generic [ref=e375]: "-20%"
+      - generic [ref=e377]:
+        - generic [ref=e378]:
+          - generic [ref=e379]:
+            - img [ref=e380]
+            - text: Hot
+          - heading "Mayores Descuentos" [level=2] [ref=e382]
+          - paragraph [ref=e383]: Los chollos con los porcentajes de ahorro más brutales
+        - generic [ref=e384]:
+          - link "-55% DAIWA Caña Surfcasting Sweepfire 4.2m 100-200g 67,99 € 30,88 € Ahorras 37,11 €" [ref=e385] [cursor=pointer]:
+            - /url: /deals/daiwa-sweepfire-cana-surfcasting-42m
+            - generic [ref=e386]: "-55%"
+            - heading "DAIWA Caña Surfcasting Sweepfire 4.2m 100-200g" [level=3] [ref=e387]
+            - generic [ref=e388]:
+              - text: 67,99 €
+              - generic [ref=e389]: 30,88 €
+            - generic [ref=e390]:
+              - img [ref=e391]
+              - generic [ref=e393]: Ahorras 37,11 €
+          - link "-49% Fjallraven Chaqueta Skogsö Acolchada - Hombre 312,00 € 160,39 € Ahorras 151,61 €" [ref=e394] [cursor=pointer]:
+            - /url: /deals/chaqueta-impermeable-pesca-skogso
+            - generic [ref=e395]: "-49%"
+            - heading "Fjallraven Chaqueta Skogsö Acolchada - Hombre" [level=3] [ref=e396]
+            - generic [ref=e397]:
+              - text: 312,00 €
+              - generic [ref=e398]: 160,39 €
+            - generic [ref=e399]:
+              - img [ref=e400]
+              - generic [ref=e402]: Ahorras 151,61 €
+          - link "-43% Vicloon Kit de Pesca 120 Piezas - Set Completo con Caja 29,99 € 16,99 € Ahorras 13,00 €" [ref=e403] [cursor=pointer]:
+            - /url: /deals/vicloon-kit-senuelos-pesca-120-piezas
+            - generic [ref=e404]: "-43%"
+            - heading "Vicloon Kit de Pesca 120 Piezas - Set Completo con Caja" [level=3] [ref=e405]
+            - generic [ref=e406]:
+              - text: 29,99 €
+              - generic [ref=e407]: 16,99 €
+            - generic [ref=e408]:
+              - img [ref=e409]
+              - generic [ref=e411]: Ahorras 13,00 €
+          - link "-32% Mitchell Adventure 2 - Cañas de Pescar para Surf 3.9m 80-150g 35,99 € 24,49 € Ahorras 11,50 €" [ref=e412] [cursor=pointer]:
+            - /url: /deals/mitchell-adventure-2-cana-surfcasting-39m
+            - generic [ref=e413]: "-32%"
+            - heading "Mitchell Adventure 2 - Cañas de Pescar para Surf 3.9m 80-150g" [level=3] [ref=e414]
+            - generic [ref=e415]:
+              - text: 35,99 €
+              - generic [ref=e416]: 24,49 €
+            - generic [ref=e417]:
+              - img [ref=e418]
+              - generic [ref=e420]: Ahorras 11,50 €
+          - link "-31% Shakespeare Caña Salt Surf Lowrider 4.2m 4-8oz 129,99 € 89,99 € Ahorras 40,00 €" [ref=e421] [cursor=pointer]:
+            - /url: /deals/shakespeare-salt-surf-lowrider-cana-42m
+            - generic [ref=e422]: "-31%"
+            - heading "Shakespeare Caña Salt Surf Lowrider 4.2m 4-8oz" [level=3] [ref=e423]
+            - generic [ref=e424]:
+              - text: 129,99 €
+              - generic [ref=e425]: 89,99 €
+            - generic [ref=e426]:
+              - img [ref=e427]
+              - generic [ref=e429]: Ahorras 40,00 €
+  - contentinfo [ref=e430]:
+    - generic [ref=e431]:
+      - generic [ref=e432]:
+        - generic [ref=e433]:
+          - generic [ref=e434]:
+            - img [ref=e436]
+            - generic [ref=e442]: PesCatch
+          - paragraph [ref=e443]: La plataforma líder en chollos de pesca en España. Buscamos, verificamos y publicamos las mejores ofertas en material de pesca para que ahorres en tu pasión.
+          - generic [ref=e444]:
+            - generic [ref=e445]: Recibe los mejores chollos en tu email
+            - generic [ref=e446]:
+              - textbox "tu@email.com" [ref=e447]
+              - button "Suscribir" [ref=e448]
+        - generic [ref=e449]:
+          - heading "Enlaces" [level=3] [ref=e450]
+          - list [ref=e451]:
+            - listitem [ref=e452]:
+              - link "Buscar Ofertas" [ref=e453] [cursor=pointer]:
+                - /url: /search
+            - listitem [ref=e454]:
+              - link "Categorías" [ref=e455] [cursor=pointer]:
+                - /url: /categories
+            - listitem [ref=e456]:
+              - link "Sobre Nosotros" [ref=e457] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=e458]:
+              - link "Contacto" [ref=e459] [cursor=pointer]:
+                - /url: /
+        - generic [ref=e460]:
+          - heading "Legal" [level=3] [ref=e461]
+          - list [ref=e462]:
+            - listitem [ref=e463]:
+              - link "Privacidad" [ref=e464] [cursor=pointer]:
+                - /url: /privacy
+            - listitem [ref=e465]:
+              - link "Términos" [ref=e466] [cursor=pointer]:
+                - /url: /terms
+            - listitem [ref=e467]:
+              - link "Cookies" [ref=e468] [cursor=pointer]:
+                - /url: /cookies
+            - listitem [ref=e469]:
+              - link "Afiliados" [ref=e470] [cursor=pointer]:
+                - /url: /affiliate
+      - generic [ref=e471]:
+        - paragraph [ref=e472]: © 2026 PesCatch. Todos los derechos reservados.
+        - paragraph [ref=e473]:
+          - text: En calidad de Afiliado de Amazon, obtenemos ingresos por las compras adscritas que cumplen los requisitos aplicables.
+          - link "Más info" [ref=e474] [cursor=pointer]:
+            - /url: /affiliate
+  - alert [ref=e475]
