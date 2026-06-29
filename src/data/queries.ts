@@ -305,18 +305,30 @@ export async function getDealsByProduct(productId: string): Promise<Deal[]> {
 
 export async function migrateExistingDealsToProducts() {
   const db = getDb()
-  await seedDatabase()
 
-  const unmigrated = await db.execute("SELECT id FROM deals WHERE productId = ''")
+  const unmigrated = await db.execute("SELECT * FROM deals WHERE productId = ''")
   if (unmigrated.rows.length === 0) return
 
   for (const row of unmigrated.rows) {
-    const dealId = row.id as string
-    const deal = await loadDeal('SELECT * FROM deals WHERE id = ?', [dealId])
-    if (!deal) continue
-
+    const r = row as Record<string, unknown>
+    const dealId = r.id as string
     const productId = `prod_${dealId}`
     const now = new Date().toISOString()
+
+    const title = (r.title as string) || ''
+    const slug = (r.slug as string) || ''
+    const description = (r.description as string) || ''
+    const imageUrl = (r.imageUrl as string) || ''
+    const images = (r.images as string) || '[]'
+    const category = (r.category as string) || ''
+    const subcategory = (r.subcategory as string) || ''
+    const technicalSpecs = (r.technicalSpecs as string) || '{}'
+    const tags = (r.tags as string) || '[]'
+    const rating = Number(r.rating) || 0
+    const reviewCount = Number(r.reviewCount) || 0
+    const review = (r.review as string) || ''
+    const pros = (r.pros as string) || '[]'
+    const cons = (r.cons as string) || '[]'
 
     await db.execute({
       sql: `INSERT OR IGNORE INTO products (
@@ -326,21 +338,17 @@ export async function migrateExistingDealsToProducts() {
         createdAt, updatedAt
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
-        productId,
-        deal.title, deal.slug, '', '', '',
-        deal.imageUrl, JSON.stringify(deal.images),
-        deal.category, deal.subcategory,
-        deal.description, JSON.stringify(deal.technicalSpecs),
-        JSON.stringify(deal.tags),
-        deal.rating || 0, deal.reviewCount || 0,
-        deal.review, JSON.stringify(deal.pros),
-        JSON.stringify(deal.cons), now, now,
+        productId, title, slug, '', '', '',
+        imageUrl, images, category, subcategory,
+        description, technicalSpecs, tags,
+        rating, reviewCount, review, pros, cons,
+        now, now,
       ] as InValue[],
     })
 
     await db.execute({
-      sql: 'UPDATE deals SET productId = ?, slug = ? WHERE id = ?',
-      args: [productId, deal.slug, dealId],
+      sql: 'UPDATE deals SET productId = ? WHERE id = ?',
+      args: [productId, dealId],
     })
   }
 }
