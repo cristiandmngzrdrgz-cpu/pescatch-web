@@ -1,5 +1,6 @@
-import { getDb, initSchema } from './db'
+import { getDb, initSchema, migrateSchema } from './db'
 import { sampleDeals } from '@/data/deals'
+import { migrateExistingDealsToProducts } from '@/data/queries'
 
 let seeded = false
 
@@ -8,6 +9,7 @@ export async function seedDatabase() {
 
   const db = getDb()
   await initSchema()
+  await migrateSchema()
 
   const result = await db.execute('SELECT COUNT(*) as count FROM deals')
   const hasDeals = Number(result.rows[0]?.count) > 0
@@ -15,18 +17,41 @@ export async function seedDatabase() {
   if (!hasDeals) {
   for (const deal of sampleDeals) {
     await db.execute({
+      sql: `INSERT OR IGNORE INTO products (
+        id, name, slug, ean, asin, brand, imageUrl, images,
+        category, subcategory, description, specs, tags,
+        rating, reviewCount, review, pros, cons,
+        createdAt, updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        deal.productId, deal.title, deal.slug,
+        deal.ean || '', deal.asin || '', deal.brand || '',
+        deal.imageUrl, JSON.stringify(deal.images || []),
+        deal.category, deal.subcategory || '',
+        deal.description, JSON.stringify(deal.technicalSpecs || {}),
+        JSON.stringify(deal.tags || []),
+        deal.rating || 0, deal.reviewCount || 0,
+        deal.review || '', JSON.stringify(deal.pros || []),
+        JSON.stringify(deal.cons || []),
+        deal.createdAt || deal.publishedAt,
+        deal.updatedAt || deal.publishedAt,
+      ],
+    })
+
+    await db.execute({
       sql: `INSERT INTO deals (
-        id, title, slug, description, originalPrice, salePrice, shippingCost,
+        id, productId, title, slug, description, originalPrice, salePrice, shippingCost,
         discountPercent, currency, imageUrl, images,
         storeId, storeName, storeUrl, storeReputation, storeCommissionRate,
         affiliateUrl, category, subcategory, tags,
         stockStatus, stockCount, rating, reviewCount,
         technicalSpecs, review, pros, cons,
         votesUp, votesDown, featured, commission,
+        ean, asin,
         publishedAt, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
-        deal.id, deal.title, deal.slug, deal.description,
+        deal.id, deal.productId, deal.title, deal.slug, deal.description,
         deal.originalPrice, deal.salePrice, deal.shippingCost,
         deal.discountPercent, '€', deal.imageUrl,
         JSON.stringify(deal.images || []),
@@ -40,6 +65,7 @@ export async function seedDatabase() {
         JSON.stringify(deal.pros || []), JSON.stringify(deal.cons || []),
         deal.votesUp || 0, deal.votesDown || 0,
         deal.featured ? 1 : 0, deal.commission || 0,
+        deal.ean || '', deal.asin || '',
         deal.publishedAt, deal.createdAt || deal.publishedAt,
         deal.updatedAt || deal.publishedAt,
       ],
@@ -77,6 +103,9 @@ export async function seedDatabase() {
 
   // Seed blog posts
   await seedBlogPosts()
+
+  // Migrate existing deals to products (for production DB upgrade)
+  await migrateExistingDealsToProducts()
 
   seeded = true
   console.log('✅ Database seeded successfully')

@@ -1,5 +1,29 @@
+export interface Product {
+  id: string
+  name: string
+  slug: string
+  ean?: string
+  asin?: string
+  brand: string
+  imageUrl: string
+  images: string[]
+  category: string
+  subcategory: string
+  description: string
+  specs: Record<string, string>
+  tags: string[]
+  rating?: number
+  reviewCount?: number
+  review: string
+  pros: string[]
+  cons: string[]
+  createdAt: string
+  updatedAt: string
+}
+
 export interface Deal {
   id: string
+  productId: string
   slug: string
   title: string
   description: string
@@ -31,6 +55,9 @@ export interface Deal {
   updatedAt: string
   featured: boolean
   commission: number
+  ean?: string
+  asin?: string
+  brand?: string
 }
 
 export interface PricePoint {

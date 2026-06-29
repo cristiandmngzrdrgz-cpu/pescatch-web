@@ -28,8 +28,31 @@ export function getDb(): Client {
 export async function initSchema() {
   const db = getDb()
   await db.batch([
+    `CREATE TABLE IF NOT EXISTS products (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      ean TEXT NOT NULL DEFAULT '',
+      asin TEXT NOT NULL DEFAULT '',
+      brand TEXT NOT NULL DEFAULT '',
+      imageUrl TEXT NOT NULL DEFAULT '',
+      images TEXT NOT NULL DEFAULT '[]',
+      category TEXT NOT NULL DEFAULT '',
+      subcategory TEXT NOT NULL DEFAULT '',
+      description TEXT NOT NULL DEFAULT '',
+      specs TEXT NOT NULL DEFAULT '{}',
+      tags TEXT NOT NULL DEFAULT '[]',
+      rating REAL NOT NULL DEFAULT 0,
+      reviewCount INTEGER NOT NULL DEFAULT 0,
+      review TEXT NOT NULL DEFAULT '',
+      pros TEXT NOT NULL DEFAULT '[]',
+      cons TEXT NOT NULL DEFAULT '[]',
+      createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+      updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+    )`,
     `CREATE TABLE IF NOT EXISTS deals (
       id TEXT PRIMARY KEY,
+      productId TEXT NOT NULL DEFAULT '',
       title TEXT NOT NULL,
       slug TEXT NOT NULL UNIQUE,
       description TEXT NOT NULL DEFAULT '',
@@ -80,7 +103,10 @@ export async function initSchema() {
       createdAt TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (dealId) REFERENCES deals(id) ON DELETE CASCADE
     )`,
+    'CREATE INDEX IF NOT EXISTS idx_products_slug ON products(slug)',
+    'CREATE INDEX IF NOT EXISTS idx_products_ean ON products(ean)',
     'CREATE INDEX IF NOT EXISTS idx_deals_slug ON deals(slug)',
+    'CREATE INDEX IF NOT EXISTS idx_deals_product ON deals(productId)',
     'CREATE INDEX IF NOT EXISTS idx_deals_category ON deals(category)',
     'CREATE INDEX IF NOT EXISTS idx_deals_featured ON deals(featured)',
     'CREATE INDEX IF NOT EXISTS idx_deals_discount ON deals(discountPercent)',
@@ -104,6 +130,23 @@ export async function initSchema() {
     'CREATE INDEX IF NOT EXISTS idx_posts_slug ON posts(slug)',
     'CREATE INDEX IF NOT EXISTS idx_posts_published ON posts(publishedAt)',
   ])
+}
+
+export async function migrateSchema() {
+  const db = getDb()
+
+  const info = await db.execute("PRAGMA table_info(deals)")
+  const columnNames = info.rows.map(r => r.name as string)
+
+  if (!columnNames.includes('productId')) {
+    await db.execute("ALTER TABLE deals ADD COLUMN productId TEXT NOT NULL DEFAULT ''")
+  }
+  if (!columnNames.includes('ean')) {
+    await db.execute("ALTER TABLE deals ADD COLUMN ean TEXT NOT NULL DEFAULT ''")
+  }
+  if (!columnNames.includes('asin')) {
+    await db.execute("ALTER TABLE deals ADD COLUMN asin TEXT NOT NULL DEFAULT ''")
+  }
 }
 
 export async function closeDb() {

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
-import { getDealBySlug, getRelatedDeals } from '@/data/queries'
+import { getDealBySlug, getRelatedDeals, getDealsByProduct } from '@/data/queries'
 import { formatPrice, formatDate } from '@/lib/utils'
+import { STORES } from '@/types'
 
 export const dynamic = 'force-dynamic'
 import { Badge } from '@/components/ui/badge'
@@ -26,6 +27,7 @@ export default async function DealDetailPage({
   if (!deal) notFound()
 
   const related = await getRelatedDeals(deal)
+  const storeDeals = deal.productId ? await getDealsByProduct(deal.productId) : []
   const category = CATEGORIES.find(c => c.id === deal.category)
 
   const dealSchema = {
@@ -262,6 +264,54 @@ export default async function DealDetailPage({
               )}
             </div>
           </div>
+
+          {/* Multi-Store Price Comparison */}
+          {storeDeals.length > 1 && (
+            <div className="rounded-2xl p-5" style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
+              <h3 className="font-bold mb-3 text-sm flex items-center gap-2" style={{ color: '#E8F0FE' }}>
+                <Store className="h-4 w-4" style={{ color: '#00D4FF' }} />
+                Disponible en {storeDeals.length} tiendas
+              </h3>
+              <div className="space-y-2">
+                {storeDeals.map((sd) => {
+                  const isCheapest = sd.salePrice === Math.min(...storeDeals.map(d => d.salePrice))
+                  return (
+                    <a
+                      key={sd.id}
+                      href={sd.affiliateUrl}
+                      target="_blank"
+                      rel="nofollow sponsored"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 hover:border-[#00D4FF]/30 no-underline"
+                      style={{
+                        background: isCheapest ? 'rgba(38,222,129,0.06)' : 'rgba(255,255,255,0.02)',
+                        border: `1px solid ${isCheapest ? 'rgba(38,222,129,0.2)' : '#1E3A5F'}`,
+                      }}
+                    >
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style={{ background: 'rgba(0,212,255,0.1)' }}>
+                        <Store className="h-4 w-4" style={{ color: '#00D4FF' }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium truncate" style={{ color: '#8BA3C7' }}>{sd.store.name}</div>
+                        {sd.shippingCost > 0 && (
+                          <div className="text-xs" style={{ color: '#4A6080' }}>+{formatPrice(sd.shippingCost)} envío</div>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-bold" style={{ color: isCheapest ? '#26DE81' : '#FFB800' }}>
+                          {formatPrice(sd.salePrice)}
+                        </div>
+                        {isCheapest && (
+                          <div className="text-xs font-semibold mt-0.5" style={{ color: '#26DE81' }}>Mejor precio</div>
+                        )}
+                      </div>
+                      <ArrowRight className="h-4 w-4 flex-shrink-0" style={{ color: '#4A6080' }} />
+                    </a>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* CTA Buttons */}
           <div className="space-y-3">

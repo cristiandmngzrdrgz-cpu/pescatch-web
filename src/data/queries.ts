@@ -1,4 +1,4 @@
-import type { Deal, DealFilters, Store } from '@/types'
+import type { Deal, DealFilters, Product, Store } from '@/types'
 import { getDb } from '@/lib/db'
 import { seedDatabase } from '@/lib/seed'
 import type { InValue } from '@libsql/client'
@@ -13,6 +13,7 @@ function mapRowToDeal(row: Record<string, unknown>): Deal {
 
   return {
     id: row.id as string,
+    productId: (row.productId as string) || '',
     title: row.title as string,
     slug: row.slug as string,
     description: row.description as string,
@@ -44,6 +45,74 @@ function mapRowToDeal(row: Record<string, unknown>): Deal {
     updatedAt: row.updatedAt as string,
     featured: Boolean(row.featured),
     commission: row.commission as number,
+    ean: (row.ean as string) || '',
+    asin: (row.asin as string) || '',
+    brand: (row.brand as string) || '',
+  }
+}
+
+function mapRowToProduct(row: Record<string, unknown>): Product {
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    slug: row.slug as string,
+    ean: (row.ean as string) || undefined,
+    asin: (row.asin as string) || undefined,
+    brand: (row.brand as string) || '',
+    imageUrl: (row.imageUrl as string) || '',
+    images: JSON.parse((row.images as string) || '[]'),
+    category: (row.category as string) || '',
+    subcategory: (row.subcategory as string) || '',
+    description: (row.description as string) || '',
+    specs: JSON.parse((row.specs as string) || '{}'),
+    tags: JSON.parse((row.tags as string) || '[]'),
+    rating: (row.rating as number) || undefined,
+    reviewCount: (row.reviewCount as number) || undefined,
+    review: (row.review as string) || '',
+    pros: JSON.parse((row.pros as string) || '[]'),
+    cons: JSON.parse((row.cons as string) || '[]'),
+    createdAt: (row.createdAt as string) || '',
+    updatedAt: (row.updatedAt as string) || '',
+  }
+}
+
+async function enrichWithProducts(deals: Deal[]): Promise<void> {
+  const db = getDb()
+  const productIds = [...new Set(deals.map(d => d.productId).filter(Boolean))]
+  if (productIds.length === 0) return
+
+  const placeholders = productIds.map(() => '?').join(',')
+  const result = await db.execute({
+    sql: `SELECT * FROM products WHERE id IN (${placeholders})`,
+    args: productIds,
+  })
+
+  const productMap = new Map<string, Product>()
+  for (const row of result.rows) {
+    const p = mapRowToProduct(row as Record<string, unknown>)
+    productMap.set(p.id, p)
+  }
+
+  for (const deal of deals) {
+    const product = productMap.get(deal.productId)
+    if (!product) continue
+    deal.title = product.name
+    deal.slug = product.slug
+    deal.description = product.description
+    deal.imageUrl = product.imageUrl
+    deal.images = product.images
+    deal.category = product.category
+    deal.subcategory = product.subcategory
+    deal.tags = product.tags
+    deal.rating = product.rating
+    deal.reviewCount = product.reviewCount
+    deal.technicalSpecs = product.specs
+    deal.review = product.review
+    deal.pros = product.pros
+    deal.cons = product.cons
+    deal.ean = product.ean
+    deal.asin = product.asin
+    deal.brand = product.brand
   }
 }
 
@@ -63,6 +132,8 @@ async function loadDeals(sql: string, params: InValue[] = []): Promise<Deal[]> {
   const result = await db.execute({ sql, args: params })
   const deals = result.rows.map(r => mapRowToDeal(r as Record<string, unknown>))
 
+  await enrichWithProducts(deals)
+
   for (const deal of deals) {
     deal.priceHistory = await loadPriceHistory(deal.id)
   }
@@ -78,6 +149,7 @@ async function loadDeal(sql: string, params: InValue[]): Promise<Deal | undefine
   if (result.rows.length === 0) return undefined
 
   const deal = mapRowToDeal(result.rows[0] as Record<string, unknown>)
+  await enrichWithProducts([deal])
   deal.priceHistory = await loadPriceHistory(deal.id)
   return deal
 }
@@ -169,6 +241,110 @@ export async function searchDeals(query: string): Promise<Deal[]> {
   return getDeals({ search: query })
 }
 
+export async function createProduct(data: Record<string, unknown>): Promise<Product> {
+  const db = getDb()
+  await seedDatabase()
+
+  const id = (data.id as string) || `product_${Date.now()}`
+  const now = new Date().toISOString()
+
+  const str = (v: unknown, fallback = ''): string => (v as string) || fallback
+  const num = (v: unknown, fallback = 0): number => Number(v) || fallback
+  const json = (v: unknown): string => JSON.stringify(v || [])
+
+  await db.execute({
+    sql: `INSERT OR IGNORE INTO products (
+      id, name, slug, ean, asin, brand, imageUrl, images,
+      category, subcategory, description, specs, tags,
+      rating, reviewCount, review, pros, cons,
+      createdAt, updatedAt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      id,
+      str(data.name), str(data.slug),
+      str(data.ean), str(data.asin), str(data.brand),
+      str(data.imageUrl), json(data.images),
+      str(data.category), str(data.subcategory),
+      str(data.description), JSON.stringify(data.specs || {}), json(data.tags),
+      num(data.rating), num(data.reviewCount),
+      str(data.review), json(data.pros), json(data.cons),
+      now, now,
+    ] as InValue[],
+  })
+
+  return (await getProductById(id))!
+}
+
+export async function getProductById(id: string): Promise<Product | undefined> {
+  const db = getDb()
+  await seedDatabase()
+  const result = await db.execute({ sql: 'SELECT * FROM products WHERE id = ?', args: [id] })
+  if (result.rows.length === 0) return undefined
+  return mapRowToProduct(result.rows[0] as Record<string, unknown>)
+}
+
+export async function getProductBySlug(slug: string): Promise<Product | undefined> {
+  const db = getDb()
+  await seedDatabase()
+  const result = await db.execute({ sql: 'SELECT * FROM products WHERE slug = ?', args: [slug] })
+  if (result.rows.length === 0) return undefined
+  return mapRowToProduct(result.rows[0] as Record<string, unknown>)
+}
+
+export async function getProductByEan(ean: string): Promise<Product | undefined> {
+  const db = getDb()
+  await seedDatabase()
+  const result = await db.execute({ sql: 'SELECT * FROM products WHERE ean = ?', args: [ean] })
+  if (result.rows.length === 0) return undefined
+  return mapRowToProduct(result.rows[0] as Record<string, unknown>)
+}
+
+export async function getDealsByProduct(productId: string): Promise<Deal[]> {
+  return loadDeals('SELECT * FROM deals WHERE productId = ? ORDER BY salePrice ASC', [productId])
+}
+
+export async function migrateExistingDealsToProducts() {
+  const db = getDb()
+  await seedDatabase()
+
+  const unmigrated = await db.execute("SELECT id FROM deals WHERE productId = ''")
+  if (unmigrated.rows.length === 0) return
+
+  for (const row of unmigrated.rows) {
+    const dealId = row.id as string
+    const deal = await loadDeal('SELECT * FROM deals WHERE id = ?', [dealId])
+    if (!deal) continue
+
+    const productId = `prod_${dealId}`
+    const now = new Date().toISOString()
+
+    await db.execute({
+      sql: `INSERT OR IGNORE INTO products (
+        id, name, slug, ean, asin, brand, imageUrl, images,
+        category, subcategory, description, specs, tags,
+        rating, reviewCount, review, pros, cons,
+        createdAt, updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        productId,
+        deal.title, deal.slug, '', '', '',
+        deal.imageUrl, JSON.stringify(deal.images),
+        deal.category, deal.subcategory,
+        deal.description, JSON.stringify(deal.technicalSpecs),
+        JSON.stringify(deal.tags),
+        deal.rating || 0, deal.reviewCount || 0,
+        deal.review, JSON.stringify(deal.pros),
+        JSON.stringify(deal.cons), now, now,
+      ] as InValue[],
+    })
+
+    await db.execute({
+      sql: 'UPDATE deals SET productId = ?, slug = ? WHERE id = ?',
+      args: [productId, deal.slug, dealId],
+    })
+  }
+}
+
 export async function createDeal(data: Record<string, unknown>): Promise<Deal> {
   const db = getDb()
   await seedDatabase()
@@ -186,6 +362,7 @@ export async function createDeal(data: Record<string, unknown>): Promise<Deal> {
 
   const insertArgs: InValue[] = [
     id,
+    str(data.productId),
     str(data.title), str(data.slug), str(data.description),
     originalPrice, salePrice, num(data.shippingCost),
     discountPercent, '€', str(data.imageUrl),
@@ -199,20 +376,22 @@ export async function createDeal(data: Record<string, unknown>): Promise<Deal> {
     JSON.stringify(data.technicalSpecs || {}), str(data.review),
     json(data.pros), json(data.cons),
     0, 0, data.featured ? 1 : 0, num(data.commission),
+    str(data.ean), str(data.asin),
     now, now, now,
   ]
 
   await db.execute({
     sql: `INSERT INTO deals (
-      id, title, slug, description, originalPrice, salePrice, shippingCost,
+      id, productId, title, slug, description, originalPrice, salePrice, shippingCost,
       discountPercent, currency, imageUrl, images,
       storeId, storeName, storeUrl, storeReputation, storeCommissionRate,
       affiliateUrl, category, subcategory, tags,
       stockStatus, stockCount, rating, reviewCount,
       technicalSpecs, review, pros, cons,
       votesUp, votesDown, featured, commission,
+      ean, asin,
       publishedAt, createdAt, updatedAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: insertArgs,
   })
 
@@ -239,7 +418,7 @@ export async function updateDeal(id: string, data: Record<string, unknown>): Pro
   const num = (v: unknown, fallback = 0): number => Number(v) || fallback
 
   const updateArgs: InValue[] = [
-    str(data.title), str(data.slug), str(data.description), originalPrice, salePrice,
+    str(data.productId), str(data.title), str(data.slug), str(data.description), originalPrice, salePrice,
     num(data.shippingCost), discountPercent, str(data.imageUrl),
     JSON.stringify(data.images || []),
     str(data.storeId), str(data.storeName), str(data.storeUrl), str(data.storeReputation, 'good'),
@@ -250,18 +429,20 @@ export async function updateDeal(id: string, data: Record<string, unknown>): Pro
     num(data.rating), num(data.reviewCount),
     JSON.stringify(data.technicalSpecs || {}), str(data.review),
     JSON.stringify(data.pros || []), JSON.stringify(data.cons || []),
+    str(data.ean), str(data.asin),
     data.featured ? 1 : 0, num(data.commission),
     now, id,
   ]
 
   await db.execute({
     sql: `UPDATE deals SET
-      title = ?, slug = ?, description = ?, originalPrice = ?, salePrice = ?,
+      productId = ?, title = ?, slug = ?, description = ?, originalPrice = ?, salePrice = ?,
       shippingCost = ?, discountPercent = ?, imageUrl = ?, images = ?,
       storeId = ?, storeName = ?, storeUrl = ?, storeReputation = ?, storeCommissionRate = ?,
       affiliateUrl = ?, category = ?, subcategory = ?, tags = ?,
       stockStatus = ?, stockCount = ?, rating = ?, reviewCount = ?,
       technicalSpecs = ?, review = ?, pros = ?, cons = ?,
+      ean = ?, asin = ?,
       featured = ?, commission = ?, updatedAt = ?
     WHERE id = ?`,
     args: updateArgs,
