@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { getDb, initSchema, migrateSchema } from '../src/lib/db'
 import { matchByEan, matchBySlug, insertProduct, updateProduct, upsertDeal, recordPricePoint } from '../src/lib/sync/matcher'
 import { readJsonFile } from '../src/lib/sync/reader-json'
@@ -40,18 +41,21 @@ async function processRow(
 ): Promise<void> {
   const db = getDb()
   const now = new Date().toISOString()
-  const ean = row.ean?.trim()
-  if (!ean) return
+  const ean = row.ean?.trim() || ''
 
   try {
     // 1. Match or create product
-    let matched = await matchByEan(ean)
+    let matched: { id: string; exists: boolean } | null = null
     let isNew = false
 
+    if (ean) {
+      matched = await matchByEan(ean)
+    }
+
     if (!matched) {
-      isNew = true
       const slug = await generateUniqueSlug(row.name)
-      const productId = `prod_${ean}`
+      const productId = ean ? `prod_${ean}` : `prod_${slug}`
+      isNew = true
       await insertProduct(
         productId,
         row.name, slug, ean, row.brand || '',
@@ -164,8 +168,8 @@ async function main() {
   // Read data from Google Sheets or local JSON file
   let rows: SyncRow[] = []
 
-  if (process.env.GOOGLE_SHEET_ID) {
-    console.log('Reading from Google Sheets...')
+  if (process.env.GOOGLE_SHEET_CSV_URL) {
+    console.log('Reading from Google Sheets CSV...')
     rows = await readGoogleSheets()
   }
 
