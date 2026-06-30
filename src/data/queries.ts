@@ -522,3 +522,23 @@ export async function addComment(dealId: string, author: string, content: string
   })
   return getComments(dealId)
 }
+
+export async function getAllComments() {
+  const db = getDb()
+  const result = await db.execute(`
+    SELECT c.*, d.title as dealTitle, d.slug as dealSlug
+    FROM comments c
+    LEFT JOIN deals d ON c.dealId = d.id
+    ORDER BY c.createdAt DESC
+  `)
+  return result.rows.map(r => r as Record<string, unknown>)
+}
+
+export async function deleteComment(id: number): Promise<boolean> {
+  const db = getDb()
+  const result = await db.execute({
+    sql: 'DELETE FROM comments WHERE id = ?',
+    args: [id],
+  })
+  return result.rowsAffected > 0
+}

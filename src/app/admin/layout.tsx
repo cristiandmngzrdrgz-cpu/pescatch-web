@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Fish, LayoutDashboard, PlusCircle, List, ArrowLeft } from 'lucide-react'
+import { Fish, LayoutDashboard, PlusCircle, List, ArrowLeft, Newspaper, MessageSquare, RefreshCw } from 'lucide-react'
 import { isAdminAuthenticated } from '@/lib/admin-auth'
 import { AdminLogin } from './admin-login'
 
@@ -41,6 +41,8 @@ export default async function AdminLayout({
             <LayoutDashboard className="h-4 w-4" />
             Dashboard
           </Link>
+
+          <div className="mt-2 mb-1 px-3 text-xs font-semibold uppercase tracking-wider" style={{ color: '#4A6080' }}>Chollos</div>
           <Link
             href="/admin/deals"
             className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium rounded-xl transition-colors"
@@ -51,11 +53,47 @@ export default async function AdminLayout({
           </Link>
           <Link
             href="/admin/deals/new"
-            className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium rounded-xl"
-            style={{ background: '#00D4FF', color: '#0B1120' }}
+            className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium rounded-xl transition-colors"
+            style={{ color: '#8BA3C7' }}
           >
             <PlusCircle className="h-4 w-4" />
             Nuevo chollo
+          </Link>
+
+          <div className="mt-3 mb-1 px-3 text-xs font-semibold uppercase tracking-wider" style={{ color: '#4A6080' }}>Blog</div>
+          <Link
+            href="/admin/blog"
+            className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium rounded-xl transition-colors"
+            style={{ color: '#8BA3C7' }}
+          >
+            <Newspaper className="h-4 w-4" />
+            Todos los posts
+          </Link>
+          <Link
+            href="/admin/blog/new"
+            className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium rounded-xl transition-colors"
+            style={{ color: '#8BA3C7' }}
+          >
+            <PlusCircle className="h-4 w-4" />
+            Nuevo post
+          </Link>
+
+          <div className="mt-3 mb-1 px-3 text-xs font-semibold uppercase tracking-wider" style={{ color: '#4A6080' }}>Gestión</div>
+          <Link
+            href="/admin/comments"
+            className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium rounded-xl transition-colors"
+            style={{ color: '#8BA3C7' }}
+          >
+            <MessageSquare className="h-4 w-4" />
+            Comentarios
+          </Link>
+          <Link
+            href="/admin/sync"
+            className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium rounded-xl transition-colors"
+            style={{ color: '#8BA3C7' }}
+          >
+            <RefreshCw className="h-4 w-4" />
+            Sync
           </Link>
         </nav>
 

@@ -37,9 +37,7 @@ yarn-error.log*
 .vercel
 
 # sqlite db (auto-generated)
-data/
-
-# possible stale db files from dev
+/data/
 pescatch.db
 pescatch.db-wal
 
