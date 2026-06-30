@@ -20,7 +20,13 @@ function createDbClient(): Client {
 
 let client: Client | null = null
 
+const globalForDb = globalThis as unknown as { _pescatchDb?: Client }
+
 export function getDb(): Client {
+  if (process.env.TURSO_DATABASE_URL) {
+    if (!globalForDb._pescatchDb) globalForDb._pescatchDb = createDbClient()
+    return globalForDb._pescatchDb
+  }
   if (!client) client = createDbClient()
   return client
 }
@@ -86,7 +92,8 @@ export async function initSchema() {
       commission REAL NOT NULL DEFAULT 0,
       publishedAt TEXT NOT NULL DEFAULT (datetime('now')),
       createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-      updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+      updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(productId, storeId)
     )`,
     `CREATE TABLE IF NOT EXISTS price_history (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -13,9 +13,10 @@ export const metadata: Metadata = {
 }
 
 export default async function CategoriesPage() {
+  const categoryResults = await Promise.all(CATEGORIES.map(cat => getDeals({ category: cat.slug }).then(d => [cat.slug, d] as const)))
   const categoryDeals = new Map<string, Awaited<ReturnType<typeof getDeals>>>()
-  for (const cat of CATEGORIES) {
-    categoryDeals.set(cat.slug, await getDeals({ category: cat.slug }))
+  for (const [slug, deals] of categoryResults) {
+    categoryDeals.set(slug, deals)
   }
 
   return (

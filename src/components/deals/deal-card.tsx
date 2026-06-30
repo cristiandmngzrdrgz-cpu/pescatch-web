@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { formatPrice } from '@/lib/utils'
 import { Clock, Store, Truck, ChevronUp, Fish } from 'lucide-react'
 import { CATEGORIES } from '@/types'
@@ -22,30 +23,22 @@ export function DealCard({ deal, bestPriceStore, storeCount }: DealCardProps) {
   return (
     <Link href={`/deals/${deal.slug}`}>
       <article
-        className="group rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
+        className="group rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-[rgba(0,212,255,0.5)] hover:shadow-[0_0_25px_rgba(0,212,255,0.2),0_8px_32px_rgba(0,0,0,0.4)]"
         style={{
           background: '#0B1120',
           border: '1px solid #1E3A5F',
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = 'rgba(0,212,255,0.5)'
-          e.currentTarget.style.boxShadow = '0 0 25px rgba(0,212,255,0.2), 0 8px 32px rgba(0,0,0,0.4)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = '#1E3A5F'
-          e.currentTarget.style.boxShadow = 'none'
         }}
       >
         <div className="relative h-48 flex items-center justify-center overflow-hidden"
           style={{ background: 'linear-gradient(135deg, #1A2535, rgba(0,212,255,0.05))' }}>
           {hasImage ? (
-            <img
+            <Image
               src={deal.imageUrl}
               alt={deal.title}
-              loading="lazy"
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               onError={() => setImgError(true)}
-              className="absolute inset-0 object-cover group-hover:scale-105 transition-transform duration-500 w-full h-full"
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
             <div className="flex flex-col items-center gap-2 opacity-40">

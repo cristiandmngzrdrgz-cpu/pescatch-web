@@ -2,10 +2,11 @@ import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(...inputs))
 }
 
 export function formatPrice(price: number, currency = '€'): string {
+  if (!Number.isFinite(price)) return `—${currency}`
   return `${price.toFixed(2).replace('.', ',')}${currency}`
 }
 
@@ -38,7 +39,7 @@ export function slugify(text: string): string {
 export function getStockLabel(status: string, count?: number): string {
   switch (status) {
     case 'in_stock': return 'En stock'
-    case 'limited': return `Últimas ${count} unidades`
+    case 'limited': return `Últimas ${count ?? 'pocas'} unidades`
     case 'out_of_stock': return 'Sin stock'
     default: return status
   }

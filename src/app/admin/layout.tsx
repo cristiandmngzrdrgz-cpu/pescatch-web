@@ -1,16 +1,24 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Fish, LayoutDashboard, PlusCircle, List, ArrowLeft } from 'lucide-react'
+import { isAdminAuthenticated } from '@/lib/admin-auth'
+import { AdminLogin } from './admin-login'
 
 export const metadata: Metadata = {
   title: 'Panel Admin - PesCatch',
 }
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const authed = await isAdminAuthenticated()
+
+  if (!authed) {
+    return <AdminLogin />
+  }
+
   return (
     <div className="flex min-h-[calc(100vh-68px)]" style={{ background: '#0B1120' }}>
       <aside className="hidden md:flex w-60 flex-col p-5" style={{ background: '#111827', borderRight: '1px solid #1E3A5F' }}>

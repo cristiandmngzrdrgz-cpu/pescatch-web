@@ -101,7 +101,10 @@ export async function upsertDeal(
 ): Promise<string> {
   const db = getDb()
 
-  // Check if a deal for this product+store already exists
+  const discountPercent = Math.round(((originalPrice - salePrice) / (originalPrice || 1)) * 100)
+  const store = getStoreInfo(storeId)
+
+  // Check if a deal for this product+store already exists (for returning the id)
   const existing = await db.execute({
     sql: 'SELECT id FROM deals WHERE productId = ? AND storeId = ?',
     args: [productId, storeId],
@@ -109,14 +112,14 @@ export async function upsertDeal(
 
   if (existing.rows.length > 0) {
     const dealId = existing.rows[0].id as string
-    const discountPercent = Math.round(((originalPrice - salePrice) / (originalPrice || 1)) * 100)
 
     await db.execute({
       sql: `UPDATE deals SET
         title = ?, slug = ?, originalPrice = ?, salePrice = ?, shippingCost = ?, discountPercent = ?,
-        stockStatus = ?, affiliateUrl = ?, updatedAt = ?
+        stockStatus = ?, affiliateUrl = ?, storeName = ?, storeUrl = ?,
+        storeReputation = ?, storeCommissionRate = ?, updatedAt = ?
       WHERE id = ?`,
-      args: [title, slug, originalPrice, salePrice, shippingCost, discountPercent, stockStatus, affiliateUrl, now, dealId],
+      args: [title, slug, originalPrice, salePrice, shippingCost, discountPercent, stockStatus, affiliateUrl, storeName, store.url || '', store.reputation, store.commissionRate || 0, now, dealId],
     })
 
     return dealId
@@ -124,9 +127,6 @@ export async function upsertDeal(
 
   // Create new deal
   const dealId = `deal_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
-  const discountPercent = Math.round(((originalPrice - salePrice) / (originalPrice || 1)) * 100)
-
-  const store = getStoreInfo(storeId)
 
   await db.execute({
     sql: `INSERT INTO deals (

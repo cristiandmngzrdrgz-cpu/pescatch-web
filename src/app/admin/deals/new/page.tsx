@@ -13,6 +13,7 @@ import Link from 'next/link'
 export default function NewDealPage() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
   const [form, setForm] = useState({
     title: '',
@@ -44,6 +45,7 @@ export default function NewDealPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
+    setError('')
 
     const store = STORES.find(s => s.id === form.store)
 
@@ -85,7 +87,7 @@ export default function NewDealPage() {
       if (!res.ok) throw new Error('Error al crear el chollo')
       router.push('/admin/deals')
     } catch (err) {
-      alert('Error al guardar: ' + (err as Error).message)
+      setError((err as Error).message || 'Error al crear el chollo')
     } finally {
       setSaving(false)
     }
@@ -222,6 +224,11 @@ export default function NewDealPage() {
           </div>
         </div>
 
+        {error && (
+          <div className="rounded-xl p-3 text-sm font-medium mb-4" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#EF4444' }}>
+            {error}
+          </div>
+        )}
         <div className="flex gap-3 pt-4">
           <Button type="submit" disabled={saving} className="h-11 px-6 font-semibold rounded-xl" style={{ background: '#00D4FF', color: '#0B1120' }}>
             <Save className="h-4 w-4 mr-1.5" />

@@ -53,12 +53,7 @@ function parseCsv(text: string): string[][] {
   const rawRowStrings = text.split(/\r?\n/).filter(line => line.trim() !== '')
 
   for (const rawRow of rawRowStrings) {
-    let rowStr = rawRow
-    if (rowStr.startsWith('"') && rowStr.endsWith('"')) {
-      rowStr = rowStr.slice(1, -1)
-    }
-
-    const fields = parseCsvRow(rowStr)
+    const fields = parseCsvRow(rawRow)
     if (fields.length > 0 && fields.some(f => f.trim() !== '')) {
       rows.push(fields)
     }

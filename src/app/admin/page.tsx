@@ -6,7 +6,7 @@ import { CATEGORIES } from '@/types'
 export default async function AdminDashboard() {
   const deals = await getDeals()
   const featured = deals.filter(d => d.featured)
-  const avgDiscount = Math.round(deals.reduce((sum, d) => sum + d.discountPercent, 0) / deals.length)
+  const avgDiscount = deals.length > 0 ? Math.round(deals.reduce((sum, d) => sum + d.discountPercent, 0) / deals.length) : 0
   const totalVotes = deals.reduce((sum, d) => sum + d.votesUp + d.votesDown, 0)
 
   const stats = [

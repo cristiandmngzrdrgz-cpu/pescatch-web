@@ -1,9 +1,12 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { getDeals } from '@/data/queries'
 import { formatPrice, formatDate } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Plus, Pencil } from 'lucide-react'
 import { CATEGORIES } from '@/types'
+
+export const dynamic = 'force-dynamic'
 
 export default async function AdminDealsPage() {
   const deals = await getDeals({ sortBy: 'newest' })
@@ -43,9 +46,9 @@ export default async function AdminDealsPage() {
                 <tr key={deal.id} style={{ borderBottom: '1px solid #1E3A5F' }}>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1A2535, rgba(0,212,255,0.05))' }}>
+                      <div className="h-10 w-10 rounded-lg overflow-hidden flex-shrink-0 relative flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1A2535, rgba(0,212,255,0.05))' }}>
                         {deal.imageUrl ? (
-                          <img src={deal.imageUrl} alt="" className="h-full w-full object-cover" />
+                          <Image src={deal.imageUrl} alt="" fill sizes="40px" className="object-cover" />
                         ) : (
                           <span className="text-sm font-bold" style={{ color: '#00D4FF' }}>{deal.title[0]}</span>
                         )}

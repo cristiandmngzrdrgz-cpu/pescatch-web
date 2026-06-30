@@ -1,14 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { formatDate } from '@/lib/utils'
-import { MessageCircle, Send } from 'lucide-react'
+import { MessageCircle, Send, Loader2 } from 'lucide-react'
 
 interface Comment {
-  id: string
+  id: number | string
   author: string
   content: string
   createdAt: string
@@ -19,24 +19,45 @@ interface CommentsSectionProps {
   initialComments?: Comment[]
 }
 
-export function CommentsSection({ dealId: _dealId, initialComments = [] }: CommentsSectionProps) {
+export function CommentsSection({ dealId, initialComments = [] }: CommentsSectionProps) {
   const [comments, setComments] = useState<Comment[]>(initialComments)
   const [author, setAuthor] = useState('')
   const [content, setContent] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    fetch(`/api/deals/${dealId}/comments`)
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) setComments(data)
+      })
+      .catch(() => {})
+  }, [dealId])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!content.trim()) return
+    const trimmed = content.trim()
+    if (!trimmed || trimmed.length > 2000) return
 
-    const newComment: Comment = {
-      id: Date.now().toString(),
-      author: author.trim() || 'Anónimo',
-      content: content.trim(),
-      createdAt: new Date().toISOString(),
+    setLoading(true)
+    setError('')
+
+    try {
+      const res = await fetch(`/api/deals/${dealId}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ author: author.trim() || 'Anónimo', content: trimmed }),
+      })
+      if (!res.ok) throw new Error('Error al publicar')
+      const updated = await res.json()
+      if (Array.isArray(updated)) setComments(updated)
+      setContent('')
+    } catch {
+      setError('No se pudo publicar el comentario. Inténtalo de nuevo.')
+    } finally {
+      setLoading(false)
     }
-
-    setComments(prev => [newComment, ...prev])
-    setContent('')
   }
 
   return (
@@ -54,10 +75,12 @@ export function CommentsSection({ dealId: _dealId, initialComments = [] }: Comme
           value={content}
           onChange={e => setContent(e.target.value)}
           rows={3}
+          maxLength={2000}
           className="resize-none rounded-xl"
           style={{ background: '#111827', borderColor: '#1E3A5F', color: '#E8F0FE' }}
         />
-        <div className="flex items-center gap-3">
+          {error && <p className="text-xs mb-3" style={{ color: '#EF4444' }}>{error}</p>}
+          <div className="flex items-center gap-3">
           <input
             type="text"
             placeholder="Tu nombre (opcional)"
@@ -69,11 +92,11 @@ export function CommentsSection({ dealId: _dealId, initialComments = [] }: Comme
           <Button
             type="submit"
             size="sm"
-            disabled={!content.trim()}
+            disabled={!content.trim() || loading}
             className="h-10 px-5 font-semibold rounded-xl"
             style={{ background: '#00D4FF', color: '#0B1120' }}
           >
-            <Send className="h-4 w-4 mr-1.5" />
+            {loading ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Send className="h-4 w-4 mr-1.5" />}
             Comentar
           </Button>
         </div>

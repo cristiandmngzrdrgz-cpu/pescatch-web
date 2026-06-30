@@ -10,7 +10,7 @@ async function seedBlogPost() {
   const content = [
     'Elegir la caña de spinning adecuada puede marcar la diferencia entre una jornada de pesca memorable y una frustrante. Hemos probado y comparado los modelos más destacados del mercado para ayudarte a encontrar la caña perfecta según tu presupuesto y estilo de pesca.',
     '',
-    '## TL;DR — Para los que tienen prisa',
+    '## Para los que tienen prisa',
     '',
     '**Daiwa Morethan Branzino AGS** es la mejor caña de spinning del mercado sin discusión. Si buscas calidad-precio, el **Hart Bloody Marine UL** te sorprenderá. Para empezar con garantías, el **Daiwa Legalis Seabass** es imbatible en su rango. Y si tu presupuesto es ajustado, el **Daiwa Ninja Spinning** cumple sobradamente.',
     '',

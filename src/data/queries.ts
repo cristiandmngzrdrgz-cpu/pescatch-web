@@ -3,6 +3,10 @@ import { getDb } from '@/lib/db'
 import { seedDatabase } from '@/lib/seed'
 import type { InValue } from '@libsql/client'
 
+function safeJsonParse<T>(raw: string, fallback: T): T {
+  try { return JSON.parse(raw) as T } catch { return fallback }
+}
+
 function mapRowToDeal(row: Record<string, unknown>): Deal {
   const store: Store = {
     id: row.storeId as string,
@@ -23,20 +27,20 @@ function mapRowToDeal(row: Record<string, unknown>): Deal {
     discountPercent: row.discountPercent as number,
     currency: row.currency as string,
     imageUrl: row.imageUrl as string,
-    images: JSON.parse((row.images as string) || '[]'),
+    images: safeJsonParse((row.images as string) || '[]', [] as string[]),
     store,
     affiliateUrl: row.affiliateUrl as string,
     category: row.category as string,
     subcategory: row.subcategory as string,
-    tags: JSON.parse((row.tags as string) || '[]'),
+    tags: safeJsonParse((row.tags as string) || '[]', [] as string[]),
     stockStatus: row.stockStatus as Deal['stockStatus'],
     stockCount: row.stockCount as number,
     rating: row.rating as number,
     reviewCount: row.reviewCount as number,
-    technicalSpecs: JSON.parse((row.technicalSpecs as string) || '{}'),
+    technicalSpecs: safeJsonParse((row.technicalSpecs as string) || '{}', {} as Record<string, string>),
     review: row.review as string,
-    pros: JSON.parse((row.pros as string) || '[]'),
-    cons: JSON.parse((row.cons as string) || '[]'),
+    pros: safeJsonParse((row.pros as string) || '[]', [] as string[]),
+    cons: safeJsonParse((row.cons as string) || '[]', [] as string[]),
     votesUp: row.votesUp as number,
     votesDown: row.votesDown as number,
     priceHistory: [],
@@ -60,17 +64,17 @@ function mapRowToProduct(row: Record<string, unknown>): Product {
     asin: (row.asin as string) || undefined,
     brand: (row.brand as string) || '',
     imageUrl: (row.imageUrl as string) || '',
-    images: JSON.parse((row.images as string) || '[]'),
+    images: safeJsonParse((row.images as string) || '[]', [] as string[]),
     category: (row.category as string) || '',
     subcategory: (row.subcategory as string) || '',
     description: (row.description as string) || '',
-    specs: JSON.parse((row.specs as string) || '{}'),
-    tags: JSON.parse((row.tags as string) || '[]'),
+    specs: safeJsonParse((row.specs as string) || '{}', {} as Record<string, string>),
+    tags: safeJsonParse((row.tags as string) || '[]', [] as string[]),
     rating: (row.rating as number) || undefined,
     reviewCount: (row.reviewCount as number) || undefined,
     review: (row.review as string) || '',
-    pros: JSON.parse((row.pros as string) || '[]'),
-    cons: JSON.parse((row.cons as string) || '[]'),
+    pros: safeJsonParse((row.pros as string) || '[]', [] as string[]),
+    cons: safeJsonParse((row.cons as string) || '[]', [] as string[]),
     createdAt: (row.createdAt as string) || '',
     updatedAt: (row.updatedAt as string) || '',
   }
@@ -96,23 +100,20 @@ async function enrichWithProducts(deals: Deal[]): Promise<void> {
   for (const deal of deals) {
     const product = productMap.get(deal.productId)
     if (!product) continue
-    deal.title = product.name
-    deal.slug = product.slug
-    deal.description = product.description
-    deal.imageUrl = product.imageUrl
-    deal.images = product.images
-    deal.category = product.category
-    deal.subcategory = product.subcategory
-    deal.tags = product.tags
-    deal.rating = product.rating
-    deal.reviewCount = product.reviewCount
-    deal.technicalSpecs = product.specs
-    deal.review = product.review
-    deal.pros = product.pros
-    deal.cons = product.cons
-    deal.ean = product.ean
-    deal.asin = product.asin
-    deal.brand = product.brand
+    if (!deal.imageUrl && product.imageUrl) deal.imageUrl = product.imageUrl
+    if (!deal.images.length && product.images.length) deal.images = product.images
+    if (!deal.category && product.category) deal.category = product.category
+    if (!deal.subcategory && product.subcategory) deal.subcategory = product.subcategory
+    if (!deal.tags.length && product.tags.length) deal.tags = product.tags
+    if (!deal.rating && product.rating) deal.rating = product.rating
+    if (!deal.reviewCount && product.reviewCount) deal.reviewCount = product.reviewCount
+    if (!Object.keys(deal.technicalSpecs).length && Object.keys(product.specs).length) deal.technicalSpecs = product.specs
+    if (!deal.review && product.review) deal.review = product.review
+    if (!deal.pros.length && product.pros.length) deal.pros = product.pros
+    if (!deal.cons.length && product.cons.length) deal.cons = product.cons
+    if (!deal.ean && product.ean) deal.ean = product.ean
+    if (!deal.asin && product.asin) deal.asin = product.asin
+    if (!deal.brand && product.brand) deal.brand = product.brand
   }
 }
 
@@ -128,6 +129,29 @@ async function loadPriceHistory(dealId: string): Promise<{ date: string; price: 
   }))
 }
 
+async function loadPriceHistories(dealIds: string[]): Promise<Map<string, { date: string; price: number }[]>> {
+  const map = new Map<string, { date: string; price: number }[]>()
+  if (dealIds.length === 0) return map
+  for (const id of dealIds) map.set(id, [])
+
+  const db = getDb()
+  const placeholders = dealIds.map(() => '?').join(',')
+  const result = await db.execute({
+    sql: `SELECT dealId, date, price FROM price_history WHERE dealId IN (${placeholders}) ORDER BY dealId, date ASC`,
+    args: dealIds,
+  })
+
+  for (const row of result.rows) {
+    const r = row as Record<string, unknown>
+    const id = r.dealId as string
+    const entry = { date: String(r.date ?? ''), price: Number(r.price) || 0 }
+    const list = map.get(id)
+    if (list) list.push(entry)
+  }
+
+  return map
+}
+
 async function loadDeals(sql: string, params: InValue[] = []): Promise<Deal[]> {
   const db = getDb()
   await seedDatabase()
@@ -137,8 +161,9 @@ async function loadDeals(sql: string, params: InValue[] = []): Promise<Deal[]> {
 
   await enrichWithProducts(deals)
 
+  const historyMap = await loadPriceHistories(deals.map(d => d.id))
   for (const deal of deals) {
-    deal.priceHistory = await loadPriceHistory(deal.id)
+    deal.priceHistory = historyMap.get(deal.id) ?? []
   }
 
   return deals
@@ -466,6 +491,18 @@ export async function deleteDeal(id: string): Promise<boolean> {
   const db = getDb()
   const result = await db.execute({ sql: 'DELETE FROM deals WHERE id = ?', args: [id] })
   return result.rowsAffected > 0
+}
+
+export async function voteDeal(id: string, vote: 'up' | 'down'): Promise<{ votesUp: number; votesDown: number } | null> {
+  const db = getDb()
+  const column = vote === 'up' ? 'votesUp' : 'votesDown'
+  await db.execute({ sql: `UPDATE deals SET ${column} = ${column} + 1 WHERE id = ?`, args: [id] })
+  const result = await db.execute({ sql: 'SELECT votesUp, votesDown FROM deals WHERE id = ?', args: [id] })
+  if (result.rows.length === 0) return null
+  return {
+    votesUp: result.rows[0].votesUp as number,
+    votesDown: result.rows[0].votesDown as number,
+  }
 }
 
 export async function getComments(dealId: string) {

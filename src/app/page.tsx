@@ -1,6 +1,7 @@
 import { getDeals, getFeaturedDeals } from '@/data/queries'
 import { getPosts } from '@/data/blog-queries'
 import { DealCard } from '@/components/deals/deal-card'
+import Image from 'next/image'
 import { Fish, ArrowRight, Clock, Zap, Star, Shield, BadgeCheck, Users, BookOpen, ChevronRight, Anchor, Wind, Target, Backpack, Shirt, Ship } from 'lucide-react'
 import Link from 'next/link'
 import { CATEGORIES } from '@/types'
@@ -22,13 +23,14 @@ export default async function HomePage() {
     getFeaturedDeals(),
     getDeals({ sortBy: 'newest' }),
     getDeals({ sortBy: 'discount' }).then(d => d.slice(0, 5)),
-    getPosts(3),
+    getPosts(4),
   ])
 
   const totalDeals = latest.length
   const categoryDealCounts = new Map<string, number>()
-  for (const cat of CATEGORIES) {
-    categoryDealCounts.set(cat.slug, (await getDeals({ category: cat.slug })).length)
+  const categoryResults = await Promise.all(CATEGORIES.map(cat => getDeals({ category: cat.slug }).then(d => [cat.slug, d.length] as const)))
+  for (const [slug, count] of categoryResults) {
+    categoryDealCounts.set(slug, count)
   }
 
   const totalSavings = latest.reduce((sum, d) => sum + Math.max(0, d.originalPrice - d.salePrice), 0)
@@ -48,13 +50,16 @@ export default async function HomePage() {
     <div>
       {/* HERO */}
       <section className="relative overflow-hidden min-h-[85vh] lg:min-h-[90vh] flex items-center">
-        <div className="absolute inset-0" style={{ background: '#0B1A30' }}>
-          <img
-            src="/images/hero-bg.jpg"
-            alt="Pesca deportiva"
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ objectPosition: 'center 45%' }}
-          />
+          <div className="absolute inset-0" style={{ background: '#0B1A30' }}>
+            <Image
+              src="/images/hero-bg.jpg"
+              alt="Pesca deportiva"
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover"
+              style={{ objectPosition: 'center 45%' }}
+            />
           <div className="absolute inset-0" style={{
             background: 'linear-gradient(90deg, rgba(11,26,48,0.92) 0%, rgba(11,26,48,0.7) 40%, rgba(11,26,48,0.3) 70%, transparent 100%)',
           }} />
@@ -142,10 +147,12 @@ export default async function HomePage() {
             {/* Right: Image */}
             <div className="hidden lg:block relative h-full min-h-[500px] rounded-2xl overflow-hidden"
               style={{ boxShadow: '0 0 40px rgba(0,212,255,0.1), 0 20px 60px rgba(0,0,0,0.4)' }}>
-              <img
+              <Image
                 src="/images/hero-bg.jpg"
                 alt="Pesca deportiva"
-                className="absolute inset-0 w-full h-full object-cover"
+                fill
+                sizes="50vw"
+                className="object-cover"
                 style={{ objectPosition: 'center 30%' }}
               />
               <div className="absolute inset-0" style={{
@@ -160,13 +167,21 @@ export default async function HomePage() {
       {posts.length > 0 && (
         <section className="py-20 md:py-24 relative overflow-hidden"
           style={{ background: 'linear-gradient(180deg, #0B1A30 0%, #111827 100%)' }}>
+          <div className="absolute inset-0 opacity-[0.04] pointer-events-none">
+            <Image src="/images/cat-senuelos.jpg" alt="" fill sizes="100vw" className="object-cover" style={{ objectPosition: 'center 30%' }} />
+          </div>
           <div className="mx-auto max-w-7xl px-4">
             <div className="flex items-end justify-between mb-12">
               <div>
-                <div className="inline-flex items-center gap-2 mb-3 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider"
-                  style={{ background: 'rgba(0,212,255,0.12)', border: '1px solid rgba(0,212,255,0.25)', color: '#00D4FF' }}>
-                  <BookOpen className="h-3 w-3" />
-                  Blog
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-1 h-8 rounded-full" style={{ background: 'linear-gradient(180deg, #00D4FF, #FFB800)' }} />
+                  <div>
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider"
+                      style={{ background: 'rgba(0,212,255,0.12)', border: '1px solid rgba(0,212,255,0.25)', color: '#00D4FF' }}>
+                      <BookOpen className="h-3 w-3" />
+                      Blog
+                    </div>
+                  </div>
                 </div>
                 <h2 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: '#E8F0FE' }}>Guías y comparativas</h2>
                 <p className="mt-1.5 text-base" style={{ color: '#8BA3C7' }}>
@@ -180,28 +195,38 @@ export default async function HomePage() {
               </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {posts.map((post: BlogPost, i) => {
-                const gradients = [
-                  'linear-gradient(135deg, #0F1F38, #1B2A4A)',
-                  'linear-gradient(135deg, #0B1120, #1E3A5F)',
-                  'linear-gradient(135deg, #0F1F38, #1E3A5F)',
-                ]
+              {posts.map((post: BlogPost) => {
                 return (
                   <Link key={post.id} href={`/blog/${post.slug}`}
-                    className="group relative rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl"
+                    className="group relative rounded-2xl overflow-hidden transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_0_30px_rgba(0,212,255,0.15)]"
                     style={{
-                      background: gradients[i % gradients.length],
                       border: '1px solid #1E3A5F',
+                      height: '420px',
                     }}>
-                    <div className="p-7">
-                      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: '#00D4FF' }}>
-                        {post.category || 'Artículo'}
+                    {post.featuredImage ? (
+                      <>
+                        <Image src={post.featuredImage} alt="" fill sizes="33vw" className="object-cover group-hover:scale-105 transition-transform duration-700" />
+                        <div className="absolute inset-0" style={{
+                          background: 'linear-gradient(180deg, rgba(11,18,32,0.1) 0%, rgba(11,18,32,0.3) 30%, rgba(11,18,32,0.85) 65%, #0B1120 100%)',
+                        }} />
+                      </>
+                    ) : (
+                      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0F1F38, #1B2A4A)' }}>
+                        <Fish className="absolute -bottom-6 -right-6 h-48 w-48 opacity-[0.04]" style={{ color: '#00D4FF' }} />
                       </div>
-                      <h3 className="font-bold text-lg leading-snug mb-3 line-clamp-2 transition-colors duration-300 group-hover:text-[#00D4FF]"
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 p-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="px-2.5 py-0.5 rounded-full text-[0.6rem] font-bold uppercase tracking-wider"
+                          style={{ background: 'rgba(0,212,255,0.15)', backdropFilter: 'blur(8px)', color: '#00D4FF', border: '1px solid rgba(0,212,255,0.25)' }}>
+                          {post.category || 'Artículo'}
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-base leading-snug mb-1.5 line-clamp-2 transition-colors duration-300 group-hover:text-[#00D4FF]"
                         style={{ color: '#E8F0FE' }}>
                         {post.title}
                       </h3>
-                      <p className="text-sm leading-relaxed line-clamp-3 mb-5" style={{ color: '#8BA3C7' }}>
+                      <p className="text-sm leading-relaxed line-clamp-2 mb-3" style={{ color: '#A0B8D8' }}>
                         {post.excerpt}
                       </p>
                       <div className="flex items-center justify-between">
@@ -209,9 +234,9 @@ export default async function HomePage() {
                           <Clock className="h-3 w-3" />
                           {new Date(post.publishedAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
                         </div>
-                        <span className="text-xs font-semibold flex items-center gap-1 transition-all duration-300 group-hover:gap-2"
+                        <span className="text-xs font-semibold flex items-center gap-1.5 transition-all duration-300 group-hover:gap-2.5"
                           style={{ color: '#00D4FF' }}>
-                          Leer <ArrowRight className="h-3 w-3" />
+                          Leer <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" />
                         </span>
                       </div>
                     </div>
@@ -258,8 +283,11 @@ export default async function HomePage() {
       )}
 
       {/* Categories */}
-      <section className="py-16 md:py-20" style={{ background: '#0B1120' }}>
-        <div className="mx-auto max-w-7xl px-4">
+      <section className="py-16 md:py-20 relative overflow-hidden" style={{ background: '#0B1120' }}>
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
+          <Image src="/images/cat-canas.jpg" alt="" fill sizes="100vw" className="object-cover" />
+        </div>
+        <div className="mx-auto max-w-7xl px-4 relative z-10">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider"
               style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', color: '#00D4FF' }}>
@@ -270,30 +298,40 @@ export default async function HomePage() {
             <p className="mt-2 text-lg" style={{ color: '#8BA3C7' }}>Explora los chollos por tipo de material de pesca</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {CATEGORIES.map((cat, i) => {
+            {CATEGORIES.map((cat) => {
               const dealCount = categoryDealCounts.get(cat.slug) || 0
               const Icon = categoryIcons[cat.slug] || Fish
-              const gradients = [
-                'linear-gradient(135deg, #0F1F38, #1B2A4A)',
-                'linear-gradient(135deg, #0B1120, #1E3A5F)',
-                'linear-gradient(135deg, #0F1F38, #1E3A5F)',
-                'linear-gradient(135deg, #0B1120, #1B2A4A)',
-                'linear-gradient(135deg, #0F1F38, #1B2A4A)',
-                'linear-gradient(135deg, #0B1120, #1E3A5F)',
-              ]
+              const bgImages: Record<string, string> = {
+                carretes: '/images/cat-carretes.jpg',
+                canas: '/images/cat-canas.jpg',
+                senuelos: '/images/cat-senuelos.jpg',
+                accesorios: '/images/cat-accesorios.jpg',
+                ropa: '/images/cat-ropa.jpg',
+                nautica: '/images/cat-nautica.jpg',
+              }
+              const bg = bgImages[cat.slug]
               return (
                 <Link key={cat.id} href={`/categories/${cat.slug}`}
                   className="group relative overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                  style={{ background: gradients[i % gradients.length], border: '1px solid #1E3A5F', minHeight: '220px' }}>
-                  <div className="relative z-10 p-6 flex flex-col justify-between h-full min-h-[220px]">
+                  style={{ border: '1px solid #1E3A5F', minHeight: '240px' }}>
+                  {bg && (
+                    <>
+                      <Image src={bg} alt="" fill sizes="25vw" className="object-cover group-hover:scale-105 transition-transform duration-700" />
+                      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(11,26,48,0.85) 0%, rgba(11,26,48,0.7) 50%, rgba(11,26,48,0.9) 100%)' }} />
+                    </>
+                  )}
+                  {!bg && (
+                    <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0F1F38, #1B2A4A)' }} />
+                  )}
+                  <div className="relative z-10 p-6 flex flex-col justify-between h-full min-h-[240px]">
                     <div className="w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg"
-                      style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', color: '#00D4FF' }}>
+                      style={{ background: 'rgba(0,212,255,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(0,212,255,0.2)', color: '#00D4FF' }}>
                       <Icon className="h-6 w-6" />
                     </div>
                     <div>
                       {dealCount > 0 && (
                         <span className="inline-block w-fit text-xs font-bold px-3 py-1 rounded-full mb-2"
-                          style={{ background: 'rgba(0,212,255,0.15)', border: '1px solid rgba(0,212,255,0.25)', color: '#00D4FF' }}>
+                          style={{ background: 'rgba(0,212,255,0.2)', backdropFilter: 'blur(8px)', border: '1px solid rgba(0,212,255,0.25)', color: '#00D4FF' }}>
                           {dealCount} {dealCount === 1 ? 'chollo' : 'chollos'}
                         </span>
                       )}

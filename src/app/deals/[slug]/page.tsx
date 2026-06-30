@@ -3,6 +3,7 @@ import { getDealBySlug, getRelatedDeals, getDealsByProduct } from '@/data/querie
 import { formatPrice, formatDate } from '@/lib/utils'
 import type { Metadata } from 'next'
 import { buildAmazonUrl } from '@/lib/amazon-affiliate'
+import Image from 'next/image'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,7 +16,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title,
     description,
-    openGraph: { title, description, type: 'website' },
+    openGraph: { title, description, type: 'website', images: deal.imageUrl ? [{ url: deal.imageUrl }] : [] },
   }
 }
 import { Badge } from '@/components/ui/badge'
@@ -56,11 +57,11 @@ export default async function DealDetailPage({
       priceCurrency: 'EUR',
       availability: deal.stockStatus === 'in_stock' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
       url: buildAmazonUrl(deal.affiliateUrl),
-      priceValidUntil: new Date(new Date(deal.publishedAt).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // eslint-disable-line react-hooks/purity
     },
     brand: { '@type': 'Brand', name: deal.store.name },
     sku: deal.id,
-    aggregateRating: deal.rating ? {
+    aggregateRating: deal.rating != null ? {
       '@type': 'AggregateRating',
       ratingValue: deal.rating,
       reviewCount: deal.reviewCount,
@@ -95,11 +96,12 @@ export default async function DealDetailPage({
         <div className="lg:col-span-3">
           <div className="relative aspect-[4/3] rounded-2xl overflow-hidden group"
             style={{ background: 'linear-gradient(135deg, #1A2535, rgba(0,212,255,0.05))' }}>
-            <img
+            <Image
               src={deal.imageUrl}
               alt={deal.title}
-              loading="lazy"
-              className="absolute inset-0 object-cover group-hover:scale-105 transition-transform duration-700 w-full h-full"
+              fill
+              sizes="(max-width: 1024px) 100vw, 60vw"
+              className="object-cover group-hover:scale-105 transition-transform duration-700"
             />
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
               style={{ boxShadow: 'inset 0 0 60px rgba(0,212,255,0.1)' }} />
@@ -136,7 +138,7 @@ export default async function DealDetailPage({
                     border: '2px solid transparent',
                     background: 'linear-gradient(135deg, #1A2535, rgba(0,212,255,0.05))',
                   }}>
-                  <img src={img} alt={`${deal.title} ${i + 1}`} loading="lazy" className="object-cover w-full h-full" />
+                  <Image src={img} alt={`${deal.title} ${i + 1}`} fill sizes="80px" className="object-cover" />
                 </div>
               ))}
             </div>
@@ -374,11 +376,11 @@ export default async function DealDetailPage({
               </div>
               <div className="rounded-xl p-3 transition-all duration-200 hover:scale-105" style={{ background: 'rgba(38,222,129,0.05)' }}>
                 <div className="text-xs mb-0.5" style={{ color: '#4A6080' }}>Mínimo</div>
-                <div className="font-extrabold" style={{ color: '#26DE81' }}>{formatPrice(Math.min(...deal.priceHistory.map(p => p.price)))}</div>
+                <div className="font-extrabold" style={{ color: '#26DE81' }}>{formatPrice(deal.priceHistory.length > 0 ? Math.min(...deal.priceHistory.map(p => p.price)) : deal.salePrice)}</div>
               </div>
               <div className="rounded-xl p-3 transition-all duration-200 hover:scale-105" style={{ background: 'rgba(255,71,87,0.05)' }}>
                 <div className="text-xs mb-0.5" style={{ color: '#4A6080' }}>Máximo</div>
-                <div className="font-extrabold" style={{ color: '#FF4757' }}>{formatPrice(Math.max(...deal.priceHistory.map(p => p.price)))}</div>
+                <div className="font-extrabold" style={{ color: '#FF4757' }}>{formatPrice(deal.priceHistory.length > 0 ? Math.max(...deal.priceHistory.map(p => p.price)) : deal.salePrice)}</div>
               </div>
             </div>
           </section>

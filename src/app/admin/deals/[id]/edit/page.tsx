@@ -7,16 +7,9 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { CATEGORIES, STORES } from '@/types'
+import type { Deal } from '@/types'
 import { ChevronLeft, Save, Pencil, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-
-interface DealData {
-  id: string; title: string; slug: string; description: string;
-  originalPrice: number; salePrice: number; shippingCost: number;
-  imageUrl: string; category: string; subcategory: string;
-  store: { id: string; name?: string; url?: string; reputation?: string; commissionRate?: number };
-  affiliateUrl: string; stockStatus: string; review: string;
-}
 
 export default function EditDealPage() {
   const router = useRouter()
@@ -34,13 +27,13 @@ export default function EditDealPage() {
     store: '', affiliateUrl: '', stockStatus: 'in_stock', review: '',
   })
 
-  const [originalDeal, setOriginalDeal] = useState<DealData | null>(null)
+  const [originalDeal, setOriginalDeal] = useState<Deal | null>(null)
 
   useEffect(() => {
     fetch(`/api/deals/${id}`)
       .then(async r => {
         if (!r.ok) { setNotFound(true); setLoading(false); return }
-        const data: DealData = await r.json()
+        const data: Deal = await r.json()
         setOriginalDeal(data)
         setForm({
           title: data.title, slug: data.slug, description: data.description,
@@ -76,8 +69,14 @@ export default function EditDealPage() {
       storeCommissionRate: store?.commissionRate || 0,
       affiliateUrl: form.affiliateUrl, category: form.category,
       subcategory: form.subcategory || '', tags: [], stockStatus: form.stockStatus,
-      rating: 0, reviewCount: 0, technicalSpecs: {}, review: form.review,
-      pros: [], cons: [], featured: false, commission: 0,
+      rating: originalDeal?.rating ?? 0,
+      reviewCount: originalDeal?.reviewCount ?? 0,
+      technicalSpecs: originalDeal?.technicalSpecs ?? {},
+      review: form.review,
+      pros: originalDeal?.pros ?? [],
+      cons: originalDeal?.cons ?? [],
+      featured: originalDeal?.featured ?? false,
+      commission: originalDeal?.commission ?? 0,
     }
 
     try {
@@ -158,11 +157,11 @@ export default function EditDealPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>Precio original (€)</label>
-              <Input type="number" step="0.01" value={form.originalPrice} onChange={e => updateField('originalPrice', e.target.value)} required className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
+              <Input type="number" step="0.01" min="0" value={form.originalPrice} onChange={e => updateField('originalPrice', e.target.value)} required className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
             </div>
             <div>
               <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>Precio oferta (€)</label>
-              <Input type="number" step="0.01" value={form.salePrice} onChange={e => updateField('salePrice', e.target.value)} required className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
+              <Input type="number" step="0.01" min="0" value={form.salePrice} onChange={e => updateField('salePrice', e.target.value)} required className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
             </div>
             <div>
               <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>Gastos de envío (€)</label>

@@ -1,15 +1,24 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Search, Menu, X, Fish, ChevronDown } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { CATEGORIES } from '@/types'
 
 export function Navbar() {
+  const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full" style={{
@@ -47,7 +56,7 @@ export function Navbar() {
                 {cat.subcategories.length > 0 && <ChevronDown className="h-3 w-3 opacity-60 group-hover:rotate-180 transition-transform" />}
               </Link>
               {cat.subcategories.length > 0 && (
-                <div className="absolute top-full left-0 hidden group-hover:block pt-2 z-50">
+                <div className="absolute top-full left-0 hidden group-hover:block group-focus-within:block pt-2 z-50">
                   <div className="rounded-xl p-2 shadow-2xl min-w-[200px]" style={{
                     background: 'rgba(17,24,39,0.96)',
                     backdropFilter: 'blur(20px)',
@@ -56,10 +65,8 @@ export function Navbar() {
                   }}>
                     {cat.subcategories.map((sub) => (
                       <Link key={sub.id} href={`/categories/${cat.slug}/${sub.slug}`}
-                        className="block px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:translate-x-1"
-                        style={{ color: '#8BA3C7' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.color = '#00D4FF'; e.currentTarget.style.background = 'rgba(0,212,255,0.08)' }}
-                        onMouseLeave={(e) => { e.currentTarget.style.color = '#8BA3C7'; e.currentTarget.style.background = 'transparent' }}>
+                        className="block px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:translate-x-1 hover:text-[#00D4FF] hover:bg-[rgba(0,212,255,0.08)]"
+                        style={{ color: '#8BA3C7' }}>
                         {sub.name}
                       </Link>
                     ))}
@@ -78,12 +85,7 @@ export function Navbar() {
 
         <div className={`items-center gap-2 ${searchOpen ? 'flex flex-1' : 'hidden md:flex'}`}>
           <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              if (searchQuery.trim()) {
-                window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`
-              }
-            }}
+            onSubmit={handleSearch}
             className="relative flex-1 max-w-sm"
           >
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" style={{ color: '#4A6080' }} />
@@ -145,25 +147,22 @@ export function Navbar() {
                   label: cat.name,
                   subs: cat.subcategories.map(s => ({ href: `/categories/${cat.slug}/${s.slug}`, label: s.name })),
                 })),
+                { href: '/blog', label: 'Blog' },
                 { href: '/search', label: 'Buscar' },
               ].map((item, i) => (
                 <div key={i}>
-                  <Link href={item.href} className="block px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200"
-                    style={{ color: '#8BA3C7' }}
-                    onClick={() => setMenuOpen(false)}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,212,255,0.06)'; e.currentTarget.style.color = '#00D4FF' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#8BA3C7' }}>
+                    <Link href={item.href} className="block px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 hover:bg-[rgba(0,212,255,0.06)] hover:text-[#00D4FF]"
+                      style={{ color: '#8BA3C7' }}
+                      onClick={() => setMenuOpen(false)}>
                     {item.label}
                   </Link>
                   {'subs' in item && item.subs && (
                     <div className="ml-5 flex flex-col border-l border-[#1E3A5F] pl-3">
                       {item.subs.map((sub) => (
                         <Link key={sub.href} href={sub.href}
-                          className="block px-3 py-2 text-sm rounded-lg transition-all duration-200"
+                          className="block px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:text-[#00D4FF]"
                           onClick={() => setMenuOpen(false)}
-                          style={{ color: '#4A6080' }}
-                          onMouseEnter={(e) => { e.currentTarget.style.color = '#00D4FF' }}
-                          onMouseLeave={(e) => { e.currentTarget.style.color = '#4A6080' }}>
+                          style={{ color: '#4A6080' }}>
                           {sub.label}
                         </Link>
                       ))}

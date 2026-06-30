@@ -69,9 +69,11 @@ export function PriceHistoryChart({ history }: PriceHistoryChartProps) {
             key={i}
             cx={xScale(i)}
             cy={yScale(sorted[i].price)}
-            r="3"
+            r="4"
             fill="#00D4FF"
-            className="hover:r-4 transition-all"
+            style={{ transition: 'r 0.2s' }}
+            onMouseEnter={(e) => { e.currentTarget.setAttribute('r', '6') }}
+            onMouseLeave={(e) => { e.currentTarget.setAttribute('r', '4') }}
           />
         ))}
 

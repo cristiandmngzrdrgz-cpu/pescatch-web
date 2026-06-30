@@ -48,6 +48,9 @@ pescatch.db-wal
 .od-designs/
 .od-output-homepage.html
 page-*.snapshot.md
+*-snap.txt
+*-snapshot.txt
+sienna-page.txt
 *.png
 AGENTS.md
 CLAUDE.md
@@ -60,6 +63,3 @@ next-env.d.ts
 
 # UNCLAUDE
 .claude/settings.json
-
-.vercel
-.env*

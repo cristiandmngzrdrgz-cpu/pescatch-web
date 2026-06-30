@@ -92,7 +92,7 @@ export interface Subcategory {
 }
 
 export interface Comment {
-  id: string
+  id: number
   dealId: string
   author: string
   content: string

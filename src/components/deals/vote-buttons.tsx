@@ -26,14 +26,8 @@ export function VoteButtons({ dealId, initialUp, initialDown }: VoteButtonsProps
   const [upCount, setUpCount] = useState(initialUp)
   const [downCount, setDownCount] = useState(initialDown)
 
-  const handleVote = (type: 'up' | 'down') => {
-    if (vote === type) {
-      setVote(null)
-      localStorage.removeItem(getVoteKey(dealId))
-      if (type === 'up') setUpCount(prev => prev - 1)
-      else setDownCount(prev => prev - 1)
-      return
-    }
+  const handleVote = async (type: 'up' | 'down') => {
+    if (vote === type) return
 
     if (vote) {
       if (vote === 'up') setUpCount(prev => prev - 1)
@@ -44,11 +38,24 @@ export function VoteButtons({ dealId, initialUp, initialDown }: VoteButtonsProps
     localStorage.setItem(getVoteKey(dealId), type)
     if (type === 'up') setUpCount(prev => prev + 1)
     else setDownCount(prev => prev + 1)
+
+    try {
+      const res = await fetch(`/api/deals/${dealId}/vote`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vote: type }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setUpCount(data.votesUp)
+        setDownCount(data.votesDown)
+      }
+    } catch {}
   }
 
   return (
     <div className="flex items-center gap-1">
-      <div className="text-sm mr-2" style={{ color: '#8BA3C7' }}>til?</div>
+      <div className="text-sm mr-2" style={{ color: '#8BA3C7' }}>útil?</div>
       <Button
         variant="ghost"
         size="sm"
@@ -59,7 +66,7 @@ export function VoteButtons({ dealId, initialUp, initialDown }: VoteButtonsProps
           color: vote === 'up' ? '#26DE81' : '#4A6080',
         }}
         onClick={() => handleVote('up')}
-        title="til"
+        title="útil"
       >
         <ChevronUp className="h-5 w-5" />
       </Button>
@@ -75,7 +82,7 @@ export function VoteButtons({ dealId, initialUp, initialDown }: VoteButtonsProps
           color: vote === 'down' ? '#EF4444' : '#4A6080',
         }}
         onClick={() => handleVote('down')}
-        title="No til"
+        title="No útil"
       >
         <ChevronDown className="h-5 w-5" />
       </Button>

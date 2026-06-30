@@ -3,14 +3,25 @@ import { getDb } from '@/lib/db'
 import { seedDatabase } from '@/lib/seed'
 import type { InValue } from '@libsql/client'
 
+function extractFirstProductImage(content: string): string {
+  const match = content.match(/<!--\s*PRODUCTS_DATA:\s*(\[.*?\])\s*-->/)
+  if (!match) return ''
+  try {
+    const products = JSON.parse(match[1])
+    if (products.length > 0 && products[0].image) return products[0].image
+  } catch {}
+  return ''
+}
+
 function mapRowToPost(row: Record<string, unknown>): BlogPost {
+  const content = row.content as string
   return {
     id: row.id as string,
     title: row.title as string,
     slug: row.slug as string,
     excerpt: row.excerpt as string,
-    content: row.content as string,
-    featuredImage: row.featuredImage as string,
+    content,
+    featuredImage: (row.featuredImage as string) || extractFirstProductImage(content),
     author: row.author as string,
     category: row.category as string,
     tags: JSON.parse((row.tags as string) || '[]'),

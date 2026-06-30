@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPostById, updatePost, deletePost } from '@/data/blog-queries'
+import { adminApiCheck } from '@/lib/admin-auth'
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -9,6 +10,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 }
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const authError = await adminApiCheck()
+  if (authError) return authError
+
   const { id } = await params
   const data = await request.json()
   const post = await updatePost(id, data)
@@ -17,6 +21,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const authError = await adminApiCheck()
+  if (authError) return authError
+
   const { id } = await params
   const deleted = await deletePost(id)
   if (!deleted) return NextResponse.json({ error: 'Post not found' }, { status: 404 })
