@@ -106,7 +106,6 @@ export async function initSchema() {
     'CREATE INDEX IF NOT EXISTS idx_products_slug ON products(slug)',
     'CREATE INDEX IF NOT EXISTS idx_products_ean ON products(ean)',
     'CREATE INDEX IF NOT EXISTS idx_deals_slug ON deals(slug)',
-    'CREATE INDEX IF NOT EXISTS idx_deals_product ON deals(productId)',
     'CREATE INDEX IF NOT EXISTS idx_deals_category ON deals(category)',
     'CREATE INDEX IF NOT EXISTS idx_deals_featured ON deals(featured)',
     'CREATE INDEX IF NOT EXISTS idx_deals_discount ON deals(discountPercent)',
@@ -140,6 +139,7 @@ export async function migrateSchema() {
 
   if (!columnNames.includes('productId')) {
     await db.execute("ALTER TABLE deals ADD COLUMN productId TEXT NOT NULL DEFAULT ''")
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_deals_product ON deals(productId)')
   }
   if (!columnNames.includes('ean')) {
     await db.execute("ALTER TABLE deals ADD COLUMN ean TEXT NOT NULL DEFAULT ''")
