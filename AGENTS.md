@@ -50,7 +50,7 @@ const { headers, rows } = await readAllRows()
 await updateCell(sheetRow, colIndex, value)
 ```
 
-## Productos actuales (43)
+## Productos actuales (51)
 Los primeros 13 tienen datos de Amazon (ASIN, imagen, precio). Los 14 adicionales son productos de Decathlon.
 
 | # | Tipo | Nombre | Categoría |
@@ -59,6 +59,7 @@ Los primeros 13 tienen datos de Amazon (ASIN, imagen, precio). Los 14 adicionale
 | 14-27 | Solo Decathlon | Shimano Ultegra, Sienna FG, Daiwa Crossfire, Caperlan R100, Mitchell Avocet, Caperlan RFT, WXM 500, Shimano Vengeance, WXM 100, Ilicium 500, Daiwa Legalis, Okuma Altera, etc. | carretes, canas |
 | 28-37 | Solo Decathlon | Yo-Zuri, Ragot, Caperlan Saxton, Williamson, kits señuelos, sedal, Daiwa Ninja 4000C, Daiwa Joinus, Mitchell Premium Pro | senuelos, accesorios, carretes |
 | 38-43 | Solo Decathlon | Caperlan TX4, TX8, MTX8, MTX4 trenzados, Caperlan WXM 100/500 cañas | accesorios, canas |
+| 44-51 | Solo Decathlon | Caperlan fluorocarbono, sedales, TX8 verde, Daiwa Ninja 2500XH/6000 | accesorios, carretes |
 
 ## Prioridades próximas
 1. **Buscar Amazon equivalents** para los 14 productos Decathlon (mejorar multi-tienda)
