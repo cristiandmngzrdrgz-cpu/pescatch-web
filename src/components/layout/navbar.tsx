@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Search, Menu, X, Fish, ChevronDown, Moon, Sun } from 'lucide-react'
+import { Search, Menu, X, Fish, ChevronDown } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { CATEGORIES } from '@/types'
 
@@ -10,12 +10,6 @@ export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [darkMode, setDarkMode] = useState(false)
-
-  const toggleDark = () => {
-    setDarkMode(!darkMode)
-    document.documentElement.classList.toggle('dark')
-  }
 
   return (
     <header className="sticky top-0 z-50 w-full" style={{
@@ -114,15 +108,6 @@ export function Navbar() {
           aria-label="Buscar"
         >
           <Search className="h-5 w-5" />
-        </button>
-
-        <button
-          onClick={toggleDark}
-          className="w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 hover:scale-105"
-          style={{ border: '1px solid rgba(30,58,95,0.5)', background: 'rgba(255,255,255,0.04)', color: '#8BA3C7' }}
-          aria-label="Modo oscuro"
-        >
-          {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
 
       </div>

@@ -8,9 +8,14 @@ import type { Deal } from '@/types'
 
 interface DealCardProps {
   deal: Deal
+  bestPriceStore?: string | null
+  storeCount?: number
 }
 
-export function DealCard({ deal }: DealCardProps) {
+export function DealCard({ deal, bestPriceStore, storeCount }: DealCardProps) {
+  const isBestPrice = bestPriceStore != null && deal.store.name === bestPriceStore
+  const showBestPrice = storeCount != null && storeCount >= 2
+
   return (
     <Link href={`/deals/${deal.slug}`}>
       <article
@@ -40,7 +45,19 @@ export function DealCard({ deal }: DealCardProps) {
           {/* Image overlay glow on hover */}
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
             style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.2), transparent 40%)' }} />
-          <div className="absolute top-3 right-3">
+          <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
+            {showBestPrice && isBestPrice && (
+              <span className="inline-flex items-center gap-1 text-[0.6rem] font-bold px-2 py-1 rounded-full"
+                style={{
+                  background: 'rgba(0,212,255,0.2)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(0,212,255,0.5)',
+                  color: '#00D4FF',
+                }}>
+                <Store className="h-2.5 w-2.5" />
+                Mejor Precio
+              </span>
+            )}
             <span className="inline-block font-extrabold text-xs px-2.5 py-1.5 rounded-full transition-all duration-300"
               style={deal.discountPercent >= 50
                 ? { background: '#FF4757', color: '#FFFFFF', boxShadow: '0 0 12px rgba(255,71,87,0.3)' }
@@ -84,6 +101,12 @@ export function DealCard({ deal }: DealCardProps) {
           <div className="flex items-center gap-1 text-xs mb-2" style={{ color: '#4A6080' }}>
             <Store className="h-3 w-3" />
             <span>{deal.store.name}</span>
+            {showBestPrice && !isBestPrice && bestPriceStore && (
+              <>
+                <span className="mx-0.5" style={{ color: '#1E3A5F' }}>·</span>
+                <span style={{ color: '#FFB800' }}>Más barato en {bestPriceStore}</span>
+              </>
+            )}
           </div>
           <h3 className="font-semibold text-sm leading-snug line-clamp-2 transition-colors duration-300 group-hover:text-[#00D4FF]"
             style={{ color: '#E8F0FE' }}>

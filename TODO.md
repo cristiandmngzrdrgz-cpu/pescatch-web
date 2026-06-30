@@ -59,9 +59,11 @@
 - [x] Daiwa Saltist reemplazado por Shimano FX XT 2.10m (bestseller #1 cañas) — ASIN B0846PNXKM
 - [x] 4 productos añadidos: Mitchell Mx1, Abu Garcia Cardinal X, Abu Garcia Tormentor2, TRUSCEND Kit (13 total)
 - [x] 14 productos Decathlon añadidos (27 total)
-- [ ] Buscar ASINs Amazon para los 14 productos Decathlon
-- [ ] Añadir más señuelos y accesorios (categorías flojas)
-- [ ] Rediseño hero, CTA, badges, pruebas sociales, navegación
+- [x] Buscar ASINs Amazon para productos Decathlon — 12 ASINs encontrados y escritos en Sheet
+- [x] Añadir más señuelos de marca: Yo-Zuri 3D Inshore Twitchbait + Xorus Patchinko 125
+- [x] Rediseño hero con badge ahorro dinámico, trust bar con datos reales
+- [x] Badges "Mejor Precio" y "Más barato en X" en DealCard (multi-tienda)
+- [x] Limpiar navegación: eliminar dark mode toggle
 - [ ] Buscar equivalentes Decathlon para cada producto
 
 ### Sync — Importar todos los productos
@@ -77,7 +79,7 @@
 - [ ] Limpiar navegación (ocultar Admin, consolidar)
 
 ### Contenido — Artículos de blog
-- [ ] "Mejores carretes de spinning calidad-precio"
+- [x] "Mejores carretes de spinning calidad-precio" → `mejores-carretes-spinning-calidad-precio-2026`
 - [ ] "Las 5 mejores cañas de surfcasting 2026"
 - [ ] "Kits de señuelos para empezar a pescar"
 - [ ] "Comparativa: carretes Shimano vs Daiwa"

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { getPostBySlug } from '@/data/blog-queries'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { buildAmazonUrl } from '@/lib/amazon-affiliate'
 
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
@@ -102,7 +103,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       {products.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
           {products.map((p, i) => (
-            <a key={p.asin} href={`https://www.amazon.es/dp/${p.asin}`} target="_blank" rel="nofollow sponsored"
+              <a key={p.asin} href={buildAmazonUrl(p.asin)} target="_blank" rel="nofollow sponsored"
               className="group rounded-2xl overflow-hidden transition-all duration-500 hover:-translate-y-1 no-underline hover:border-[rgba(0,212,255,0.5)] hover:shadow-[0_0_30px_rgba(0,212,255,0.15)]"
               style={{ background: 'linear-gradient(135deg, #111827, #0B1120)', border: '1px solid #1E3A5F' }}>
               <div className="p-5">
@@ -166,7 +167,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <h2 className="text-xl font-bold mb-6" style={{ color: '#E8F0FE' }}>Comparativa de precios</h2>
           <div className="space-y-3">
             {products.map((p, i) => (
-              <a key={p.asin} href={`https://www.amazon.es/dp/${p.asin}`} target="_blank" rel="nofollow sponsored"
+            <a key={p.asin} href={buildAmazonUrl(p.asin)} target="_blank" rel="nofollow sponsored"
                 className="flex items-center justify-between p-4 rounded-xl transition-all duration-300 no-underline group hover:border-[rgba(0,212,255,0.4)] hover:bg-[#111827]"
                 style={{ background: '#0B1120', border: '1px solid #1E3A5F' }}>
                 <div className="flex items-center gap-3 flex-1 min-w-0">

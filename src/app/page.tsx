@@ -1,6 +1,6 @@
 import { getDeals, getFeaturedDeals } from '@/data/queries'
 import { DealCard } from '@/components/deals/deal-card'
-import { Fish, TrendingDown, Store, Tag, ArrowRight, Clock, Zap, Star, Shield, Users, BadgeCheck, Percent } from 'lucide-react'
+import { Fish, ArrowRight, Clock, Zap, Star, Shield, BadgeCheck, Percent, Users } from 'lucide-react'
 import Link from 'next/link'
 import { CATEGORIES } from '@/types'
 
@@ -10,10 +10,23 @@ export default async function HomePage() {
   const featured = await getFeaturedDeals()
   const latest = await getDeals({ sortBy: 'newest' })
   const topDiscounts = (await getDeals({ sortBy: 'discount' })).slice(0, 5)
-  const totalDeals = (await getDeals({})).length
+  const totalDeals = latest.length
   const categoryDealCounts = new Map<string, number>()
   for (const cat of CATEGORIES) {
     categoryDealCounts.set(cat.slug, (await getDeals({ category: cat.slug })).length)
+  }
+
+  const totalSavings = latest.reduce((sum, d) => sum + Math.max(0, d.originalPrice - d.salePrice), 0)
+  const bestPriceMap = new Map<string, { bestPrice: number; bestStore: string; storeCount: number }>()
+  for (const deal of latest) {
+    if (!deal.productId) continue
+    const prev = bestPriceMap.get(deal.productId) ?? { bestPrice: Infinity, bestStore: '', storeCount: 0 }
+    prev.storeCount++
+    if (deal.salePrice < prev.bestPrice) {
+      prev.bestPrice = deal.salePrice
+      prev.bestStore = deal.store.name
+    }
+    bestPriceMap.set(deal.productId, prev)
   }
 
   const categoryImages: Record<string, string> = {
@@ -40,17 +53,24 @@ export default async function HomePage() {
           }} />
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-4 py-24 lg:py-32 w-full">
+          <div className="relative mx-auto max-w-7xl px-4 py-24 lg:py-32 w-full">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 text-sm rounded-full px-4 py-1.5 mb-6"
-              style={{ background: 'rgba(255,184,0,0.1)', border: '1px solid rgba(255,184,0,0.25)', color: '#FFB800' }}>
-              <BadgeCheck className="h-4 w-4" />
-              <span className="font-semibold">+{totalDeals} ofertas verificadas por pescadores</span>
+            <div className="flex flex-wrap gap-2 mb-6">
+              <div className="inline-flex items-center gap-2 text-sm rounded-full px-4 py-1.5"
+                style={{ background: 'rgba(255,184,0,0.1)', border: '1px solid rgba(255,184,0,0.25)', color: '#FFB800' }}>
+                <BadgeCheck className="h-4 w-4" />
+                <span className="font-semibold">+{totalDeals} ofertas</span>
+              </div>
+              <div className="inline-flex items-center gap-2 text-sm rounded-full px-4 py-1.5"
+                style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.25)', color: '#00D4FF' }}>
+                <Percent className="h-4 w-4" />
+                <span className="font-semibold">{totalSavings.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })} en ahorros</span>
+              </div>
             </div>
 
             <h1 className="text-[2.75rem] sm:text-[4rem] font-extrabold leading-[1.05] tracking-tight mb-5"
               style={{ color: '#E8F0FE', textShadow: '0 2px 20px rgba(0,0,0,0.3)' }}>
-              El Mejor{' '}
+              El{' '}
               <span style={{
                 background: 'linear-gradient(135deg, #00D4FF, #00D4FF 40%, #FFB800 100%)',
                 WebkitBackgroundClip: 'text',
@@ -93,8 +113,8 @@ export default async function HomePage() {
             <div className="mt-10 flex flex-wrap gap-5">
               {[
                 { icon: Shield, text: 'Comparativa multi-tienda', sub: 'Amazon · Decathlon · AliExpress' },
-                { icon: Users, text: '+50 ofertas verificadas', sub: 'Actualizadas cada semana' },
-                { icon: Percent, text: 'Ahorros reales', sub: 'Hasta -50% en material top' },
+                { icon: Users, text: `${totalDeals} ofertas verificadas`, sub: `Más de ${totalSavings.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })} ahorrados` },
+                { icon: Zap, text: 'Chollos actualizados', sub: 'Precios revisados cada semana' },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -126,9 +146,14 @@ export default async function HomePage() {
               <p className="mt-2 text-lg" style={{ color: '#8BA3C7' }}>Las mejores ofertas seleccionadas por nuestro equipo</p>
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {featured.map((deal) => (
-                <DealCard key={deal.id} deal={deal} />
-              ))}
+              {featured.map((deal) => {
+                const cmp = deal.productId ? bestPriceMap.get(deal.productId) : undefined
+                return (
+                  <DealCard key={deal.id} deal={deal}
+                    bestPriceStore={cmp?.bestStore}
+                    storeCount={cmp?.storeCount} />
+                )
+              })}
             </div>
           </div>
         </section>

@@ -1,4 +1,5 @@
 import type { StoreAdapter, StoreLookupResult } from './types'
+import { buildAmazonUrl } from '@/lib/amazon-affiliate'
 
 const AMAZON_PA_API_KEY = process.env.AMAZON_PA_API_KEY || ''
 const AMAZON_PA_SECRET = process.env.AMAZON_PA_SECRET || ''
@@ -72,7 +73,7 @@ async function lookupViaPaApi(ean: string): Promise<StoreLookupResult | null> {
 
   return {
     price,
-    url: item.DetailPageURL || `https://www.amazon.es/dp/${ean}`,
+    url: item.DetailPageURL || buildAmazonUrl(`https://www.amazon.es/dp/${ean}`),
     shipping: offer?.DeliveryInfo?.IsAmazonFulfilled ? 0 : 3.99,
     stock: offer?.Availability?.Type === 'now' ? 'in_stock' : 'limited',
     name: item.ItemInfo?.Title || undefined,
@@ -102,7 +103,7 @@ async function lookupViaBrightData(ean: string, apiKey: string): Promise<StoreLo
 
   return {
     price: Number(product.price) || 0,
-    url: product.url || `https://www.amazon.es/dp/${ean}`,
+    url: product.url || buildAmazonUrl(`https://www.amazon.es/dp/${ean}`),
     shipping: product.is_prime ? 0 : Number(product.shipping) || 3.99,
     stock: product.in_stock ? 'in_stock' : 'out_of_stock',
     name: product.title || undefined,
