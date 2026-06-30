@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { Search, Menu, X, Fish, ChevronDown, Moon, Sun } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { CATEGORIES } from '@/types'
 
@@ -44,13 +43,8 @@ export function Navbar() {
           <span className="font-extrabold text-xl tracking-tight" style={{ color: '#E8F0FE' }}>PesCatch</span>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-8 ml-8">
-          <Link href="/" className="text-[0.925rem] font-medium transition-all duration-200 hover:text-[#00D4FF] relative py-1"
-            style={{ color: '#E8F0FE' }}>
-            Inicio
-            <span className="absolute -bottom-px left-0 w-full h-0.5 bg-gradient-to-r from-[#00D4FF] to-[#FFB800] scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
-          </Link>
-          {CATEGORIES.slice(0, 3).map((cat) => (
+        <nav className="hidden lg:flex items-center gap-6 ml-8">
+          {CATEGORIES.map((cat) => (
             <div key={cat.id} className="relative group">
               <Link href={`/categories/${cat.slug}`}
                 className="flex items-center gap-1 text-[0.925rem] font-medium transition-all duration-200 hover:text-[#00D4FF] py-1"
@@ -83,10 +77,6 @@ export function Navbar() {
           <Link href="/blog" className="text-[0.925rem] font-medium transition-colors duration-200 hover:text-[#00D4FF]"
             style={{ color: '#8BA3C7' }}>
             Blog
-          </Link>
-          <Link href="/search" className="text-[0.925rem] font-medium transition-colors duration-200 hover:text-[#00D4FF]"
-            style={{ color: '#8BA3C7' }}>
-            Buscar
           </Link>
         </nav>
 
@@ -135,12 +125,6 @@ export function Navbar() {
           {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
 
-        <Link href="/admin">
-          <Button variant="ghost" size="sm" className="text-xs transition-all duration-200 hover:text-[#00D4FF]"
-            style={{ color: '#8BA3C7' }}>
-            Admin
-          </Button>
-        </Link>
       </div>
 
       {menuOpen && (

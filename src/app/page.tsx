@@ -1,6 +1,6 @@
 import { getDeals, getFeaturedDeals } from '@/data/queries'
 import { DealCard } from '@/components/deals/deal-card'
-import { Fish, TrendingDown, Store, Tag, ArrowRight, Clock, Zap, Star } from 'lucide-react'
+import { Fish, TrendingDown, Store, Tag, ArrowRight, Clock, Zap, Star, Shield, Users, BadgeCheck, Percent } from 'lucide-react'
 import Link from 'next/link'
 import { CATEGORIES } from '@/types'
 
@@ -10,111 +10,102 @@ export default async function HomePage() {
   const featured = await getFeaturedDeals()
   const latest = await getDeals({ sortBy: 'newest' })
   const topDiscounts = (await getDeals({ sortBy: 'discount' })).slice(0, 5)
+  const totalDeals = (await getDeals({})).length
   const categoryDealCounts = new Map<string, number>()
   for (const cat of CATEGORIES) {
     categoryDealCounts.set(cat.slug, (await getDeals({ category: cat.slug })).length)
   }
 
+  const categoryImages: Record<string, string> = {
+    carretes: 'https://images.unsplash.com/photo-1589656966895-2f33e7653819?w=400&q=80',
+    canas: 'https://images.unsplash.com/photo-1572051416422-2270c7e21868?w=400&q=80',
+    senuelos: 'https://images.unsplash.com/photo-1589187150112-5b9aadc86518?w=400&q=80',
+    accesorios: 'https://images.unsplash.com/photo-1513863545813-5f7d724e4456?w=400&q=80',
+  }
+
   return (
     <div>
-      {/* Hero */}
-      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0A1326 0%, #0B1120 40%, #111827 100%)' }}>
-        {/* Ambient glow */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full opacity-20 blur-[120px]" style={{ background: 'radial-gradient(circle, rgba(0,212,255,0.4), transparent 70%)' }} />
-          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full opacity-15 blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(255,184,0,0.35), transparent 70%)' }} />
-          <div className="absolute top-1/3 right-1/3 w-[300px] h-[300px] rounded-full opacity-10 blur-[80px]" style={{ background: 'radial-gradient(circle, rgba(0,212,255,0.3), transparent 70%)' }} />
+      {/* HERO - Imagen real de pesca */}
+      <section className="relative overflow-hidden min-h-[85vh] flex items-center"
+        style={{ background: 'linear-gradient(135deg, #0A1326 0%, #0B1120 50%, #111827 100%)' }}>
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1621277230131-1966e041a6a6?w=1400&q=85"
+            alt="Pesca deportiva"
+            className="w-full h-full object-cover opacity-20"
+            style={{ objectPosition: 'center 30%' }}
+          />
+          <div className="absolute inset-0" style={{
+            background: 'linear-gradient(90deg, rgba(10,19,38,0.95) 0%, rgba(10,19,38,0.7) 50%, rgba(10,19,38,0.4) 100%)'
+          }} />
         </div>
 
-        {/* Subtle grid overlay */}
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{
-          backgroundImage: 'linear-gradient(rgba(0,212,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.3) 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
-        }} />
-
-        {/* Scanline */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.03]">
-          <div className="absolute inset-x-0 h-[2px] bg-[#00D4FF]" style={{ animation: 'scanline 8s linear infinite' }} />
-        </div>
-
-        <div className="relative mx-auto max-w-7xl px-4 py-20 lg:py-32">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            <div className="max-w-xl">
-              <div className="inline-flex items-center gap-1.5 text-sm rounded-full px-4 py-1.5 mb-6 animate-pulse"
-                style={{ background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)', color: '#00D4FF' }}>
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: '#26DE81' }} />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ background: '#26DE81' }} />
-                </span>
-                <span className="font-semibold ml-1">Chollos verificados en tiempo real</span>
-              </div>
-
-              <h1 className="text-[2.5rem] sm:text-[3.25rem] font-extrabold leading-[1.05] tracking-tight mb-4" style={{ color: '#E8F0FE' }}>
-                Los Mejores{' '}
-                <span style={{
-                  background: 'linear-gradient(135deg, #00D4FF 0%, #00D4FF 40%, #FFB800 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  filter: 'drop-shadow(0 0 12px rgba(0,212,255,0.3))',
-                }}>
-                  Chollos
-                </span>{' '}
-                de Pesca
-              </h1>
-              <p className="text-lg leading-relaxed mb-8 max-w-lg" style={{ color: '#8BA3C7' }}>
-                Ahorra hasta un <span className="font-bold" style={{ color: '#FFB800' }}>50%</span> en material de pesca de calidad.
-                Todas las ofertas verificadas manualmente por pescadores como tú.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <Link href="/search" className="inline-flex items-center gap-2 font-bold px-8 py-3.5 rounded-full glow-cta group"
-                  style={{ background: '#00D4FF', color: '#0B1120', boxShadow: '0 4px 20px rgba(0,212,255,0.4)' }}>
-                  Ver Ofertas
-                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-                <Link href="/categories" className="inline-flex items-center gap-2 font-semibold px-8 py-3.5 rounded-full transition-all hover:border-[#00D4FF]/50 hover:shadow-[0_0_15px_rgba(0,212,255,0.15)]"
-                  style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.08)', color: '#8BA3C7' }}>
-                  Categorías
-                </Link>
-              </div>
-              <div className="mt-8 flex flex-wrap gap-3">
-                {[
-                  { icon: TrendingDown, text: 'Precio mínimo garantizado' },
-                  { icon: Store, text: '8 tiendas verificadas' },
-                  { icon: Tag, text: `${featured.length} chollos activos` },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-2 rounded-full px-4 py-2 text-sm"
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: '#4A6080' }}>
-                    <item.icon className="h-4 w-4" style={{ color: '#00D4FF' }} />
-                    {item.text}
-                  </div>
-                ))}
-              </div>
+        <div className="relative mx-auto max-w-7xl px-4 py-24 lg:py-32 w-full">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 text-sm rounded-full px-4 py-1.5 mb-6"
+              style={{ background: 'rgba(255,184,0,0.1)', border: '1px solid rgba(255,184,0,0.25)', color: '#FFB800' }}>
+              <BadgeCheck className="h-4 w-4" />
+              <span className="font-semibold">+{totalDeals} ofertas verificadas por pescadores</span>
             </div>
 
-            {/* Hero floating cards */}
-            <div className="hidden lg:flex flex-col gap-4">
-              {topDiscounts.slice(0, 3).map((deal, i) => (
-                <Link key={deal.id} href={`/deals/${deal.slug}`}
-                  className="flex items-center gap-4 p-5 rounded-2xl transition-all hover:-translate-y-0.5 no-underline group"
-                  style={{
-                    border: '1px solid rgba(30,58,95,0.5)',
-                    background: 'rgba(17,24,39,0.6)',
-                    animation: `fadeInUp 0.6s ease-out ${i * 0.15}s both`,
-                  }}>
-                  <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'linear-gradient(135deg, #00D4FF, #1A2535)', boxShadow: '0 0 15px rgba(0,212,255,0.15)' }}>
-                    <Fish className="h-6 w-6" style={{ color: 'rgba(255,255,255,0.9)' }} />
+            <h1 className="text-[2.75rem] sm:text-[4rem] font-extrabold leading-[1.05] tracking-tight mb-5"
+              style={{ color: '#E8F0FE', textShadow: '0 2px 20px rgba(0,0,0,0.3)' }}>
+              El Mejor{' '}
+              <span style={{
+                background: 'linear-gradient(135deg, #00D4FF, #00D4FF 40%, #FFB800 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}>
+                Material de Pesca
+              </span>
+              <br />al Mejor Precio
+            </h1>
+
+            <p className="text-lg sm:text-xl leading-relaxed mb-8 max-w-lg" style={{ color: '#8BA3C7' }}>
+              Comparamos precios entre <strong style={{ color: '#E8F0FE' }}>Amazon, Decathlon y AliExpress</strong> para que ahorres en carretes, cañas, señuelos y accesorios.
+            </p>
+
+            <div className="flex flex-wrap gap-3">
+              <Link href="/search"
+                className="inline-flex items-center gap-2 font-bold px-10 py-4 rounded-full text-lg transition-all duration-300 hover:scale-105 active:scale-95 group"
+                style={{
+                  background: 'linear-gradient(135deg, #00D4FF, #0099CC)',
+                  color: '#0B1120',
+                  boxShadow: '0 4px 25px rgba(0,212,255,0.5), 0 0 60px rgba(0,212,255,0.15)',
+                }}>
+                Ver Ofertas
+                <ArrowRight className="h-5 w-5 group-hover:translate-x-1.5 transition-transform" />
+              </Link>
+              <Link href="/categories"
+                className="inline-flex items-center gap-2 font-semibold px-8 py-4 rounded-full text-lg transition-all duration-200"
+                style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#8BA3C7',
+                  backdropFilter: 'blur(4px)',
+                }}>
+                Categorías
+              </Link>
+            </div>
+
+            {/* Trust bar */}
+            <div className="mt-10 flex flex-wrap gap-5">
+              {[
+                { icon: Shield, text: 'Comparativa multi-tienda', sub: 'Amazon · Decathlon · AliExpress' },
+                { icon: Users, text: '+50 ofertas verificadas', sub: 'Actualizadas cada semana' },
+                { icon: Percent, text: 'Ahorros reales', sub: 'Hasta -50% en material top' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ background: 'rgba(0,212,255,0.1)' }}>
+                    <item.icon className="h-5 w-5" style={{ color: '#00D4FF' }} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm truncate group-hover:text-[#00D4FF] transition-colors" style={{ color: '#E8F0FE' }}>{deal.title}</div>
-                    <div className="text-xs mt-1" style={{ color: '#4A6080' }}>desde {deal.salePrice.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</div>
+                  <div>
+                    <div className="text-sm font-semibold" style={{ color: '#E8F0FE' }}>{item.text}</div>
+                    <div className="text-xs" style={{ color: '#4A6080' }}>{item.sub}</div>
                   </div>
-                  <span className="font-bold text-xs px-3 py-1.5 rounded-full flex-shrink-0"
-                    style={{ background: '#FFB800', color: '#0B1120', boxShadow: '0 0 12px rgba(255,184,0,0.3)' }}>
-                    -{deal.discountPercent}%
-                  </span>
-                </Link>
+                </div>
               ))}
             </div>
           </div>
@@ -155,27 +146,37 @@ export default async function HomePage() {
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: '#E8F0FE' }}>Categorías</h2>
             <p className="mt-2 text-lg" style={{ color: '#8BA3C7' }}>Explora los chollos por tipo de material de pesca</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {CATEGORIES.map((cat) => {
               const dealCount = categoryDealCounts.get(cat.slug) || 0
+              const imgSrc = categoryImages[cat.slug] || ''
               return (
                 <Link key={cat.id} href={`/categories/${cat.slug}`}
-                  className="group relative overflow-hidden p-7 text-center rounded-2xl transition-all duration-300 hover:-translate-y-1"
-                  style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                    style={{
-                      background: 'radial-gradient(circle at center, rgba(0,212,255,0.08) 0%, transparent 70%)',
-                      boxShadow: 'inset 0 0 30px rgba(0,212,255,0.05)',
+                  className="group relative overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  style={{ background: '#111827', border: '1px solid #1E3A5F', minHeight: '260px' }}>
+                  <div className="absolute inset-0">
+                    {imgSrc && (
+                      <img src={imgSrc} alt={cat.name}
+                        className="w-full h-full object-cover opacity-30 group-hover:opacity-50 transition-opacity duration-500"
+                      />
+                    )}
+                    <div className="absolute inset-0" style={{
+                      background: 'linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.7) 100%)',
                     }} />
-                  <div className="relative z-10">
-                    <div className="w-14 h-14 mx-auto mb-4 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110"
-                      style={{ background: '#1A2535', boxShadow: '0 0 0 rgba(0,212,255,0)' }}>
-                      <Fish className="h-7 w-7 transition-all duration-300 group-hover:text-[#00D4FF]" style={{ color: '#4A6080' }} />
+                  </div>
+                  <div className="relative z-10 p-6 flex flex-col justify-end h-full min-h-[260px]">
+                    {dealCount > 0 && (
+                      <span className="inline-block w-fit text-xs font-bold px-3 py-1 rounded-full mb-3"
+                        style={{ background: 'rgba(0,212,255,0.15)', border: '1px solid rgba(0,212,255,0.25)', color: '#00D4FF' }}>
+                        {dealCount} {dealCount === 1 ? 'chollo' : 'chollos'}
+                      </span>
+                    )}
+                    <h3 className="text-xl font-bold" style={{ color: '#E8F0FE' }}>{cat.name}</h3>
+                    <div className="flex items-center gap-1 mt-1 text-sm group-hover:gap-2 transition-all"
+                      style={{ color: '#00D4FF' }}>
+                      <span>Ver chollos</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
                     </div>
-                    <h3 className="font-semibold transition-colors duration-300 group-hover:text-[#00D4FF]" style={{ color: '#E8F0FE' }}>{cat.name}</h3>
-                    <p className="text-sm mt-1" style={{ color: '#4A6080' }}>
-                      {dealCount} {dealCount === 1 ? 'chollo' : 'chollos'}
-                    </p>
                   </div>
                 </Link>
               )
