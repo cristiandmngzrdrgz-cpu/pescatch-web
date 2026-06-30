@@ -3,8 +3,20 @@ import { DealCard } from '@/components/deals/deal-card'
 import { CATEGORIES } from '@/types'
 import Link from 'next/link'
 import { Fish } from 'lucide-react'
+import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string; sub: string }> }): Promise<Metadata> {
+  const { slug, sub } = await params
+  const category = CATEGORIES.find(c => c.slug === slug)
+  const subcategory = category?.subcategories.find(s => s.slug === sub)
+  if (!category || !subcategory) return { title: 'Subcategoría no encontrada | PesCatch' }
+  return {
+    title: `${subcategory.name} de ${category.name} — Chollos y Ofertas | PesCatch`,
+    description: `Las mejores ofertas en ${subcategory.name.toLowerCase()} de ${category.name.toLowerCase()}. Chollos en material de pesca en Amazon, Decathlon y AliExpress.`,
+  }
+}
 
 export default async function SubcategoryPage({
   params,

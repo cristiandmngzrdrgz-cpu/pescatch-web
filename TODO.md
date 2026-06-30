@@ -71,12 +71,13 @@
 - [x] 9 productos en DB
 
 ### Frontend — Conversión
-- [ ] Hero con imagen real de pesca (no cards mini)
-- [ ] CTA único "Ver Ofertas" más grande
-- [ ] Categorías con imágenes y contadores
-- [ ] Badges de valor: "Más barato en X", "Mejor relación calidad-precio"
-- [ ] Prueba social: contador de ahorros, testimonios
-- [ ] Limpiar navegación (ocultar Admin, consolidar)
+- [x] Hero con imagen real de pesca (local, no Unsplash)
+- [x] CTA único "Ver Ofertas" + botón Blog
+- [x] Categorías con iconos Lucide + contadores (sin dep. externas)
+- [x] Badges "Mejor Precio" y "Más barato en X" en DealCard
+- [x] Prueba social: trust bar con contador de ahorros
+- [x] Blog first: sección de posts en homepage
+- [x] Limpiar navegación: eliminado dark mode toggle
 
 ### Contenido — Artículos de blog
 - [x] "Mejores carretes de spinning calidad-precio" → `mejores-carretes-spinning-calidad-precio-2026`

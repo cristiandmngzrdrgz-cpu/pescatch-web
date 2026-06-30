@@ -1,9 +1,23 @@
 import { notFound } from 'next/navigation'
 import { getDealBySlug, getRelatedDeals, getDealsByProduct } from '@/data/queries'
 import { formatPrice, formatDate } from '@/lib/utils'
-import { STORES } from '@/types'
+import type { Metadata } from 'next'
+import { buildAmazonUrl } from '@/lib/amazon-affiliate'
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const deal = await getDealBySlug(slug)
+  if (!deal) return {}
+  const title = `${deal.title} — ${formatPrice(deal.salePrice)} | PesCatch`
+  const description = deal.description?.slice(0, 160) || `Oferta en ${deal.title} — ${deal.store?.name ?? ''} — ${formatPrice(deal.salePrice)}`
+  return {
+    title,
+    description,
+    openGraph: { title, description, type: 'website' },
+  }
+}
 import { Badge } from '@/components/ui/badge'
 import { BadgeCheck, Store, Truck, Package, BarChart3, Tag, Share2, ArrowRight, Star, Clock, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -41,8 +55,8 @@ export default async function DealDetailPage({
       price: deal.salePrice,
       priceCurrency: 'EUR',
       availability: deal.stockStatus === 'in_stock' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-      url: deal.affiliateUrl,
-      priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      url: buildAmazonUrl(deal.affiliateUrl),
+      priceValidUntil: new Date(new Date(deal.publishedAt).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     },
     brand: { '@type': 'Brand', name: deal.store.name },
     sku: deal.id,
@@ -276,9 +290,9 @@ export default async function DealDetailPage({
                 {storeDeals.map((sd) => {
                   const isCheapest = sd.salePrice === Math.min(...storeDeals.map(d => d.salePrice))
                   return (
-                    <a
-                      key={sd.id}
-                      href={sd.affiliateUrl}
+                      <a
+                        key={sd.id}
+                        href={sd.store.id === 'amazon' ? buildAmazonUrl(sd.affiliateUrl) : sd.affiliateUrl}
                       target="_blank"
                       rel="nofollow sponsored"
                       className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 hover:border-[#00D4FF]/30 no-underline"
@@ -316,7 +330,7 @@ export default async function DealDetailPage({
           {/* CTA Buttons */}
           <div className="space-y-3">
             <a
-              href={deal.affiliateUrl}
+              href={deal.store.id === 'amazon' ? buildAmazonUrl(deal.affiliateUrl) : deal.affiliateUrl}
               target="_blank"
               rel="nofollow sponsored"
               className="flex items-center justify-center gap-2 w-full h-14 font-bold text-base rounded-full transition-all duration-300 glow-cta no-underline group"

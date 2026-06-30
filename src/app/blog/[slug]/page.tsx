@@ -140,8 +140,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       {products.length > 0 && (
         <div className="rounded-2xl p-6 md:p-8 mb-10" style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
           <h2 className="text-xl font-bold mb-6" style={{ color: '#E8F0FE' }}>Puntuaciones detalladas</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((p, i) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products.map((p) => (
               <div key={p.asin}>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(135deg, #1A2535, rgba(0,212,255,0.05))' }}>

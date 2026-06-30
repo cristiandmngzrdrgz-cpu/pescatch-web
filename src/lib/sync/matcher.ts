@@ -169,6 +169,9 @@ export function getStoreInfo(storeId: string): { id: string; name: string; url?:
     amazon: { id: 'amazon', name: 'Amazon', url: 'https://amazon.es', reputation: 'good', commissionRate: 0.05 },
     decathlon: { id: 'decathlon', name: 'Decathlon', url: 'https://decathlon.es', reputation: 'good', commissionRate: 0.03 },
     aliexpress: { id: 'aliexpress', name: 'AliExpress', url: 'https://aliexpress.com', reputation: 'neutral', commissionRate: 0.08 },
+    'fishing-tackle-bait': { id: 'fishing-tackle-bait', name: 'Fishing Tackle & Bait', url: 'https://fishingtackleandbait.co.uk', reputation: 'good', commissionRate: 0.05 },
+    'total-fishing-tackle': { id: 'total-fishing-tackle', name: 'Total Fishing Tackle', url: 'https://total-fishing-tackle.com', reputation: 'good', commissionRate: 0.05 },
+    'pure-fishing': { id: 'pure-fishing', name: 'Pure Fishing', url: 'https://purefishing.com', reputation: 'good', commissionRate: 0.10 },
   }
   return stores[storeId] || { id: storeId, name: storeId, url: '', reputation: 'neutral', commissionRate: 0 }
 }

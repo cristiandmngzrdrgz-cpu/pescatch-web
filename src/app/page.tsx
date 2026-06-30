@@ -1,7 +1,7 @@
 import { getDeals, getFeaturedDeals } from '@/data/queries'
 import { getPosts } from '@/data/blog-queries'
 import { DealCard } from '@/components/deals/deal-card'
-import { Fish, ArrowRight, Clock, Zap, Star, Shield, BadgeCheck, Percent, Users, BookOpen, ChevronRight, Anchor, Wind, Target, Backpack, Shirt, Ship } from 'lucide-react'
+import { Fish, ArrowRight, Clock, Zap, Star, Shield, BadgeCheck, Users, BookOpen, ChevronRight, Anchor, Wind, Target, Backpack, Shirt, Ship } from 'lucide-react'
 import Link from 'next/link'
 import { CATEGORIES } from '@/types'
 import type { BlogPost } from '@/types'
@@ -47,144 +47,177 @@ export default async function HomePage() {
   return (
     <div>
       {/* HERO */}
-      <section className="relative overflow-hidden min-h-[80vh] flex items-center"
-        style={{
-          background: 'linear-gradient(160deg, #0B1A30 0%, #0F1F38 30%, #111827 60%, #0B1120 100%)',
-        }}>
-        <div className="absolute inset-0">
+      <section className="relative overflow-hidden min-h-[85vh] lg:min-h-[90vh] flex items-center">
+        <div className="absolute inset-0" style={{ background: '#0B1A30' }}>
           <img
             src="/images/hero-bg.jpg"
             alt="Pesca deportiva"
-            className="w-full h-full object-cover opacity-15"
-            style={{ objectPosition: 'center 40%' }}
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ objectPosition: 'center 45%' }}
           />
           <div className="absolute inset-0" style={{
-            background: 'linear-gradient(90deg, rgba(11,26,48,0.95) 0%, rgba(11,26,48,0.6) 50%, rgba(11,26,48,0.3) 100%)',
+            background: 'linear-gradient(90deg, rgba(11,26,48,0.92) 0%, rgba(11,26,48,0.7) 40%, rgba(11,26,48,0.3) 70%, transparent 100%)',
           }} />
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 py-24 lg:py-32 w-full">
-          <div className="max-w-2xl">
-            <div className="flex flex-wrap gap-2 mb-6">
-              <div className="inline-flex items-center gap-2 text-sm rounded-full px-4 py-1.5"
-                style={{ background: 'rgba(255,184,0,0.12)', border: '1px solid rgba(255,184,0,0.3)', color: '#FFB800' }}>
-                <BadgeCheck className="h-4 w-4" />
-                <span className="font-semibold">+{totalDeals} ofertas</span>
-              </div>
-              <div className="inline-flex items-center gap-2 text-sm rounded-full px-4 py-1.5"
-                style={{ background: 'rgba(0,212,255,0.12)', border: '1px solid rgba(0,212,255,0.3)', color: '#00D4FF' }}>
-                <Percent className="h-4 w-4" />
-                <span className="font-semibold">{totalSavings.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })} en ahorros</span>
-              </div>
-            </div>
-
-            <h1 className="text-[2.75rem] sm:text-[4rem] font-extrabold leading-[1.05] tracking-tight mb-5"
-              style={{ color: '#E8F0FE', textShadow: '0 2px 20px rgba(0,0,0,0.3)' }}>
-              El{' '}
-              <span style={{
-                background: 'linear-gradient(135deg, #00D4FF, #00D4FF 40%, #FFB800 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}>
-                Material de Pesca
-              </span>
-              <br />al Mejor Precio
-            </h1>
-
-            <p className="text-lg sm:text-xl leading-relaxed mb-8 max-w-lg" style={{ color: '#A0B8D8' }}>
-              Comparamos precios entre <strong style={{ color: '#E8F0FE' }}>Amazon, Decathlon y AliExpress</strong> para que ahorres en carretes, cañas, señuelos y accesorios.
-            </p>
-
-            <div className="flex flex-wrap gap-3">
-              <Link href="/search"
-                className="inline-flex items-center gap-2 font-bold px-10 py-4 rounded-full text-lg transition-all duration-300 hover:scale-105 active:scale-95 group"
-                style={{
-                  background: 'linear-gradient(135deg, #00D4FF, #0099CC)',
-                  color: '#0B1120',
-                  boxShadow: '0 4px 25px rgba(0,212,255,0.5), 0 0 60px rgba(0,212,255,0.15)',
-                }}>
-                Ver Ofertas
-                <ArrowRight className="h-5 w-5 group-hover:translate-x-1.5 transition-transform" />
-              </Link>
-              <Link href="/blog"
-                className="inline-flex items-center gap-2 font-semibold px-8 py-4 rounded-full text-lg transition-all duration-200"
-                style={{
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  color: '#A0B8D8',
-                  backdropFilter: 'blur(4px)',
-                }}>
-                <BookOpen className="h-5 w-5" />
-                Blog
-              </Link>
-            </div>
-
-            <div className="mt-10 flex flex-wrap gap-5">
-              {[
-                { icon: Shield, text: 'Comparativa multi-tienda', sub: 'Amazon · Decathlon · AliExpress' },
-                { icon: Users, text: `${totalDeals} ofertas verificadas`, sub: `Más de ${totalSavings.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })} ahorrados` },
-                { icon: Zap, text: 'Chollos actualizados', sub: 'Precios revisados cada semana' },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ background: 'rgba(0,212,255,0.1)' }}>
-                    <item.icon className="h-5 w-5" style={{ color: '#00D4FF' }} />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold" style={{ color: '#E8F0FE' }}>{item.text}</div>
-                    <div className="text-xs" style={{ color: '#4A6080' }}>{item.sub}</div>
-                  </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left: Text */}
+            <div className="max-w-xl">
+              <div className="flex flex-wrap gap-2 mb-6">
+                <div className="inline-flex items-center gap-2 text-sm rounded-full px-4 py-1.5"
+                  style={{ background: 'rgba(0,212,255,0.15)', border: '1px solid rgba(0,212,255,0.3)', color: '#00D4FF' }}>
+                  <BookOpen className="h-4 w-4" />
+                  <span className="font-semibold">Guías y análisis</span>
                 </div>
-              ))}
+                <div className="inline-flex items-center gap-2 text-sm rounded-full px-4 py-1.5"
+                  style={{ background: 'rgba(255,184,0,0.12)', border: '1px solid rgba(255,184,0,0.3)', color: '#FFB800' }}>
+                  <BadgeCheck className="h-4 w-4" />
+                  <span className="font-semibold">+{totalDeals} ofertas</span>
+                </div>
+              </div>
+
+              <h1 className="text-[2.5rem] sm:text-[3.5rem] lg:text-[4rem] font-extrabold leading-[1.05] tracking-tight mb-5"
+                style={{ color: '#E8F0FE', textShadow: '0 2px 20px rgba(0,0,0,0.3)' }}>
+                <span style={{
+                  background: 'linear-gradient(135deg, #00D4FF, #5EEAD4 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}>
+                  Guías de Pesca
+                </span>
+                <br />y los Mejores Chollos
+              </h1>
+
+              <p className="text-lg sm:text-xl leading-relaxed mb-8 max-w-lg" style={{ color: '#A0B8D8' }}>
+                Analizamos y comparamos el material de pesca para que aciertes en cada compra. <strong style={{ color: '#E8F0FE' }}>Guías honestas, chollos verificados</strong> en Amazon, Decathlon y AliExpress.
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+                <Link href="/blog"
+                  className="inline-flex items-center gap-2 font-bold px-10 py-4 rounded-full text-lg transition-all duration-300 hover:scale-105 active:scale-95 group"
+                  style={{
+                    background: 'linear-gradient(135deg, #00D4FF, #0099CC)',
+                    color: '#0B1120',
+                    boxShadow: '0 4px 25px rgba(0,212,255,0.5), 0 0 60px rgba(0,212,255,0.15)',
+                  }}>
+                  <BookOpen className="h-5 w-5" />
+                  Ver Guías
+                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1.5 transition-transform" />
+                </Link>
+                <Link href="/search"
+                  className="inline-flex items-center gap-2 font-semibold px-8 py-4 rounded-full text-lg transition-all duration-200 hover:scale-105 active:scale-95"
+                  style={{
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    color: '#A0B8D8',
+                    backdropFilter: 'blur(4px)',
+                  }}>
+                  <Zap className="h-5 w-5" />
+                  Ver Chollos
+                </Link>
+              </div>
+
+              <div className="mt-10 flex flex-wrap gap-5">
+                {[
+                  { icon: BookOpen, text: 'Guías de compra', sub: 'Comparativas y análisis detallados' },
+                  { icon: Shield, text: 'Multi-tienda', sub: 'Amazon · Decathlon · AliExpress' },
+                  { icon: Users, text: `${totalDeals} ofertas`, sub: `Más de ${totalSavings.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })} ahorrados` },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                      style={{ background: 'rgba(0,212,255,0.1)' }}>
+                      <item.icon className="h-5 w-5" style={{ color: '#00D4FF' }} />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold" style={{ color: '#E8F0FE' }}>{item.text}</div>
+                      <div className="text-xs" style={{ color: '#4A6080' }}>{item.sub}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right: Image */}
+            <div className="hidden lg:block relative h-full min-h-[500px] rounded-2xl overflow-hidden"
+              style={{ boxShadow: '0 0 40px rgba(0,212,255,0.1), 0 20px 60px rgba(0,0,0,0.4)' }}>
+              <img
+                src="/images/hero-bg.jpg"
+                alt="Pesca deportiva"
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ objectPosition: 'center 30%' }}
+              />
+              <div className="absolute inset-0" style={{
+                background: 'linear-gradient(135deg, rgba(0,212,255,0.08), transparent 50%)',
+              }} />
             </div>
           </div>
         </div>
       </section>
 
-      {/* BLOG — Latest posts */}
+      {/* BLOG — Featured posts (first section after hero) */}
       {posts.length > 0 && (
-        <section className="py-16 md:py-20" style={{ background: '#0F1F38' }}>
+        <section className="py-20 md:py-24 relative overflow-hidden"
+          style={{ background: 'linear-gradient(180deg, #0B1A30 0%, #111827 100%)' }}>
           <div className="mx-auto max-w-7xl px-4">
-            <div className="flex items-center justify-between mb-10">
+            <div className="flex items-end justify-between mb-12">
               <div>
                 <div className="inline-flex items-center gap-2 mb-3 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider"
                   style={{ background: 'rgba(0,212,255,0.12)', border: '1px solid rgba(0,212,255,0.25)', color: '#00D4FF' }}>
                   <BookOpen className="h-3 w-3" />
                   Blog
                 </div>
-                <h2 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: '#E8F0FE' }}>Guías y análisis</h2>
-                <p className="mt-1 text-base" style={{ color: '#8BA3C7' }}>Consejos, comparativas y guías de compra escritas por pescadores</p>
+                <h2 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: '#E8F0FE' }}>Guías y comparativas</h2>
+                <p className="mt-1.5 text-base" style={{ color: '#8BA3C7' }}>
+                  Análisis honestos escritos por pescadores para ayudarte a elegir
+                </p>
               </div>
               <Link href="/blog"
-                className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold transition-colors"
+                className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold transition-all hover:gap-2"
                 style={{ color: '#00D4FF' }}>
-                Ver todos <ChevronRight className="h-4 w-4" />
+                Ver todos los artículos <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {posts.map((post: BlogPost) => (
-                <Link key={post.id} href={`/blog/${post.slug}`}
-                  className="group rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
-                  style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: '#00D4FF' }}>
-                      {post.category || 'Artículo'}
+              {posts.map((post: BlogPost, i) => {
+                const gradients = [
+                  'linear-gradient(135deg, #0F1F38, #1B2A4A)',
+                  'linear-gradient(135deg, #0B1120, #1E3A5F)',
+                  'linear-gradient(135deg, #0F1F38, #1E3A5F)',
+                ]
+                return (
+                  <Link key={post.id} href={`/blog/${post.slug}`}
+                    className="group relative rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl"
+                    style={{
+                      background: gradients[i % gradients.length],
+                      border: '1px solid #1E3A5F',
+                    }}>
+                    <div className="p-7">
+                      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: '#00D4FF' }}>
+                        {post.category || 'Artículo'}
+                      </div>
+                      <h3 className="font-bold text-lg leading-snug mb-3 line-clamp-2 transition-colors duration-300 group-hover:text-[#00D4FF]"
+                        style={{ color: '#E8F0FE' }}>
+                        {post.title}
+                      </h3>
+                      <p className="text-sm leading-relaxed line-clamp-3 mb-5" style={{ color: '#8BA3C7' }}>
+                        {post.excerpt}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs" style={{ color: '#4A6080' }}>
+                          <Clock className="h-3 w-3" />
+                          {new Date(post.publishedAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </div>
+                        <span className="text-xs font-semibold flex items-center gap-1 transition-all duration-300 group-hover:gap-2"
+                          style={{ color: '#00D4FF' }}>
+                          Leer <ArrowRight className="h-3 w-3" />
+                        </span>
+                      </div>
                     </div>
-                    <h3 className="font-bold text-lg leading-snug mb-2 line-clamp-2 transition-colors duration-300 group-hover:text-[#00D4FF]"
-                      style={{ color: '#E8F0FE' }}>
-                      {post.title}
-                    </h3>
-                    <p className="text-sm leading-relaxed line-clamp-3 mb-4" style={{ color: '#8BA3C7' }}>
-                      {post.excerpt}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs" style={{ color: '#4A6080' }}>
-                      <Clock className="h-3 w-3" />
-                      {new Date(post.publishedAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                )
+              })}
             </div>
             <div className="mt-8 text-center sm:hidden">
               <Link href="/blog"
@@ -293,7 +326,7 @@ export default async function HomePage() {
           </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             {latest.slice(0, 4).map((deal) => {
-              const hoursAgo = Math.floor((Date.now() - new Date(deal.publishedAt).getTime()) / 3600000)
+              const hoursAgo = Math.floor((Date.now() - new Date(deal.publishedAt).getTime()) / 3600000) // eslint-disable-line react-hooks/purity
               return (
                 <Link key={deal.id} href={`/deals/${deal.slug}`}
                   className="group flex gap-5 p-5 rounded-2xl transition-all duration-300 hover:-translate-y-0.5 glow-cyan"

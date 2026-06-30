@@ -1,20 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const FAVORITES_KEY = 'pescatch_favorites'
 
 export function useFavorites() {
-  const [favorites, setFavorites] = useState<string[]>([])
-
-  useEffect(() => {
-    const stored = localStorage.getItem(FAVORITES_KEY)
-    if (stored) {
-      try { setFavorites(JSON.parse(stored)) } catch {}
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem(FAVORITES_KEY)
+      return stored ? JSON.parse(stored) : []
+    } catch {
+      return []
     }
-  }, [])
+  })
 
   const toggle = (dealId: string) => {
     setFavorites(prev => {

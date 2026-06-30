@@ -204,4 +204,7 @@ export const STORES: Store[] = [
   { id: 'amazon', slug: 'amazon', name: 'Amazon', reputation: 'good', url: 'https://amazon.es', commissionRate: 0.05 },
   { id: 'aliexpress', slug: 'aliexpress', name: 'AliExpress', reputation: 'neutral', url: 'https://aliexpress.com', commissionRate: 0.08 },
   { id: 'decathlon', slug: 'decathlon', name: 'Decathlon', reputation: 'good', url: 'https://decathlon.es', commissionRate: 0.03 },
+  { id: 'fishing-tackle-bait', slug: 'fishing-tackle-bait', name: 'Fishing Tackle & Bait', reputation: 'good', url: 'https://fishingtackleandbait.co.uk', commissionRate: 0.05 },
+  { id: 'total-fishing-tackle', slug: 'total-fishing-tackle', name: 'Total Fishing Tackle', reputation: 'good', url: 'https://total-fishing-tackle.com', commissionRate: 0.05 },
+  { id: 'pure-fishing', slug: 'pure-fishing', name: 'Pure Fishing', reputation: 'good', url: 'https://purefishing.com', commissionRate: 0.10 },
 ]

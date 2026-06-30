@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -15,16 +15,16 @@ function getVoteKey(dealId: string) {
 }
 
 export function VoteButtons({ dealId, initialUp, initialDown }: VoteButtonsProps) {
-  const [vote, setVote] = useState<'up' | 'down' | null>(null)
+  const [vote, setVote] = useState<'up' | 'down' | null>(() => {
+    try {
+      const stored = localStorage.getItem(getVoteKey(dealId))
+      return stored === 'up' || stored === 'down' ? stored : null
+    } catch {
+      return null
+    }
+  })
   const [upCount, setUpCount] = useState(initialUp)
   const [downCount, setDownCount] = useState(initialDown)
-
-  useEffect(() => {
-    const stored = localStorage.getItem(getVoteKey(dealId))
-    if (stored === 'up' || stored === 'down') {
-      setVote(stored)
-    }
-  }, [dealId])
 
   const handleVote = (type: 'up' | 'down') => {
     if (vote === type) {

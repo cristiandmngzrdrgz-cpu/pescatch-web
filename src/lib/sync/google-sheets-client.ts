@@ -1,11 +1,11 @@
-import { google } from 'googleapis'
+import { google, sheets_v4 } from 'googleapis'
 import path from 'path'
 
 const SHEET_ID = '1h1T46ckMSZ73QSnX88ELxRQNiAyURxugOj3QEZH4IZc'
 const SHEET_NAME = 'Hoja 1'
 const RANGE = `${SHEET_NAME}!A1:R100`
 
-let _sheets: any = null
+let _sheets: sheets_v4.Resource$Spreadsheets$Values | null = null
 
 async function getClient() {
   if (_sheets) return _sheets

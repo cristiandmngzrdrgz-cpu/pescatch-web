@@ -19,7 +19,7 @@ interface CommentsSectionProps {
   initialComments?: Comment[]
 }
 
-export function CommentsSection({ dealId, initialComments = [] }: CommentsSectionProps) {
+export function CommentsSection({ dealId: _dealId, initialComments = [] }: CommentsSectionProps) {
   const [comments, setComments] = useState<Comment[]>(initialComments)
   const [author, setAuthor] = useState('')
   const [content, setContent] = useState('')

@@ -3,8 +3,14 @@ import { DealCard } from '@/components/deals/deal-card'
 import { CATEGORIES } from '@/types'
 import Link from 'next/link'
 import { Fish } from 'lucide-react'
+import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  title: 'Categorías de Pesca — Carretes, Cañas, Señuelos y más | PesCatch',
+  description: 'Explora chollos de pesca por categoría: carretes, cañas, señuelos, accesorios, ropa y náutica. Encuentra las mejores ofertas en material de pesca en España.',
+}
 
 export default async function CategoriesPage() {
   const categoryDeals = new Map<string, Awaited<ReturnType<typeof getDeals>>>()
