@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 function mdToHtml(md: string): string {
-  let html = md
+  const html = md
     .replace(/^## (.+)$/gm, '<div class="flex items-center gap-3 mt-10 mb-4"><div class="w-1 h-8 rounded-full" style="background:linear-gradient(180deg,#00D4FF,#FFB800)"></div><h2 class="text-2xl font-bold" style="color:#E8F0FE">$1</h2></div>')
     .replace(/^### (.+)$/gm, '<h3 class="text-xl font-bold mt-8 mb-3" style="color:#E8F0FE">$1</h3>')
     .replace(/^#### (.+)$/gm, '<h4 class="text-lg font-bold mt-6 mb-2" style="color:#8BA3C7">$1</h4>')

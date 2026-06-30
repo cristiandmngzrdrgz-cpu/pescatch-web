@@ -75,9 +75,9 @@ export function PriceHistoryChart({ history }: PriceHistoryChartProps) {
           />
         ))}
 
-        {[minPrice, maxPrice].map((price) => (
+        {[minPrice, maxPrice].map((price, i) => (
           <text
-            key={price}
+            key={`y-${i}-${price}`}
             x={padding.left - 5}
             y={yScale(price) + 4}
             textAnchor="end"

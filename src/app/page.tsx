@@ -1,15 +1,30 @@
 import { getDeals, getFeaturedDeals } from '@/data/queries'
+import { getPosts } from '@/data/blog-queries'
 import { DealCard } from '@/components/deals/deal-card'
-import { Fish, ArrowRight, Clock, Zap, Star, Shield, BadgeCheck, Percent, Users } from 'lucide-react'
+import { Fish, ArrowRight, Clock, Zap, Star, Shield, BadgeCheck, Percent, Users, BookOpen, ChevronRight, Anchor, Wind, Target, Backpack, Shirt, Ship } from 'lucide-react'
 import Link from 'next/link'
 import { CATEGORIES } from '@/types'
+import type { BlogPost } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
+const categoryIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+  carretes: Anchor,
+  canas: Wind,
+  senuelos: Target,
+  accesorios: Backpack,
+  ropa: Shirt,
+  nautica: Ship,
+}
+
 export default async function HomePage() {
-  const featured = await getFeaturedDeals()
-  const latest = await getDeals({ sortBy: 'newest' })
-  const topDiscounts = (await getDeals({ sortBy: 'discount' })).slice(0, 5)
+  const [featured, latest, topDiscounts, posts] = await Promise.all([
+    getFeaturedDeals(),
+    getDeals({ sortBy: 'newest' }),
+    getDeals({ sortBy: 'discount' }).then(d => d.slice(0, 5)),
+    getPosts(3),
+  ])
+
   const totalDeals = latest.length
   const categoryDealCounts = new Map<string, number>()
   for (const cat of CATEGORIES) {
@@ -29,40 +44,35 @@ export default async function HomePage() {
     bestPriceMap.set(deal.productId, prev)
   }
 
-  const categoryImages: Record<string, string> = {
-    carretes: 'https://images.unsplash.com/photo-1589656966895-2f33e7653819?w=400&q=80',
-    canas: 'https://images.unsplash.com/photo-1572051416422-2270c7e21868?w=400&q=80',
-    senuelos: 'https://images.unsplash.com/photo-1589187150112-5b9aadc86518?w=400&q=80',
-    accesorios: 'https://images.unsplash.com/photo-1513863545813-5f7d724e4456?w=400&q=80',
-  }
-
   return (
     <div>
-      {/* HERO - Imagen real de pesca */}
-      <section className="relative overflow-hidden min-h-[85vh] flex items-center"
-        style={{ background: 'linear-gradient(135deg, #0A1326 0%, #0B1120 50%, #111827 100%)' }}>
+      {/* HERO */}
+      <section className="relative overflow-hidden min-h-[80vh] flex items-center"
+        style={{
+          background: 'linear-gradient(160deg, #0B1A30 0%, #0F1F38 30%, #111827 60%, #0B1120 100%)',
+        }}>
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1621277230131-1966e041a6a6?w=1400&q=85"
+            src="/images/hero-bg.jpg"
             alt="Pesca deportiva"
-            className="w-full h-full object-cover opacity-20"
-            style={{ objectPosition: 'center 30%' }}
+            className="w-full h-full object-cover opacity-15"
+            style={{ objectPosition: 'center 40%' }}
           />
           <div className="absolute inset-0" style={{
-            background: 'linear-gradient(90deg, rgba(10,19,38,0.95) 0%, rgba(10,19,38,0.7) 50%, rgba(10,19,38,0.4) 100%)'
+            background: 'linear-gradient(90deg, rgba(11,26,48,0.95) 0%, rgba(11,26,48,0.6) 50%, rgba(11,26,48,0.3) 100%)',
           }} />
         </div>
 
-          <div className="relative mx-auto max-w-7xl px-4 py-24 lg:py-32 w-full">
+        <div className="relative mx-auto max-w-7xl px-4 py-24 lg:py-32 w-full">
           <div className="max-w-2xl">
             <div className="flex flex-wrap gap-2 mb-6">
               <div className="inline-flex items-center gap-2 text-sm rounded-full px-4 py-1.5"
-                style={{ background: 'rgba(255,184,0,0.1)', border: '1px solid rgba(255,184,0,0.25)', color: '#FFB800' }}>
+                style={{ background: 'rgba(255,184,0,0.12)', border: '1px solid rgba(255,184,0,0.3)', color: '#FFB800' }}>
                 <BadgeCheck className="h-4 w-4" />
                 <span className="font-semibold">+{totalDeals} ofertas</span>
               </div>
               <div className="inline-flex items-center gap-2 text-sm rounded-full px-4 py-1.5"
-                style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.25)', color: '#00D4FF' }}>
+                style={{ background: 'rgba(0,212,255,0.12)', border: '1px solid rgba(0,212,255,0.3)', color: '#00D4FF' }}>
                 <Percent className="h-4 w-4" />
                 <span className="font-semibold">{totalSavings.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })} en ahorros</span>
               </div>
@@ -82,7 +92,7 @@ export default async function HomePage() {
               <br />al Mejor Precio
             </h1>
 
-            <p className="text-lg sm:text-xl leading-relaxed mb-8 max-w-lg" style={{ color: '#8BA3C7' }}>
+            <p className="text-lg sm:text-xl leading-relaxed mb-8 max-w-lg" style={{ color: '#A0B8D8' }}>
               Comparamos precios entre <strong style={{ color: '#E8F0FE' }}>Amazon, Decathlon y AliExpress</strong> para que ahorres en carretes, cañas, señuelos y accesorios.
             </p>
 
@@ -97,19 +107,19 @@ export default async function HomePage() {
                 Ver Ofertas
                 <ArrowRight className="h-5 w-5 group-hover:translate-x-1.5 transition-transform" />
               </Link>
-              <Link href="/categories"
+              <Link href="/blog"
                 className="inline-flex items-center gap-2 font-semibold px-8 py-4 rounded-full text-lg transition-all duration-200"
                 style={{
                   background: 'rgba(255,255,255,0.06)',
                   border: '1px solid rgba(255,255,255,0.1)',
-                  color: '#8BA3C7',
+                  color: '#A0B8D8',
                   backdropFilter: 'blur(4px)',
                 }}>
-                Categorías
+                <BookOpen className="h-5 w-5" />
+                Blog
               </Link>
             </div>
 
-            {/* Trust bar */}
             <div className="mt-10 flex flex-wrap gap-5">
               {[
                 { icon: Shield, text: 'Comparativa multi-tienda', sub: 'Amazon · Decathlon · AliExpress' },
@@ -131,6 +141,61 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* BLOG — Latest posts */}
+      {posts.length > 0 && (
+        <section className="py-16 md:py-20" style={{ background: '#0F1F38' }}>
+          <div className="mx-auto max-w-7xl px-4">
+            <div className="flex items-center justify-between mb-10">
+              <div>
+                <div className="inline-flex items-center gap-2 mb-3 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider"
+                  style={{ background: 'rgba(0,212,255,0.12)', border: '1px solid rgba(0,212,255,0.25)', color: '#00D4FF' }}>
+                  <BookOpen className="h-3 w-3" />
+                  Blog
+                </div>
+                <h2 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: '#E8F0FE' }}>Guías y análisis</h2>
+                <p className="mt-1 text-base" style={{ color: '#8BA3C7' }}>Consejos, comparativas y guías de compra escritas por pescadores</p>
+              </div>
+              <Link href="/blog"
+                className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold transition-colors"
+                style={{ color: '#00D4FF' }}>
+                Ver todos <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {posts.map((post: BlogPost) => (
+                <Link key={post.id} href={`/blog/${post.slug}`}
+                  className="group rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
+                  style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: '#00D4FF' }}>
+                      {post.category || 'Artículo'}
+                    </div>
+                    <h3 className="font-bold text-lg leading-snug mb-2 line-clamp-2 transition-colors duration-300 group-hover:text-[#00D4FF]"
+                      style={{ color: '#E8F0FE' }}>
+                      {post.title}
+                    </h3>
+                    <p className="text-sm leading-relaxed line-clamp-3 mb-4" style={{ color: '#8BA3C7' }}>
+                      {post.excerpt}
+                    </p>
+                    <div className="flex items-center gap-2 text-xs" style={{ color: '#4A6080' }}>
+                      <Clock className="h-3 w-3" />
+                      {new Date(post.publishedAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <div className="mt-8 text-center sm:hidden">
+              <Link href="/blog"
+                className="inline-flex items-center gap-1 text-sm font-semibold"
+                style={{ color: '#00D4FF' }}>
+                Ver todos los artículos <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Featured Deals */}
       {featured.length > 0 && (
@@ -172,35 +237,39 @@ export default async function HomePage() {
             <p className="mt-2 text-lg" style={{ color: '#8BA3C7' }}>Explora los chollos por tipo de material de pesca</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {CATEGORIES.map((cat) => {
+            {CATEGORIES.map((cat, i) => {
               const dealCount = categoryDealCounts.get(cat.slug) || 0
-              const imgSrc = categoryImages[cat.slug] || ''
+              const Icon = categoryIcons[cat.slug] || Fish
+              const gradients = [
+                'linear-gradient(135deg, #0F1F38, #1B2A4A)',
+                'linear-gradient(135deg, #0B1120, #1E3A5F)',
+                'linear-gradient(135deg, #0F1F38, #1E3A5F)',
+                'linear-gradient(135deg, #0B1120, #1B2A4A)',
+                'linear-gradient(135deg, #0F1F38, #1B2A4A)',
+                'linear-gradient(135deg, #0B1120, #1E3A5F)',
+              ]
               return (
                 <Link key={cat.id} href={`/categories/${cat.slug}`}
                   className="group relative overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                  style={{ background: '#111827', border: '1px solid #1E3A5F', minHeight: '260px' }}>
-                  <div className="absolute inset-0">
-                    {imgSrc && (
-                      <img src={imgSrc} alt={cat.name}
-                        className="w-full h-full object-cover opacity-30 group-hover:opacity-50 transition-opacity duration-500"
-                      />
-                    )}
-                    <div className="absolute inset-0" style={{
-                      background: 'linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.7) 100%)',
-                    }} />
-                  </div>
-                  <div className="relative z-10 p-6 flex flex-col justify-end h-full min-h-[260px]">
-                    {dealCount > 0 && (
-                      <span className="inline-block w-fit text-xs font-bold px-3 py-1 rounded-full mb-3"
-                        style={{ background: 'rgba(0,212,255,0.15)', border: '1px solid rgba(0,212,255,0.25)', color: '#00D4FF' }}>
-                        {dealCount} {dealCount === 1 ? 'chollo' : 'chollos'}
-                      </span>
-                    )}
-                    <h3 className="text-xl font-bold" style={{ color: '#E8F0FE' }}>{cat.name}</h3>
-                    <div className="flex items-center gap-1 mt-1 text-sm group-hover:gap-2 transition-all"
-                      style={{ color: '#00D4FF' }}>
-                      <span>Ver chollos</span>
-                      <ArrowRight className="h-3.5 w-3.5" />
+                  style={{ background: gradients[i % gradients.length], border: '1px solid #1E3A5F', minHeight: '220px' }}>
+                  <div className="relative z-10 p-6 flex flex-col justify-between h-full min-h-[220px]">
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg"
+                      style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', color: '#00D4FF' }}>
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <div>
+                      {dealCount > 0 && (
+                        <span className="inline-block w-fit text-xs font-bold px-3 py-1 rounded-full mb-2"
+                          style={{ background: 'rgba(0,212,255,0.15)', border: '1px solid rgba(0,212,255,0.25)', color: '#00D4FF' }}>
+                          {dealCount} {dealCount === 1 ? 'chollo' : 'chollos'}
+                        </span>
+                      )}
+                      <h3 className="text-xl font-bold" style={{ color: '#E8F0FE' }}>{cat.name}</h3>
+                      <div className="flex items-center gap-1 mt-1 text-sm group-hover:gap-2 transition-all"
+                        style={{ color: '#00D4FF' }}>
+                        <span>Ver chollos</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </div>
                     </div>
                   </div>
                 </Link>

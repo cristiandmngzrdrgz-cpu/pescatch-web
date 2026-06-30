@@ -122,7 +122,10 @@ async function loadPriceHistory(dealId: string): Promise<{ date: string; price: 
     sql: 'SELECT date, price FROM price_history WHERE dealId = ? ORDER BY date ASC',
     args: [dealId],
   })
-  return result.rows as unknown as { date: string; price: number }[]
+  return result.rows.map((row: Record<string, unknown>) => ({
+    date: String(row.date ?? ''),
+    price: Number(row.price) || 0,
+  }))
 }
 
 async function loadDeals(sql: string, params: InValue[] = []): Promise<Deal[]> {

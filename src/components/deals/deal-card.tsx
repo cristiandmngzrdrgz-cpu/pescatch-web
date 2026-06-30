@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { formatPrice } from '@/lib/utils'
-import { Clock, Store, Truck, ChevronUp } from 'lucide-react'
+import { Clock, Store, Truck, ChevronUp, Fish } from 'lucide-react'
 import { CATEGORIES } from '@/types'
 import type { Deal } from '@/types'
+import { useState } from 'react'
 
 interface DealCardProps {
   deal: Deal
@@ -15,6 +16,8 @@ interface DealCardProps {
 export function DealCard({ deal, bestPriceStore, storeCount }: DealCardProps) {
   const isBestPrice = bestPriceStore != null && deal.store.name === bestPriceStore
   const showBestPrice = storeCount != null && storeCount >= 2
+  const [imgError, setImgError] = useState(false)
+  const hasImage = Boolean(deal.imageUrl) && !imgError
 
   return (
     <Link href={`/deals/${deal.slug}`}>
@@ -36,13 +39,20 @@ export function DealCard({ deal, bestPriceStore, storeCount }: DealCardProps) {
       >
         <div className="relative h-48 flex items-center justify-center overflow-hidden"
           style={{ background: 'linear-gradient(135deg, #1A2535, rgba(0,212,255,0.05))' }}>
-          <img
-            src={deal.imageUrl}
-            alt={deal.title}
-            loading="lazy"
-            className="absolute inset-0 object-cover group-hover:scale-105 transition-transform duration-500 w-full h-full"
-          />
-          {/* Image overlay glow on hover */}
+          {hasImage ? (
+            <img
+              src={deal.imageUrl}
+              alt={deal.title}
+              loading="lazy"
+              onError={() => setImgError(true)}
+              className="absolute inset-0 object-cover group-hover:scale-105 transition-transform duration-500 w-full h-full"
+            />
+          ) : (
+            <div className="flex flex-col items-center gap-2 opacity-40">
+              <Fish className="h-10 w-10" style={{ color: '#00D4FF' }} />
+              <span className="text-xs font-medium" style={{ color: '#4A6080' }}>Sin imagen</span>
+            </div>
+          )}
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
             style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.2), transparent 40%)' }} />
           <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">

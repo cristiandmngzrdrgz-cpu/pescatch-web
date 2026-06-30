@@ -35,8 +35,8 @@
   --color-gold-400: #FBBF24;
 
   /* Mission Control core */
-  --color-mc-bg: #0B1120;
-  --color-mc-surface: #111827;
+  --color-mc-bg: #0F1A2E;
+  --color-mc-surface: #162035;
   --color-mc-surface-hover: #1A2535;
   --color-mc-surface-active: #1E3A5F;
   --color-mc-border: #1E3A5F;
@@ -59,7 +59,7 @@
 }
 
 :root {
-  --background: #0B1120;
+  --background: #0F1A2E;
   --foreground: #E8F0FE;
 }
 
