@@ -12,7 +12,7 @@ export default function AdminBlogPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/posts')
+    fetch('/api/posts?includeHidden=true')
       .then(r => r.json())
       .then((data: BlogPost[]) => setPosts(data))
       .finally(() => setLoading(false))
@@ -37,7 +37,7 @@ export default function AdminBlogPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-extrabold" style={{ color: '#E8F0FE' }}>Todos los posts</h1>
-          <p className="text-sm mt-1" style={{ color: '#8BA3C7' }}>{posts.length} artículos publicados</p>
+          <p className="text-sm mt-1" style={{ color: '#8BA3C7' }}>{posts.length} artículos ({posts.filter(p => p.hidden).length} ocultos)</p>
         </div>
         <Link href="/admin/blog/new">
           <Button className="h-10 px-5 font-semibold rounded-xl" style={{ background: '#00D4FF', color: '#0B1120' }}>
@@ -86,7 +86,14 @@ export default function AdminBlogPage() {
                             <Newspaper className="h-4 w-4" style={{ color: '#00D4FF' }} />
                           )}
                         </div>
-                        <div className="font-semibold max-w-[280px] truncate" style={{ color: '#E8F0FE' }}>{post.title}</div>
+                        <div className="font-semibold max-w-[280px] truncate" style={{ color: '#E8F0FE' }}>
+                          {post.title}
+                          {post.hidden && (
+                            <span className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ color: '#0B1120', background: '#EF4444' }}>
+                              OCULTO
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-5 py-3.5" style={{ color: '#8BA3C7' }}>{post.category || '—'}</td>

@@ -54,6 +54,7 @@ export interface Deal {
   createdAt: string
   updatedAt: string
   featured: boolean
+  hidden: boolean
   commission: number
   ean?: string
   asin?: string
@@ -117,6 +118,7 @@ export interface DealFilters {
   subcategory?: string
   store?: string
   minDiscount?: number
+  minPrice?: number
   maxPrice?: number
   sortBy?: 'discount' | 'price_asc' | 'price_desc' | 'newest' | 'popular'
   search?: string
@@ -195,6 +197,7 @@ export interface BlogPost {
   category: string
   tags: string[]
   relatedAsins: string[]
+  hidden: boolean
   publishedAt: string
   createdAt: string
   updatedAt: string

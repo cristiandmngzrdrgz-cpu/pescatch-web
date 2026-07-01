@@ -6,7 +6,8 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '10') || 10), 100)
   const offset = Math.max(0, parseInt(searchParams.get('offset') || '0') || 0)
-  const posts = await getPosts(limit, offset)
+  const includeHidden = searchParams.get('includeHidden') === 'true'
+  const posts = await getPosts(limit, offset, includeHidden)
   return NextResponse.json(posts)
 }
 

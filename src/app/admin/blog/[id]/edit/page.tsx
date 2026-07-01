@@ -21,6 +21,7 @@ export default function EditPostPage() {
     title: '', slug: '', excerpt: '', content: '',
     featuredImage: '', category: '', author: 'PesCatch',
     tags: '', relatedAsins: '', publishedAt: '',
+    hidden: false,
   })
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function EditPostPage() {
           tags: (data.tags || []).join(', '),
           relatedAsins: (data.relatedAsins || []).join(', '),
           publishedAt: data.publishedAt?.slice(0, 10) || '',
+          hidden: data.hidden || false,
         })
         setLoading(false)
       })
@@ -57,6 +59,7 @@ export default function EditPostPage() {
       content: form.content, featuredImage: form.featuredImage,
       category: form.category, author: form.author || 'PesCatch',
       tags, relatedAsins,
+      hidden: form.hidden,
       publishedAt: form.publishedAt ? new Date(form.publishedAt).toISOString() : undefined,
     }
 
@@ -173,6 +176,23 @@ export default function EditPostPage() {
               <Input type="date" value={form.publishedAt} onChange={e => updateField('publishedAt', e.target.value)} className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
             </div>
           </div>
+        </div>
+
+        <div className="rounded-2xl p-6 space-y-5" style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
+          <h2 className="font-bold" style={{ color: '#E8F0FE' }}>Visibilidad</h2>
+          <label className="flex items-center gap-3 cursor-pointer" style={{ color: '#E8F0FE' }}>
+            <input
+              type="checkbox"
+              checked={form.hidden}
+              onChange={e => setForm(prev => ({ ...prev, hidden: e.target.checked }))}
+              className="h-4 w-4 rounded"
+              style={{ accentColor: '#EF4444' }}
+            />
+            <div>
+              <span className="font-semibold">Oculto</span>
+              <p className="text-xs mt-0.5" style={{ color: '#8BA3C7' }}>No se muestra en la web pública. Visible solo en el panel admin.</p>
+            </div>
+          </label>
         </div>
 
         <div className="flex gap-3 pt-4">

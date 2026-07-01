@@ -26,6 +26,7 @@ function mapRowToPost(row: Record<string, unknown>): BlogPost {
     category: row.category as string,
     tags: JSON.parse((row.tags as string) || '[]'),
     relatedAsins: JSON.parse((row.relatedAsins as string) || '[]'),
+    hidden: Boolean(row.hidden),
     publishedAt: row.publishedAt as string,
     createdAt: row.createdAt as string,
     updatedAt: row.updatedAt as string,
@@ -47,20 +48,29 @@ async function loadPost(sql: string, params: InValue[]): Promise<BlogPost | unde
   return mapRowToPost(result.rows[0] as Record<string, unknown>)
 }
 
-export async function getPosts(limit = 10, offset = 0): Promise<BlogPost[]> {
-  return loadPosts('SELECT * FROM posts ORDER BY publishedAt DESC LIMIT ? OFFSET ?', [limit, offset])
+export async function getPosts(limit = 10, offset = 0, includeHidden = false): Promise<BlogPost[]> {
+  const sql = includeHidden
+    ? 'SELECT * FROM posts ORDER BY publishedAt DESC LIMIT ? OFFSET ?'
+    : 'SELECT * FROM posts WHERE hidden = 0 ORDER BY publishedAt DESC LIMIT ? OFFSET ?'
+  return loadPosts(sql, [limit, offset])
 }
 
-export async function getPostBySlug(slug: string): Promise<BlogPost | undefined> {
-  return loadPost('SELECT * FROM posts WHERE slug = ?', [slug])
+export async function getPostBySlug(slug: string, includeHidden = false): Promise<BlogPost | undefined> {
+  const sql = includeHidden
+    ? 'SELECT * FROM posts WHERE slug = ?'
+    : 'SELECT * FROM posts WHERE slug = ? AND hidden = 0'
+  return loadPost(sql, [slug])
 }
 
 export async function getPostById(id: string): Promise<BlogPost | undefined> {
   return loadPost('SELECT * FROM posts WHERE id = ?', [id])
 }
 
-export async function getPostsByCategory(category: string, limit = 10): Promise<BlogPost[]> {
-  return loadPosts('SELECT * FROM posts WHERE category = ? ORDER BY publishedAt DESC LIMIT ?', [category, limit])
+export async function getPostsByCategory(category: string, limit = 10, includeHidden = false): Promise<BlogPost[]> {
+  const sql = includeHidden
+    ? 'SELECT * FROM posts WHERE category = ? ORDER BY publishedAt DESC LIMIT ?'
+    : 'SELECT * FROM posts WHERE category = ? AND hidden = 0 ORDER BY publishedAt DESC LIMIT ?'
+  return loadPosts(sql, [category, limit])
 }
 
 export async function createPost(data: Record<string, unknown>): Promise<BlogPost> {
@@ -75,13 +85,13 @@ export async function createPost(data: Record<string, unknown>): Promise<BlogPos
 
   await db.execute({
     sql: `INSERT INTO posts (
-      id, title, slug, excerpt, content, featuredImage, author, category, tags, relatedAsins,
+      id, title, slug, excerpt, content, featuredImage, author, category, tags, relatedAsins, hidden,
       publishedAt, createdAt, updatedAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id, str(data.title), str(data.slug), str(data.excerpt), str(data.content),
       str(data.featuredImage), str(data.author, 'PesCatch'), str(data.category),
-      json(data.tags), json(data.relatedAsins),
+      json(data.tags), json(data.relatedAsins), data.hidden ? 1 : 0,
       str(data.publishedAt, now), now, now,
     ],
   })
@@ -101,13 +111,13 @@ export async function updatePost(id: string, data: Record<string, unknown>): Pro
   await db.execute({
     sql: `UPDATE posts SET
       title = ?, slug = ?, excerpt = ?, content = ?, featuredImage = ?,
-      author = ?, category = ?, tags = ?, relatedAsins = ?, updatedAt = ?
+      author = ?, category = ?, tags = ?, relatedAsins = ?, hidden = ?, updatedAt = ?
     WHERE id = ?`,
     args: [
       str(data.title), str(data.slug), str(data.excerpt), str(data.content),
       str(data.featuredImage), str(data.author, 'PesCatch'), str(data.category),
       JSON.stringify(data.tags || []), JSON.stringify(data.relatedAsins || []),
-      now, id,
+      data.hidden ? 1 : 0, now, id,
     ],
   })
 

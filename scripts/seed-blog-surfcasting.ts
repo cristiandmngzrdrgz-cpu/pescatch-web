@@ -227,8 +227,8 @@ async function seedBlogPost() {
     console.log(`✅ Blog post updated: ${slug}`)
   } else {
     await db.execute({
-      sql: `INSERT INTO posts (id, title, slug, excerpt, content, featuredImage, author, category, tags, relatedAsins, publishedAt, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      sql: `INSERT INTO posts (id, title, slug, excerpt, content, featuredImage, author, category, tags, relatedAsins, hidden, publishedAt, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         `post_${Date.now()}`,
         'Las 5 mejores cañas de surfcasting calidad-precio en 2026',
@@ -240,9 +240,7 @@ async function seedBlogPost() {
         'Cañas',
         JSON.stringify(['cañas surfcasting', 'surfcasting', 'cañas pesca', 'mejores cañas surfcasting', 'guias compra']),
         JSON.stringify(['B0F4XJ85B4', 'B098131M93', 'B0FYFMKZXZ', 'B0844Y3MNW', 'B09TTPSLZN']),
-        now,
-        now,
-        now,
+        0, now, now, now,
       ],
     })
     console.log(`✅ Blog post created: ${slug}`)

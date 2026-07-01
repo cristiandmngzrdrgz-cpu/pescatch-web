@@ -46,10 +46,10 @@ export async function seedDatabase() {
         affiliateUrl, category, subcategory, tags,
         stockStatus, stockCount, rating, reviewCount,
         technicalSpecs, review, pros, cons,
-        votesUp, votesDown, featured, commission,
+        votesUp, votesDown, featured, hidden, commission,
         ean, asin,
         publishedAt, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         deal.id, deal.productId, deal.title, deal.slug, deal.description,
         deal.originalPrice, deal.salePrice, deal.shippingCost,
@@ -64,7 +64,7 @@ export async function seedDatabase() {
         JSON.stringify(deal.technicalSpecs || {}), deal.review || '',
         JSON.stringify(deal.pros || []), JSON.stringify(deal.cons || []),
         deal.votesUp || 0, deal.votesDown || 0,
-        deal.featured ? 1 : 0, deal.commission || 0,
+        deal.featured ? 1 : 0, deal.hidden ? 1 : 0, deal.commission || 0,
         deal.ean || '', deal.asin || '',
         deal.publishedAt, deal.createdAt || deal.publishedAt,
         deal.updatedAt || deal.publishedAt,
@@ -117,8 +117,8 @@ async function seedPost(slug: string, title: string, excerpt: string, category: 
   const fullContent = content + `\n\n<!-- PRODUCTS_DATA: ${productsData} -->`
 
   await db.execute({
-    sql: `INSERT OR REPLACE INTO posts (id, title, slug, excerpt, content, featuredImage, author, category, tags, relatedAsins, publishedAt, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    sql: `INSERT OR REPLACE INTO posts (id, title, slug, excerpt, content, featuredImage, author, category, tags, relatedAsins, hidden, publishedAt, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       `post_${Date.now()}_${slug}`,
       title,
@@ -130,7 +130,7 @@ async function seedPost(slug: string, title: string, excerpt: string, category: 
       category,
       JSON.stringify(tags),
       JSON.stringify(relatedAsins),
-      now, now, now,
+      0, now, now, now,
     ],
   })
 

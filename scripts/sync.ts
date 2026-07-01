@@ -1,215 +1,19 @@
 import 'dotenv/config'
-import { getDb, initSchema, migrateSchema } from '../src/lib/db'
-import { matchByEan, matchBySlug, insertProduct, updateProduct, upsertDeal, recordPricePoint } from '../src/lib/sync/matcher'
-import { readJsonFile } from '../src/lib/sync/reader-json'
-import { readGoogleSheets } from '../src/lib/sync/reader-sheets'
-import { decathlonAdapter } from '../src/lib/sync/decathlon-adapter'
-import { amazonAdapter } from '../src/lib/sync/amazon-adapter'
-import { aliexpressAdapter } from '../src/lib/sync/aliexpress-adapter'
-import { fishingTackleBaitAdapter } from '../src/lib/sync/fishing-tackle-bait-adapter'
-import { totalFishingTackleAdapter } from '../src/lib/sync/total-fishing-tackle-adapter'
-import { pureFishingAdapter } from '../src/lib/sync/pure-fishing-adapter'
-import type { SyncRow, SyncResult, StoreAdapter } from '../src/lib/sync/types'
-
-const STORE_ADAPTERS: StoreAdapter[] = [
-  amazonAdapter,
-  decathlonAdapter,
-  aliexpressAdapter,
-  fishingTackleBaitAdapter,
-  totalFishingTackleAdapter,
-  pureFishingAdapter,
-]
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 80) || 'product'
-}
-
-async function generateUniqueSlug(base: string, excludeId?: string): Promise<string> {
-  let slug = slugify(base)
-  let counter = 1
-  let match = await matchBySlug(slug)
-  while (match && match.id !== excludeId) {
-    slug = `${slugify(base)}-${counter}`
-    counter++
-    match = await matchBySlug(slug)
-  }
-  return slug
-}
-
-async function processRow(
-  row: SyncRow,
-  result: SyncResult,
-): Promise<void> {
-  const db = getDb()
-  const now = new Date().toISOString()
-  const ean = row.ean?.trim() || ''
-
-  try {
-    // 1. Match or create product
-    let matched: { id: string; exists: boolean } | null = null
-    let isNew = false
-    const slug = slugify(row.name)
-
-    if (ean) {
-      matched = await matchByEan(ean)
-    }
-
-    if (!matched) {
-      matched = await matchBySlug(slug)
-    }
-
-    if (!matched) {
-      const uniqueSlug = await generateUniqueSlug(row.name)
-      const productId = ean ? `prod_${ean}` : `prod_${uniqueSlug}`
-      isNew = true
-      await insertProduct(
-        productId,
-        row.name, uniqueSlug, ean, row.brand || '',
-        row.category || '', row.subcategory || '',
-        row.imageUrl || '',
-        row.description || '',
-        now,
-      )
-      matched = { id: productId, exists: false }
-    } else {
-      const uniqueSlug = await generateUniqueSlug(row.name, matched.id)
-      await updateProduct(
-        matched.id,
-        row.name, uniqueSlug, row.brand || '',
-        row.category || '', row.subcategory || '',
-        row.imageUrl || '',
-        row.description || '',
-        now,
-      )
-    }
-
-    // Get the current product data for copying to deals
-    const productData = await db.execute({
-      sql: 'SELECT * FROM products WHERE id = ?',
-      args: [matched.id],
-    })
-    if (productData.rows.length === 0) return
-    const product = productData.rows[0] as Record<string, unknown>
-
-    // 2. Process each store
-    const pSlug = product.slug as string || ''
-    const pName = product.name as string || ''
-    let storeIndex = 0
-
-    const stores: { storeId: string; adapter: StoreAdapter; manualPrice?: number; manualUrl?: string; manualShipping?: number; manualStock?: string }[] = [
-      { storeId: 'amazon', adapter: amazonAdapter, manualPrice: row.amazonPrice, manualUrl: row.amazonUrl, manualShipping: row.amazonShipping, manualStock: row.amazonStock },
-      { storeId: 'decathlon', adapter: decathlonAdapter, manualPrice: row.decathlonPrice, manualUrl: row.decathlonUrl, manualShipping: row.decathlonShipping, manualStock: row.decathlonStock },
-      { storeId: 'aliexpress', adapter: aliexpressAdapter, manualPrice: row.aliexpressPrice, manualUrl: row.aliexpressUrl, manualShipping: row.aliexpressShipping, manualStock: row.aliexpressStock },
-      { storeId: 'fishing-tackle-bait', adapter: fishingTackleBaitAdapter, manualPrice: row.fishingTackleBaitPrice, manualUrl: row.fishingTackleBaitUrl, manualShipping: row.fishingTackleBaitShipping, manualStock: row.fishingTackleBaitStock },
-      { storeId: 'total-fishing-tackle', adapter: totalFishingTackleAdapter, manualPrice: row.totalFishingTacklePrice, manualUrl: row.totalFishingTackleUrl, manualShipping: row.totalFishingTackleShipping, manualStock: row.totalFishingTackleStock },
-      { storeId: 'pure-fishing', adapter: pureFishingAdapter, manualPrice: row.pureFishingPrice, manualUrl: row.pureFishingUrl, manualShipping: row.pureFishingShipping, manualStock: row.pureFishingStock },
-    ]
-
-    for (const store of stores) {
-      // Try API lookup
-      const apiResult = await store.adapter.lookup(ean)
-
-      // Use API result, fallback to manual data
-      const price = apiResult?.price ?? store.manualPrice
-      const url = apiResult?.url ?? store.manualUrl
-      const shipping = apiResult?.shipping ?? store.manualShipping ?? 0
-      const stock = apiResult?.stock ?? store.manualStock ?? 'in_stock'
-
-      if (!price || !url) { storeIndex++; continue }
-
-      // First store uses product slug, subsequent stores append storeId for uniqueness
-      const dealSlug = storeIndex === 0 ? pSlug : `${pSlug}_${store.storeId}`
-      storeIndex++
-
-      const originalPrice = Math.round(price * 1.3 * 100) / 100
-
-      const dealId = await upsertDeal(
-        matched.id,
-        store.storeId,
-        store.adapter.name,
-        dealSlug,
-        pName,
-        originalPrice,
-        price,
-        shipping,
-        stock,
-        url,
-        now,
-      )
-
-      // Record price point
-      await recordPricePoint(dealId, price, now.split('T')[0])
-
-      // Copy additional product-level fields to deal
-      const pCategory = product.category as string || ''
-      const pSubcategory = product.subcategory as string || ''
-      const pDescription = product.description as string || ''
-      const pImageUrl = product.imageUrl as string || ''
-      const pImages = product.images as string || '[]'
-
-      await db.execute({
-        sql: `UPDATE deals SET
-          category = ?, subcategory = ?,
-          description = ?, imageUrl = ?, images = ?, ean = ?
-        WHERE id = ?`,
-        args: [pCategory, pSubcategory, pDescription, pImageUrl, pImages, ean, dealId],
-      })
-    }
-
-    if (isNew) result.created++
-    else result.updated++
-
-    console.log(`  ${isNew ? 'Created' : 'Updated'} product: ${row.name}`)
-  } catch (err) {
-    result.errors.push(`Error processing "${row.name}" (EAN: ${ean}): ${(err as Error).message}`)
-  }
-}
+import { runSync, insertSyncLog } from '../src/lib/run-sync'
 
 async function main() {
   console.log('Syncing products from data source...\n')
 
-  const db = getDb()
-  await initSchema()
-  await migrateSchema()
+  const result = await runSync()
 
-  const result: SyncResult = { created: 0, updated: 0, skipped: 0, errors: [] }
-
-  // Read data from Google Sheets or local JSON file
-  let rows: SyncRow[] = []
-
-  if (process.env.GOOGLE_SHEET_CSV_URL) {
-    console.log('Reading from Google Sheets CSV...')
-    rows = await readGoogleSheets()
-  }
-
-  if (rows.length === 0) {
-    const dataFile = process.env.DATA_FILE || 'scripts/sync-data.json'
-    console.log(`Reading from file: ${dataFile}`)
-    rows = readJsonFile(dataFile)
-  }
-
-  if (rows.length === 0) {
-    console.log('No data found. Create a data file or configure Google Sheets.')
-    console.log('Sample: copy scripts/sync-data.json to populate initial data.\n')
-    return
-  }
-
-  console.log(`Processing ${rows.length} products...\n`)
-
-  for (const row of rows) {
-    await processRow(row, result)
-  }
-
-  // Summary
-  console.log('\nSync complete:')
-  console.log(`  ${result.created} products created`)
-  console.log(`  ${result.updated} products updated`)
+  console.log(`Sync complete in ${result.durationMs}ms:`)
+  console.log(`  ${result.rowsProcessed} products processed`)
+  console.log(`  ${result.created} created`)
+  console.log(`  ${result.updated} updated`)
   console.log(`  ${result.skipped} skipped`)
+  if (result.hiddenOrphans > 0) {
+    console.log(`  ${result.hiddenOrphans} deals hidden (orphaned)`)
+  }
 
   if (result.errors.length > 0) {
     console.log(`\n${result.errors.length} errors:`)
@@ -217,6 +21,16 @@ async function main() {
       console.log(`  ✗ ${err}`)
     }
   }
+
+  await insertSyncLog({
+    duration_ms: result.durationMs,
+    rows_processed: result.rowsProcessed,
+    created: result.created,
+    updated: result.updated,
+    skipped: result.skipped,
+    hidden_orphans: result.hiddenOrphans,
+    errors: result.errors,
+  })
 
   console.log('')
 }

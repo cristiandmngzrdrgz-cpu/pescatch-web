@@ -4,6 +4,7 @@ import { adminApiCheck } from '@/lib/admin-auth'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
+  const includeHidden = searchParams.get('includeHidden') === 'true'
   const filters = {
     category: searchParams.get('category') || undefined,
     subcategory: searchParams.get('subcategory') || undefined,
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
     maxPrice: searchParams.get('maxPrice') !== null ? Number(searchParams.get('maxPrice')) : undefined,
   }
 
-  const deals = await getDeals(filters)
+  const deals = await getDeals(filters, includeHidden)
   return NextResponse.json(deals)
 }
 

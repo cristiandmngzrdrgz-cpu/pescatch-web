@@ -48,6 +48,7 @@ function mapRowToDeal(row: Record<string, unknown>): Deal {
     createdAt: row.createdAt as string,
     updatedAt: row.updatedAt as string,
     featured: Boolean(row.featured),
+    hidden: Boolean(row.hidden),
     commission: row.commission as number,
     ean: (row.ean as string) || '',
     asin: (row.asin as string) || '',
@@ -182,9 +183,11 @@ async function loadDeal(sql: string, params: InValue[]): Promise<Deal | undefine
   return deal
 }
 
-export async function getDeals(filters?: DealFilters): Promise<Deal[]> {
+export async function getDeals(filters?: DealFilters, includeHidden = false): Promise<Deal[]> {
   let sql = 'SELECT * FROM deals WHERE 1=1'
   const params: InValue[] = []
+
+  if (!includeHidden) sql += ' AND hidden = 0'
 
   if (filters) {
     if (filters.category) {
@@ -195,14 +198,22 @@ export async function getDeals(filters?: DealFilters): Promise<Deal[]> {
       sql += ' AND subcategory = ?'
       params.push(filters.subcategory)
     }
+    if (filters.store) {
+      sql += ' AND storeId = ?'
+      params.push(filters.store)
+    }
     if (filters.search) {
       const q = `%${filters.search.toLowerCase()}%`
-      sql += ' AND (LOWER(title) LIKE ? OR LOWER(description) LIKE ? OR LOWER(tags) LIKE ?)'
-      params.push(q, q, q)
+      sql += ' AND (LOWER(title) LIKE ? OR LOWER(description) LIKE ? OR LOWER(tags) LIKE ? OR LOWER(storeName) LIKE ?)'
+      params.push(q, q, q, q)
     }
     if (filters.minDiscount) {
       sql += ' AND discountPercent >= ?'
       params.push(filters.minDiscount)
+    }
+    if (filters.minPrice) {
+      sql += ' AND salePrice >= ?'
+      params.push(filters.minPrice)
     }
     if (filters.maxPrice) {
       sql += ' AND salePrice <= ?'
@@ -224,16 +235,22 @@ export async function getDeals(filters?: DealFilters): Promise<Deal[]> {
   return loadDeals(sql, params)
 }
 
-export async function getDealBySlug(slug: string): Promise<Deal | undefined> {
-  return loadDeal('SELECT * FROM deals WHERE slug = ?', [slug])
+export async function getDealBySlug(slug: string, includeHidden = false): Promise<Deal | undefined> {
+  const sql = includeHidden
+    ? 'SELECT * FROM deals WHERE slug = ?'
+    : 'SELECT * FROM deals WHERE slug = ? AND hidden = 0'
+  return loadDeal(sql, [slug])
 }
 
 export async function getDealById(id: string): Promise<Deal | undefined> {
   return loadDeal('SELECT * FROM deals WHERE id = ?', [id])
 }
 
-export async function getFeaturedDeals(): Promise<Deal[]> {
-  return loadDeals('SELECT * FROM deals WHERE featured = 1 ORDER BY publishedAt DESC')
+export async function getFeaturedDeals(includeHidden = false): Promise<Deal[]> {
+  const sql = includeHidden
+    ? 'SELECT * FROM deals WHERE featured = 1 ORDER BY publishedAt DESC'
+    : 'SELECT * FROM deals WHERE featured = 1 AND hidden = 0 ORDER BY publishedAt DESC'
+  return loadDeals(sql)
 }
 
 export async function getCategories(): Promise<string[]> {
@@ -255,10 +272,11 @@ export async function getSubcategories(category: string): Promise<string[]> {
   return result.rows.map(r => r.subcategory as string)
 }
 
-export async function getRelatedDeals(deal: Deal, limit = 4): Promise<Deal[]> {
+export async function getRelatedDeals(deal: Deal, limit = 4, includeHidden = false): Promise<Deal[]> {
+  const hiddenClause = includeHidden ? '' : ' AND hidden = 0'
   return loadDeals(
     `SELECT * FROM deals
-     WHERE id != ? AND (category = ? OR tags LIKE ?)
+     WHERE id != ?${hiddenClause} AND (category = ? OR tags LIKE ?)
      ORDER BY discountPercent DESC
      LIMIT ?`,
     [deal.id, deal.category, `%${deal.tags[0] || ''}%`, limit],
@@ -327,8 +345,11 @@ export async function getProductByEan(ean: string): Promise<Product | undefined>
   return mapRowToProduct(result.rows[0] as Record<string, unknown>)
 }
 
-export async function getDealsByProduct(productId: string): Promise<Deal[]> {
-  return loadDeals('SELECT * FROM deals WHERE productId = ? ORDER BY salePrice ASC', [productId])
+export async function getDealsByProduct(productId: string, includeHidden = false): Promise<Deal[]> {
+  const sql = includeHidden
+    ? 'SELECT * FROM deals WHERE productId = ? ORDER BY salePrice ASC'
+    : 'SELECT * FROM deals WHERE productId = ? AND hidden = 0 ORDER BY salePrice ASC'
+  return loadDeals(sql, [productId])
 }
 
 export async function migrateExistingDealsToProducts() {
@@ -411,7 +432,7 @@ export async function createDeal(data: Record<string, unknown>): Promise<Deal> {
     num(data.rating), num(data.reviewCount),
     JSON.stringify(data.technicalSpecs || {}), str(data.review),
     json(data.pros), json(data.cons),
-    0, 0, data.featured ? 1 : 0, num(data.commission),
+     0, 0, data.featured ? 1 : 0, data.hidden ? 1 : 0, num(data.commission),
     str(data.ean), str(data.asin),
     now, now, now,
   ]
@@ -424,7 +445,7 @@ export async function createDeal(data: Record<string, unknown>): Promise<Deal> {
       affiliateUrl, category, subcategory, tags,
       stockStatus, stockCount, rating, reviewCount,
       technicalSpecs, review, pros, cons,
-      votesUp, votesDown, featured, commission,
+      votesUp, votesDown, featured, hidden, commission,
       ean, asin,
       publishedAt, createdAt, updatedAt
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -466,7 +487,7 @@ export async function updateDeal(id: string, data: Record<string, unknown>): Pro
     JSON.stringify(data.technicalSpecs || {}), str(data.review),
     JSON.stringify(data.pros || []), JSON.stringify(data.cons || []),
     str(data.ean), str(data.asin),
-    data.featured ? 1 : 0, num(data.commission),
+    data.featured ? 1 : 0, data.hidden ? 1 : 0, num(data.commission),
     now, id,
   ]
 
@@ -479,7 +500,7 @@ export async function updateDeal(id: string, data: Record<string, unknown>): Pro
       stockStatus = ?, stockCount = ?, rating = ?, reviewCount = ?,
       technicalSpecs = ?, review = ?, pros = ?, cons = ?,
       ean = ?, asin = ?,
-      featured = ?, commission = ?, updatedAt = ?
+      featured = ?, hidden = ?, commission = ?, updatedAt = ?
     WHERE id = ?`,
     args: updateArgs,
   })

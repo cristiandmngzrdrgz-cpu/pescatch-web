@@ -89,6 +89,7 @@ export async function initSchema() {
       votesUp INTEGER NOT NULL DEFAULT 0,
       votesDown INTEGER NOT NULL DEFAULT 0,
       featured INTEGER NOT NULL DEFAULT 0,
+      hidden INTEGER NOT NULL DEFAULT 0,
       commission REAL NOT NULL DEFAULT 0,
       publishedAt TEXT NOT NULL DEFAULT (datetime('now')),
       createdAt TEXT NOT NULL DEFAULT (datetime('now')),
@@ -129,12 +130,24 @@ export async function initSchema() {
       category TEXT NOT NULL DEFAULT '',
       tags TEXT NOT NULL DEFAULT '[]',
       relatedAsins TEXT NOT NULL DEFAULT '[]',
+      hidden INTEGER NOT NULL DEFAULT 0,
       publishedAt TEXT NOT NULL DEFAULT (datetime('now')),
       createdAt TEXT NOT NULL DEFAULT (datetime('now')),
       updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
     )`,
     'CREATE INDEX IF NOT EXISTS idx_posts_slug ON posts(slug)',
     'CREATE INDEX IF NOT EXISTS idx_posts_published ON posts(publishedAt)',
+    `CREATE TABLE IF NOT EXISTS sync_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      duration_ms INTEGER NOT NULL DEFAULT 0,
+      rows_processed INTEGER NOT NULL DEFAULT 0,
+      created INTEGER NOT NULL DEFAULT 0,
+      updated INTEGER NOT NULL DEFAULT 0,
+      skipped INTEGER NOT NULL DEFAULT 0,
+      hidden_orphans INTEGER NOT NULL DEFAULT 0,
+      errors TEXT NOT NULL DEFAULT '[]'
+    )`,
   ])
 }
 
@@ -153,6 +166,35 @@ export async function migrateSchema() {
   }
   if (!columnNames.includes('asin')) {
     await db.execute("ALTER TABLE deals ADD COLUMN asin TEXT NOT NULL DEFAULT ''")
+  }
+  if (!columnNames.includes('hidden')) {
+    await db.execute("ALTER TABLE deals ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0")
+  }
+
+  const postInfo = await db.execute("PRAGMA table_info(posts)")
+  const postColumnNames = postInfo.rows.map(r => r.name as string)
+  if (!postColumnNames.includes('hidden')) {
+    await db.execute("ALTER TABLE posts ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0")
+  }
+
+  const logInfo = await db.execute("PRAGMA table_info(sync_log)")
+  if (logInfo.rows.length === 0) {
+    await db.execute(`CREATE TABLE IF NOT EXISTS sync_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      duration_ms INTEGER NOT NULL DEFAULT 0,
+      rows_processed INTEGER NOT NULL DEFAULT 0,
+      created INTEGER NOT NULL DEFAULT 0,
+      updated INTEGER NOT NULL DEFAULT 0,
+      skipped INTEGER NOT NULL DEFAULT 0,
+      hidden_orphans INTEGER NOT NULL DEFAULT 0,
+      errors TEXT NOT NULL DEFAULT '[]'
+    )`)
+  } else {
+    const logColumns = logInfo.rows.map(r => r.name as string)
+    if (!logColumns.includes('hidden_orphans')) {
+      await db.execute("ALTER TABLE sync_log ADD COLUMN hidden_orphans INTEGER NOT NULL DEFAULT 0")
+    }
   }
 }
 
