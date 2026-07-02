@@ -8,12 +8,33 @@ import { Input } from '@/components/ui/input'
 export function AdminLogin() {
   const [value, setValue] = useState('')
   const [error, setError] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!value.trim()) return
-    document.cookie = `admin_token=${encodeURIComponent(value.trim())}; path=/; max-age=86400; SameSite=Lax`
-    window.location.reload()
+    if (!value.trim() || loading) return
+
+    setLoading(true)
+    setError(false)
+
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret: value.trim() }),
+      })
+
+      if (!res.ok) {
+        setError(true)
+        setLoading(false)
+        return
+      }
+
+      window.location.reload()
+    } catch {
+      setError(true)
+      setLoading(false)
+    }
   }
 
   return (
@@ -31,11 +52,14 @@ export function AdminLogin() {
           placeholder="Admin secret"
           value={value}
           onChange={e => { setValue(e.target.value); setError(false) }}
-          className="h-11 rounded-xl mb-4 text-center"
+          className="h-11 rounded-xl mb-2 text-center"
           style={{ background: '#0B1120', borderColor: error ? '#EF4444' : '#1E3A5F', color: '#E8F0FE' }}
         />
-        <Button type="submit" className="w-full h-11 font-semibold rounded-xl" style={{ background: '#00D4FF', color: '#0B1120' }}>
-          Acceder
+        {error && (
+          <p className="text-sm mb-3" style={{ color: '#EF4444' }}>Contraseña incorrecta</p>
+        )}
+        <Button type="submit" disabled={loading} className="w-full h-11 font-semibold rounded-xl mt-2" style={{ background: '#00D4FF', color: '#0B1120' }}>
+          {loading ? 'Comprobando...' : 'Acceder'}
         </Button>
       </form>
     </div>

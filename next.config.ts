@@ -4,7 +4,9 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'picsum.photos' },
-      { protocol: 'https', hostname: '**' },
+      { protocol: 'https', hostname: 'm.media-amazon.com' },
+      { protocol: 'https', hostname: 'contents.mediadecathlon.com' },
+      { protocol: 'https', hostname: 'ae01.alicdn.com' },
     ],
   },
   turbopack: {

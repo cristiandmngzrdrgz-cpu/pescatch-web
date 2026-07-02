@@ -1,0 +1,1205 @@
+- generic [active] [ref=f2e1]:
+  - list [ref=f2e2]:
+    - listitem [ref=f2e3]:
+      - link "Go to search" [ref=f2e4] [cursor=pointer]:
+        - /url: "#search-input-header-modal"
+    - listitem [ref=f2e5]:
+      - link "Go to content" [ref=f2e6] [cursor=pointer]:
+        - /url: "#content"
+    - listitem [ref=f2e7]:
+      - link "Go to footer" [ref=f2e8] [cursor=pointer]:
+        - /url: "#footer"
+  - region "Banner" [ref=f2e10]:
+    - generic [ref=f2e12]:
+      - generic:
+        - generic:
+          - text: ¡Ya están aquí las REBAJAS!
+          - link:
+            - /url: /es/lp/c/rebajas
+            - generic: Ver todo
+      - generic [ref=f2e824]:
+        - text: Alquila online la bici de tus peques.
+        - link "Desde 3,99€ al mes" [ref=f2e825] [cursor=pointer]:
+          - /url: https://rental.decathlon.com/es/es/catalog/ciclismo-junior-1
+          - generic [ref=f2e826]: Desde 3,99€ al mes
+      - generic:
+        - generic:
+          - text: Tus compras más fáciles
+          - link:
+            - /url: https://u7hf.adj.st/home?&adj_t=10dkirrs&adj_campaign=website_banner&adj_adgroup=web_globalbanner_descarga
+            - generic: ¡Descarga la app!
+  - banner [ref=f2e17]:
+    - generic [ref=f2e19]:
+      - link "Ir a la página de inicio" [ref=f2e21] [cursor=pointer]:
+        - /url: /es
+        - img "Decathlon" [ref=f2e22]
+      - generic "Buscar" [ref=f2e25]:
+        - search [ref=f2e26]:
+          - generic [ref=f2e27]:
+            - img [ref=f2e28]
+            - searchbox "Buscar" [ref=f2e30]
+      - navigation "Menú de acciones" [ref=f2e33]:
+        - list [ref=f2e35]:
+          - listitem [ref=f2e36]:
+            - link "Mi tienda" [ref=f2e37] [cursor=pointer]:
+              - /url: /es/store-locator
+              - img [ref=f2e38]
+          - listitem [ref=f2e40]:
+            - button "Ayuda" [ref=f2e41] [cursor=pointer]:
+              - img [ref=f2e42]
+          - listitem [ref=f2e45]:
+            - link "Inicia sesión o regístrate" [ref=f2e46] [cursor=pointer]:
+              - /url: /api/auth/signin/dkt-login?locale=es-ES&callbackUrl=%2Fes%2Faccount%2Fdashboard
+              - img [ref=f2e47]
+          - listitem [ref=f2e49]:
+            - link "Mi cesta 0 items" [ref=f2e50] [cursor=pointer]:
+              - /url: /es/checkout/cart
+              - img [ref=f2e51]
+    - navigation "Menú principal" [ref=f2e54]:
+      - list [ref=f2e57]:
+        - listitem [ref=f2e58]:
+          - button "Deportes" [ref=f2e59] [cursor=pointer]
+        - listitem [ref=f2e60]:
+          - button "Mujer" [ref=f2e61] [cursor=pointer]
+        - listitem [ref=f2e62]:
+          - button "Hombre" [ref=f2e63] [cursor=pointer]
+        - listitem [ref=f2e64]:
+          - button "Niños" [ref=f2e65] [cursor=pointer]
+        - listitem [ref=f2e66]:
+          - button "Equipamiento deportivo" [ref=f2e67] [cursor=pointer]
+        - listitem [ref=f2e68]:
+          - button "Electrónica" [ref=f2e69] [cursor=pointer]
+        - listitem [ref=f2e70]:
+          - button "Nutrición y salud" [ref=f2e71] [cursor=pointer]
+        - listitem [ref=f2e72]:
+          - button "Descuentos y rebajas" [ref=f2e73] [cursor=pointer]
+        - listitem [ref=f2e74]:
+          - button "Segunda vida" [ref=f2e75] [cursor=pointer]
+        - listitem [ref=f2e76]:
+          - button "Servicios, Clubes y Tarjeta Regalo" [ref=f2e77] [cursor=pointer]
+  - navigation "Breadcrumb" [ref=f2e80]:
+    - list [ref=f2e81]:
+      - listitem [ref=f2e82]:
+        - link "Deportes" [ref=f2e84] [cursor=pointer]:
+          - /url: /es/deportes
+          - generic [ref=f2e85]: Deportes
+        - img [ref=f2e86]
+      - listitem [ref=f2e88]:
+        - link "Pesca" [ref=f2e90] [cursor=pointer]:
+          - /url: /es/deportes/pesca
+          - generic [ref=f2e91]: Pesca
+        - img [ref=f2e92]
+      - listitem [ref=f2e94]:
+        - link "Técnicas de pesca" [ref=f2e96] [cursor=pointer]:
+          - /url: /es/deportes/pesca/tecnicas-de-pesca
+          - generic [ref=f2e97]: Técnicas de pesca
+        - img [ref=f2e98]
+      - listitem [ref=f2e100]:
+        - link "Spinning" [ref=f2e102] [cursor=pointer]:
+          - /url: /es/deportes/pesca/spinning
+          - generic [ref=f2e103]: Spinning
+        - img [ref=f2e104]
+      - listitem [ref=f2e106]:
+        - link "Carretes spinning" [ref=f2e108] [cursor=pointer]:
+          - /url: /es/deportes/pesca/carretes-para-spinning
+          - generic [ref=f2e109]: Carretes spinning
+  - main [ref=f2e110]:
+    - article [ref=f2e111]:
+      - generic [ref=f2e112]:
+        - generic [ref=f2e113]:
+          - generic [ref=f2e116]: Promoción
+          - link "Ver productos de la marca SHIMANO" [ref=f2e119] [cursor=pointer]:
+            - /url: /es/brands/shimano
+            - text: SHIMANO
+          - heading "Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1" [level=1] [ref=f2e121]
+          - generic [ref=f2e123]:
+            - generic [ref=f2e125]:
+              - img "Calificación 4,7 de 5" [ref=f2e126]:
+                - img [ref=f2e827]
+                - img [ref=f2e829]
+                - img [ref=f2e831]
+                - img [ref=f2e833]
+                - img [ref=f2e835]
+              - paragraph [ref=f2e138]: "4.7"
+            - button "Ver 142 reseñas" [ref=f2e141] [cursor=pointer]:
+              - generic [ref=f2e142]: 142 reseñas
+          - generic [ref=f2e143]: Este carrete te garantizará una buena comodidad de uso gracias a sus rodamientos de bolas 3+1.
+          - generic [ref=f2e145]: ID 8593890
+        - generic [ref=f2e146]:
+          - group "Talla:" [ref=f2e148]:
+            - generic [ref=f2e151]:
+              - paragraph [ref=f2e153]: "Talla:"
+              - paragraph [ref=f2e155]: .
+          - generic [ref=f2e157]:
+            - button "Decrease value" [disabled] [ref=f2e158]:
+              - img [ref=f2e159]
+            - spinbutton [ref=f2e160]: "1"
+            - button "Increase value" [ref=f2e161] [cursor=pointer]:
+              - img [ref=f2e162]
+          - generic [ref=f2e164]:
+            - generic [ref=f2e165]:
+              - generic [ref=f2e166]: 29,99 €
+              - generic "Precio anterior" [ref=f2e167]: 39,99 €
+              - generic [ref=f2e168]: 25% de descuento
+            - paragraph [ref=f2e170]: Desde el 22/6/2026 hasta el 19/7/2026
+          - button "Añadir a la cesta" [ref=f2e838] [cursor=pointer]
+        - generic [ref=f2e177]:
+          - generic [ref=f2e178]:
+            - generic [ref=f2e179]:
+              - generic [ref=f2e180]: Vendido y enviado por
+              - img "Decathlon" [ref=f2e181]
+            - list [ref=f2e184]:
+              - listitem [ref=f2e185]:
+                - generic [ref=f2e186]:
+                  - button "Plazo de devolución ampliado" [ref=f2e187] [cursor=pointer]:
+                    - generic [ref=f2e188]:
+                      - generic [ref=f2e191]:
+                        - img [ref=f2e193]
+                        - generic [ref=f2e195]: Plazo de devolución ampliado
+                      - img [ref=f2e196]
+                  - region "Plazo de devolución ampliado":
+                    - generic [ref=f2e198]:
+                      - paragraph [ref=f2e199]: Dispones de 60 días para devolver artículos de marca Decathlon (Quechua, Btwin, etc.) y 30 días para otras marcas (Adidas, Asics, etc.)
+                      - link "Aprender más" [ref=f2e200] [cursor=pointer]:
+                        - /url: /es/devoluciones-y-reembolsos_lp-THGT6Y
+                        - generic [ref=f2e201]: Aprender más
+              - listitem [ref=f2e202]:
+                - generic [ref=f2e203]:
+                  - button "3 años de garantía" [ref=f2e204] [cursor=pointer]:
+                    - generic [ref=f2e205]:
+                      - generic [ref=f2e208]:
+                        - img [ref=f2e210]
+                        - generic [ref=f2e212]: 3 años de garantía
+                      - img [ref=f2e213]
+                  - region "3 años de garantía":
+                    - paragraph [ref=f2e216]: "Garantía asegurada: desde 3 años hasta coberturas ampliadas en productos como bicis, mochilas, etc. Ver \"Uso y cuidado\""
+              - listitem [ref=f2e217]:
+                - generic [ref=f2e218]:
+                  - button "Recompramos tus productos usados" [ref=f2e219] [cursor=pointer]:
+                    - generic [ref=f2e220]:
+                      - generic [ref=f2e223]:
+                        - img [ref=f2e225]
+                        - generic [ref=f2e228]: Recompramos tus productos usados
+                      - img [ref=f2e229]
+                  - region "Recompramos tus productos usados":
+                    - generic [ref=f2e231]:
+                      - paragraph [ref=f2e232]: Ahorra dando una segunda vida a tus productos usados. Descubre su valor online y consigue una oferta final en tienda.
+                      - link "Pre-tasación online" [ref=f2e233] [cursor=pointer]:
+                        - /url: /second-life/buy-back
+                        - generic [ref=f2e234]: Pre-tasación online
+          - generic [ref=f2e235]:
+            - heading "Cómo conseguirlo" [level=4] [ref=f2e237]
+            - generic [ref=f2e839]:
+              - img [ref=f2e841]
+              - generic [ref=f2e843]:
+                - paragraph [ref=f2e844]: Entrega a domicilio
+                - button "Introduce código postal" [ref=f2e846] [cursor=pointer]:
+                  - generic [ref=f2e847]: Introduce código postal
+              - generic [ref=f2e853]: Recíbelo antes del jue, 2 jul
+            - generic [ref=f2e854]:
+              - img [ref=f2e856]
+              - generic [ref=f2e858]:
+                - paragraph [ref=f2e859]: Recoger en Decathlon
+                - button "Comprobar disponibilidad" [ref=f2e861] [cursor=pointer]:
+                  - generic [ref=f2e862]: Comprobar disponibilidad
+            - generic [ref=f2e863]:
+              - img [ref=f2e865]
+              - paragraph [ref=f2e868]: Recogida cerca de ti
+              - generic [ref=f2e874]: Recíbelo antes del jue, 2 jul
+      - generic [ref=f2e262]:
+        - figure [ref=f2e263]:
+          - button "Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1 1/5" [ref=f2e264] [cursor=pointer]:
+            - generic [ref=f2e267]:
+              - img "Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1 1/5"
+        - figure [ref=f2e268]:
+          - button "Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1 2/5" [ref=f2e269] [cursor=pointer]:
+            - generic [ref=f2e272]:
+              - img "Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1 2/5"
+        - figure [ref=f2e273]:
+          - button "Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1 3/5" [ref=f2e274] [cursor=pointer]:
+            - generic [ref=f2e277]:
+              - img "Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1 3/5"
+        - figure [ref=f2e278]:
+          - button "Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1 4/5" [ref=f2e279] [cursor=pointer]:
+            - generic [ref=f2e282]:
+              - img "Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1 4/5"
+        - figure [ref=f2e283]:
+          - button "Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1 5/5" [ref=f2e284] [cursor=pointer]:
+            - generic [ref=f2e287]:
+              - img "Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1 5/5"
+    - generic [ref=f2e290]:
+      - generic [ref=f2e291]:
+        - heading "Características" [level=2] [ref=f2e293]
+        - generic [ref=f2e295]:
+          - button "Artículo anterior" [disabled] [ref=f2e296]:
+            - img [ref=f2e297]
+          - button "Siguiente artículo" [ref=f2e299] [cursor=pointer]:
+            - img [ref=f2e300]
+      - group [ref=f2e303]:
+        - list "Carrusel de productos" [ref=f2e304]:
+          - listitem "Artículo 1" [ref=f2e305]:
+            - article [ref=f2e307]:
+              - generic [ref=f2e308]:
+                - img [ref=f2e310]
+                - generic [ref=f2e311]:
+                  - heading "Ligereza" [level=4] [ref=f2e313]
+                  - paragraph [ref=f2e314]: "Peso: 320 g."
+          - listitem "Artículo 2" [ref=f2e315]:
+            - article [ref=f2e317]:
+              - generic [ref=f2e318]:
+                - img [ref=f2e320]
+                - generic [ref=f2e321]:
+                  - heading "Fuerza de frenado" [level=4] [ref=f2e323]
+                  - paragraph [ref=f2e324]: "Máx.: 8,5 kg Útil: No comunicado"
+          - listitem "Artículo 3" [ref=f2e325]:
+            - article [ref=f2e327]:
+              - generic [ref=f2e328]:
+                - img [ref=f2e330]
+                - generic [ref=f2e331]:
+                  - heading "Rotación suave" [level=4] [ref=f2e333]
+                  - paragraph [ref=f2e334]: "Número de rodamientos: 3+1"
+          - listitem "Artículo 4" [ref=f2e335]:
+            - article [ref=f2e337]:
+              - generic [ref=f2e338]:
+                - img [ref=f2e340]
+                - generic [ref=f2e341]:
+                  - heading "Velocidad" [level=4] [ref=f2e343]
+                  - paragraph [ref=f2e344]: "Recuperación por vuelta de manivela: 82 cm Ratio: 5,2:1"
+          - listitem "Artículo 5" [ref=f2e345]:
+            - article [ref=f2e347]:
+              - generic [ref=f2e348]:
+                - img [ref=f2e350]
+                - generic [ref=f2e351]:
+                  - heading "Solidez" [level=4] [ref=f2e353]
+                  - paragraph [ref=f2e354]: Bobina de aluminio Armazón XT-7
+        - group "Barra de desplazamiento deslizante-group" [ref=f2e355]:
+          - scrollbar "Barra de desplazamiento deslizante" [ref=f2e356]
+          - slider "Pulgar de barra de desplazamiento" [ref=f2e357]
+    - list [ref=f2e359]:
+      - listitem [ref=f2e360]:
+        - button "Descripción" [ref=f2e361] [cursor=pointer]:
+          - generic [ref=f2e362]: Descripción
+          - img [ref=f2e363]
+      - listitem [ref=f2e365]:
+        - button "Especificaciones" [ref=f2e366] [cursor=pointer]:
+          - generic [ref=f2e367]: Especificaciones
+          - img [ref=f2e368]
+      - listitem [ref=f2e370]:
+        - button "Uso y cuidado" [ref=f2e371] [cursor=pointer]:
+          - generic [ref=f2e372]: Uso y cuidado
+          - img [ref=f2e373]
+    - generic [ref=f2e875]:
+      - generic [ref=f2e876]:
+        - heading "Nuestros productos recomendados" [level=2] [ref=f2e878]
+        - generic [ref=f2e880]:
+          - button "Artículo anterior" [disabled] [ref=f2e881]:
+            - img [ref=f2e882]
+          - button "Siguiente artículo" [ref=f2e884] [cursor=pointer]:
+            - img [ref=f2e885]
+      - group "Nuestros productos recomendados" [ref=f2e888]:
+        - list "Carrusel de productos" [ref=f2e889]:
+          - listitem "Artículo 1" [ref=f2e890]:
+            - article "Hilo Trenzado Pesca Señuelos TX4 Caqui 4 Tramos" [ref=f2e891]:
+              - generic [ref=f2e892]:
+                - link "Hilo Trenzado Pesca Señuelos TX4 Caqui 4 Tramos" [ref=f2e894] [cursor=pointer]:
+                  - /url: /es/p/hilo-trenzado-pesca-senuelos-tx4-caqui-4-tramos/362170/c109m8933473
+                  - img "Hilo Trenzado Pesca Señuelos TX4 Caqui 4 Tramos" [ref=f2e898]
+                - generic [ref=f2e902]:
+                  - link "Hilo Trenzado Pesca Señuelos TX4 Caqui 4 Tramos" [ref=f2e905] [cursor=pointer]:
+                    - /url: /es/p/hilo-trenzado-pesca-senuelos-tx4-caqui-4-tramos/362170/c109m8933473
+                  - generic [ref=f2e906]:
+                    - generic [ref=f2e908]:
+                      - img "Calificación 4,5 de 5" [ref=f2e911]:
+                        - img [ref=f2e912]
+                        - img [ref=f2e914]
+                        - img [ref=f2e916]
+                        - img [ref=f2e918]
+                        - img [ref=f2e920]
+                      - generic [ref=f2e923]: (323)
+                    - generic [ref=f2e927]: 7,99 €
+          - listitem "Artículo 2" [ref=f2e928]:
+            - article "Caja Pesca BX 2 T 2 Bandejas 5,3 L" [ref=f2e929]:
+              - generic [ref=f2e930]:
+                - link "Caja Pesca BX 2 T 2 Bandejas 5,3 L" [ref=f2e932] [cursor=pointer]:
+                  - /url: /es/p/caja-pesca-bx-2-t-2-bandejas-5-3-l/326035/m8589313
+                  - img "Caja Pesca BX 2 T 2 Bandejas 5,3 L" [ref=f2e936]
+                - generic [ref=f2e940]:
+                  - link "Caja Pesca BX 2 T 2 Bandejas 5,3 L" [ref=f2e943] [cursor=pointer]:
+                    - /url: /es/p/caja-pesca-bx-2-t-2-bandejas-5-3-l/326035/m8589313
+                  - generic [ref=f2e944]:
+                    - generic [ref=f2e946]:
+                      - img "Calificación 4,7 de 5" [ref=f2e949]:
+                        - img [ref=f2e950]
+                        - img [ref=f2e952]
+                        - img [ref=f2e954]
+                        - img [ref=f2e956]
+                        - img [ref=f2e958]
+                      - generic [ref=f2e961]: (471)
+                    - generic [ref=f2e965]: 11,99 €
+          - listitem "Artículo 3" [ref=f2e966]:
+            - article "Sedal Pesca Line Resist Cristal 250 m" [ref=f2e967]:
+              - generic [ref=f2e968]:
+                - link "Sedal Pesca Line Resist Cristal 250 m" [ref=f2e970] [cursor=pointer]:
+                  - /url: /es/p/sedal-pesca-line-resist-cristal-250-m/149157/c251m8353336
+                  - img "Sedal Pesca Line Resist Cristal 250 m" [ref=f2e974]
+                - generic [ref=f2e978]:
+                  - link "Sedal Pesca Line Resist Cristal 250 m" [ref=f2e981] [cursor=pointer]:
+                    - /url: /es/p/sedal-pesca-line-resist-cristal-250-m/149157/c251m8353336
+                  - generic [ref=f2e982]:
+                    - generic [ref=f2e984]:
+                      - img "Calificación 4,6 de 5" [ref=f2e987]:
+                        - img [ref=f2e988]
+                        - img [ref=f2e990]
+                        - img [ref=f2e992]
+                        - img [ref=f2e994]
+                        - img [ref=f2e996]
+                      - generic [ref=f2e999]: (789)
+                    - generic [ref=f2e1002]:
+                      - generic [ref=f2e1003]: 4,99 €
+                      - generic [ref=f2e1004]: 0,02 €/m
+          - listitem "Artículo 4" [ref=f2e1005]:
+            - article "Caña Pesca Señuelos Mar Vengeance CX Spinning 2,40 m M 10-35 g" [ref=f2e1006]:
+              - generic [ref=f2e1007]:
+                - link "Caña Pesca Señuelos Mar Vengeance CX Spinning 2,40 m M 10-35 g" [ref=f2e1009] [cursor=pointer]:
+                  - /url: /es/p/cana-pesca-senuelos-mar-vengeance-cx-spinning-2-40-m-m-10-35-g/369306/m8952646
+                  - img "Caña Pesca Señuelos Mar Vengeance CX Spinning 2,40 m M 10-35 g" [ref=f2e1013]
+                - generic [ref=f2e1017]:
+                  - link "Caña Pesca Señuelos Mar Vengeance CX Spinning 2,40 m M 10-35 g" [ref=f2e1020] [cursor=pointer]:
+                    - /url: /es/p/cana-pesca-senuelos-mar-vengeance-cx-spinning-2-40-m-m-10-35-g/369306/m8952646
+                  - generic [ref=f2e1021]:
+                    - generic [ref=f2e1023]:
+                      - img "Calificación 4,7 de 5" [ref=f2e1026]:
+                        - img [ref=f2e1027]
+                        - img [ref=f2e1029]
+                        - img [ref=f2e1031]
+                        - img [ref=f2e1033]
+                        - img [ref=f2e1035]
+                      - generic [ref=f2e1038]: (12)
+                    - generic [ref=f2e1041]:
+                      - generic [ref=f2e1042]: 44,99 €
+                      - generic "Precio anterior" [ref=f2e1043]: 59,99 €
+                      - generic [ref=f2e1044]: 25% de descuento
+          - listitem "Artículo 5" [ref=f2e1045]:
+            - article "Hilo Trenzado Pesca Señuelos Caperlan TX8 Gris 8 Hebras 150m" [ref=f2e1046]:
+              - generic [ref=f2e1047]:
+                - link "Hilo Trenzado Pesca Señuelos Caperlan TX8 Gris 8 Hebras 150m" [ref=f2e1049] [cursor=pointer]:
+                  - /url: /es/p/hilo-trenzado-pesca-senuelos-caperlan-tx8-gris-8-hebras-150m/363453/c3m8938594
+                  - img "Hilo Trenzado Pesca Señuelos Caperlan TX8 Gris 8 Hebras 150m" [ref=f2e1053]
+                - generic [ref=f2e1057]:
+                  - link "Hilo Trenzado Pesca Señuelos Caperlan TX8 Gris 8 Hebras 150m" [ref=f2e1060] [cursor=pointer]:
+                    - /url: /es/p/hilo-trenzado-pesca-senuelos-caperlan-tx8-gris-8-hebras-150m/363453/c3m8938594
+                  - generic [ref=f2e1061]:
+                    - generic [ref=f2e1063]:
+                      - img "Calificación 4,4 de 5" [ref=f2e1066]:
+                        - img [ref=f2e1067]
+                        - img [ref=f2e1069]
+                        - img [ref=f2e1071]
+                        - img [ref=f2e1073]
+                        - img [ref=f2e1075]
+                      - generic [ref=f2e1078]: (305)
+                    - generic [ref=f2e1082]: 18,99 €
+          - listitem "Artículo 6" [ref=f2e1083]:
+            - article "Kit Señuelos Flexibles Montados Natori SHD 105 / GRB 110 RTC" [ref=f2e1084]:
+              - generic [ref=f2e1085]:
+                - link "Kit Señuelos Flexibles Montados Natori SHD 105 / GRB 110 RTC" [ref=f2e1087] [cursor=pointer]:
+                  - /url: /es/p/kit-senuelos-flexibles-montados-natori-shd-105-grb-110-rtc/338972/c4c263c27m8737466
+                  - img "Kit Señuelos Flexibles Montados Natori SHD 105 / GRB 110 RTC" [ref=f2e1091]
+                - generic [ref=f2e1095]:
+                  - link "Kit Señuelos Flexibles Montados Natori SHD 105 / GRB 110 RTC" [ref=f2e1098] [cursor=pointer]:
+                    - /url: /es/p/kit-senuelos-flexibles-montados-natori-shd-105-grb-110-rtc/338972/c4c263c27m8737466
+                  - generic [ref=f2e1099]:
+                    - generic [ref=f2e1101]:
+                      - img "Calificación 4,8 de 5" [ref=f2e1104]:
+                        - img [ref=f2e1105]
+                        - img [ref=f2e1107]
+                        - img [ref=f2e1109]
+                        - img [ref=f2e1111]
+                        - img [ref=f2e1113]
+                      - generic [ref=f2e1115]: (86)
+                    - generic [ref=f2e1118]:
+                      - generic [ref=f2e1119]: 6,99 €
+                      - generic [ref=f2e1120]: 1,17 €/unidad
+          - listitem "Artículo 7" [ref=f2e1121]:
+            - article "Caña Ukiyo-500 240 Sepia Calamar" [ref=f2e1122]:
+              - generic [ref=f2e1123]:
+                - link "Caña Ukiyo-500 240 Sepia Calamar" [ref=f2e1125] [cursor=pointer]:
+                  - /url: /es/p/cana-ukiyo-500-240-sepia-calamar/310776/m8563262
+                  - img "Caña Ukiyo-500 240 Sepia Calamar" [ref=f2e1129]
+                - generic [ref=f2e1133]:
+                  - link "Caña Ukiyo-500 240 Sepia Calamar" [ref=f2e1136] [cursor=pointer]:
+                    - /url: /es/p/cana-ukiyo-500-240-sepia-calamar/310776/m8563262
+                  - generic [ref=f2e1137]:
+                    - generic [ref=f2e1139]:
+                      - img "Calificación 4,6 de 5" [ref=f2e1142]:
+                        - img [ref=f2e1143]
+                        - img [ref=f2e1145]
+                        - img [ref=f2e1147]
+                        - img [ref=f2e1149]
+                        - img [ref=f2e1151]
+                      - generic [ref=f2e1154]: (43)
+                    - generic [ref=f2e1158]: 54,99 €
+          - listitem "Artículo 8" [ref=f2e1159]:
+            - article "Sedal 4X4 500 m" [ref=f2e1160]:
+              - generic [ref=f2e1161]:
+                - link "Sedal 4X4 500 m" [ref=f2e1163] [cursor=pointer]:
+                  - /url: /es/p/sedal-4x4-500-m/7439/c6m5626399
+                  - img "Sedal 4X4 500 m" [ref=f2e1167]
+                - generic [ref=f2e1171]:
+                  - link "Sedal 4X4 500 m" [ref=f2e1174] [cursor=pointer]:
+                    - /url: /es/p/sedal-4x4-500-m/7439/c6m5626399
+                  - generic [ref=f2e1175]:
+                    - generic [ref=f2e1177]:
+                      - img "Calificación 4,6 de 5" [ref=f2e1180]:
+                        - img [ref=f2e1181]
+                        - img [ref=f2e1183]
+                        - img [ref=f2e1185]
+                        - img [ref=f2e1187]
+                        - img [ref=f2e1189]
+                      - generic [ref=f2e1192]: (278)
+                    - generic [ref=f2e1195]:
+                      - generic [ref=f2e1196]: 5,99 €
+                      - generic [ref=f2e1197]: 0,02 €/m
+          - listitem "Artículo 9" [ref=f2e1198]:
+            - article "Caña Pesca Señuelos Mar Spinning Ilicium 500 2,70 m 10-35 g" [ref=f2e1199]:
+              - generic [ref=f2e1200]:
+                - link "Caña Pesca Señuelos Mar Spinning Ilicium 500 2,70 m 10-35 g" [ref=f2e1202] [cursor=pointer]:
+                  - /url: /es/p/cana-pesca-senuelos-mar-spinning-ilicium-500-2-70-m-10-35-g/347240/m8804213
+                  - img "Caña Pesca Señuelos Mar Spinning Ilicium 500 2,70 m 10-35 g" [ref=f2e1206]
+                - generic [ref=f2e1210]:
+                  - link "Caña Pesca Señuelos Mar Spinning Ilicium 500 2,70 m 10-35 g" [ref=f2e1213] [cursor=pointer]:
+                    - /url: /es/p/cana-pesca-senuelos-mar-spinning-ilicium-500-2-70-m-10-35-g/347240/m8804213
+                  - generic [ref=f2e1214]:
+                    - generic [ref=f2e1216]:
+                      - img "Calificación 4,7 de 5" [ref=f2e1219]:
+                        - img [ref=f2e1220]
+                        - img [ref=f2e1222]
+                        - img [ref=f2e1224]
+                        - img [ref=f2e1226]
+                        - img [ref=f2e1228]
+                      - generic [ref=f2e1231]: (74)
+                    - generic [ref=f2e1235]: 69,99 €
+          - listitem "Artículo 10" [ref=f2e1236]:
+            - article "Caña Pesca Caperlan WXM-100 Spinning 2,10 m 7-21 g" [ref=f2e1237]:
+              - generic [ref=f2e1238]:
+                - link "Caña Pesca Caperlan WXM-100 Spinning 2,10 m 7-21 g" [ref=f2e1240] [cursor=pointer]:
+                  - /url: /es/p/cana-pesca-caperlan-wxm-100-spinning-2-10-m-7-21-g/339478/m8739985
+                  - img "Caña Pesca Caperlan WXM-100 Spinning 2,10 m 7-21 g" [ref=f2e1244]
+                - generic [ref=f2e1248]:
+                  - link "Caña Pesca Caperlan WXM-100 Spinning 2,10 m 7-21 g" [ref=f2e1251] [cursor=pointer]:
+                    - /url: /es/p/cana-pesca-caperlan-wxm-100-spinning-2-10-m-7-21-g/339478/m8739985
+                  - generic [ref=f2e1252]:
+                    - generic [ref=f2e1254]:
+                      - img "Calificación 4,5 de 5" [ref=f2e1257]:
+                        - img [ref=f2e1258]
+                        - img [ref=f2e1260]
+                        - img [ref=f2e1262]
+                        - img [ref=f2e1264]
+                        - img [ref=f2e1266]
+                      - generic [ref=f2e1269]: (52)
+                    - generic [ref=f2e1273]: 27,99 €
+        - group "Barra de desplazamiento deslizante-group" [ref=f2e1274]:
+          - scrollbar "Barra de desplazamiento deslizante" [ref=f2e1275]
+          - slider "Pulgar de barra de desplazamiento" [ref=f2e1276]
+    - generic [ref=f2e1277]:
+      - generic [ref=f2e1278]:
+        - heading "Nuestros productos similares" [level=2] [ref=f2e1280]
+        - generic [ref=f2e1282]:
+          - button "Artículo anterior" [disabled] [ref=f2e1283]:
+            - img [ref=f2e1284]
+          - button "Siguiente artículo" [ref=f2e1286] [cursor=pointer]:
+            - img [ref=f2e1287]
+      - group "Nuestros productos similares" [ref=f2e1290]:
+        - list "Carrusel de productos" [ref=f2e1291]:
+          - listitem "Artículo 1" [ref=f2e1292]:
+            - article "Hilo Trenzado Pesca Señuelos TX4 Caqui 4 Tramos" [ref=f2e1293]:
+              - generic [ref=f2e1294]:
+                - link "Carrete Casting Pesca Señuelos WXM 300 RC Manivela Izquierda" [ref=f2e1296] [cursor=pointer]:
+                  - /url: /es/p/carrete-casting-pesca-senuelos-wxm-300-rc-manivela-izquierda/310420/c1c3m8560060
+                  - img "Carrete Casting Pesca Señuelos WXM 300 RC Manivela Izquierda" [ref=f2e1300]
+                - generic [ref=f2e1304]:
+                  - link "Carrete Casting Pesca Señuelos WXM 300 RC Manivela Izquierda" [ref=f2e1307] [cursor=pointer]:
+                    - /url: /es/p/carrete-casting-pesca-senuelos-wxm-300-rc-manivela-izquierda/310420/c1c3m8560060
+                  - generic [ref=f2e1308]:
+                    - generic [ref=f2e1310]:
+                      - img "Calificación 4,7 de 5" [ref=f2e1313]:
+                        - img [ref=f2e1314]
+                        - img [ref=f2e1316]
+                        - img [ref=f2e1318]
+                        - img [ref=f2e1320]
+                        - img [ref=f2e1322]
+                      - generic [ref=f2e1325]: (63)
+                    - generic [ref=f2e1329]: 89,99 €
+          - listitem "Artículo 2" [ref=f2e1330]:
+            - article "Caja Pesca BX 2 T 2 Bandejas 5,3 L" [ref=f2e1331]:
+              - generic [ref=f2e1332]:
+                - link "Carrete Pesca Señuelos Exceler 23 LT 4000 CXH" [ref=f2e1334] [cursor=pointer]:
+                  - /url: /es/p/carrete-pesca-senuelos-exceler-23-lt-4000-cxh/383874/m9013001
+                  - img "Carrete Pesca Señuelos Exceler 23 LT 4000 CXH" [ref=f2e1338]
+                - generic [ref=f2e1342]:
+                  - link "Carrete Pesca Señuelos Exceler 23 LT 4000 CXH" [ref=f2e1345] [cursor=pointer]:
+                    - /url: /es/p/carrete-pesca-senuelos-exceler-23-lt-4000-cxh/383874/m9013001
+                  - generic [ref=f2e1346]:
+                    - generic [ref=f2e1348]:
+                      - img "Calificación 5,0 de 5" [ref=f2e1351]:
+                        - img [ref=f2e1352]
+                        - img [ref=f2e1354]
+                        - img [ref=f2e1356]
+                        - img [ref=f2e1358]
+                        - img [ref=f2e1360]
+                      - generic [ref=f2e1362]: (1)
+                    - generic [ref=f2e1366]: 92,49 €
+          - listitem "Artículo 3" [ref=f2e1367]:
+            - article "Sedal Pesca Line Resist Cristal 250 m" [ref=f2e1368]:
+              - generic [ref=f2e1369]:
+                - link "Carrete Spinning Pesca Señuelos Nasci 2500 HG FD" [ref=f2e1371] [cursor=pointer]:
+                  - /url: /es/p/carrete-spinning-pesca-senuelos-nasci-2500-hg-fd/384207/m9018009
+                  - img "Carrete Spinning Pesca Señuelos Nasci 2500 HG FD" [ref=f2e1375]
+                - generic [ref=f2e1379]:
+                  - link "Carrete Spinning Pesca Señuelos Nasci 2500 HG FD" [ref=f2e1382] [cursor=pointer]:
+                    - /url: /es/p/carrete-spinning-pesca-senuelos-nasci-2500-hg-fd/384207/m9018009
+                  - generic [ref=f2e1383]:
+                    - generic [ref=f2e1385]:
+                      - img "Calificación 5,0 de 5" [ref=f2e1388]:
+                        - img [ref=f2e1389]
+                        - img [ref=f2e1391]
+                        - img [ref=f2e1393]
+                        - img [ref=f2e1395]
+                        - img [ref=f2e1397]
+                      - generic [ref=f2e1399]: (1)
+                    - generic [ref=f2e1402]:
+                      - generic [ref=f2e1403]: 94,99 €
+                      - generic "Precio anterior" [ref=f2e1404]: 109,99 €
+                      - generic [ref=f2e1405]: 15 € de descuento
+          - listitem "Artículo 4" [ref=f2e1406]:
+            - article "Caña Pesca Señuelos Mar Vengeance CX Spinning 2,40 m M 10-35 g" [ref=f2e1407]:
+              - generic [ref=f2e1408]:
+                - link "Carrete Pesca Casting Señuelos Tatula TWS 300 HL" [ref=f2e1410] [cursor=pointer]:
+                  - /url: /es/p/carrete-pesca-casting-senuelos-tatula-tws-300-hl/383878/c8m9013121
+                  - img "Carrete Pesca Casting Señuelos Tatula TWS 300 HL" [ref=f2e1414]
+                - generic [ref=f2e1418]:
+                  - link "Carrete Pesca Casting Señuelos Tatula TWS 300 HL" [ref=f2e1421] [cursor=pointer]:
+                    - /url: /es/p/carrete-pesca-casting-senuelos-tatula-tws-300-hl/383878/c8m9013121
+                  - generic [ref=f2e1425]:
+                    - generic [ref=f2e1426]: 259,99 €
+                    - generic "Precio anterior" [ref=f2e1427]: 276,49 €
+                    - generic [ref=f2e1428]: 16,50 € de descuento
+          - listitem "Artículo 5" [ref=f2e1429]:
+            - article "Hilo Trenzado Pesca Señuelos Caperlan TX8 Gris 8 Hebras 150m" [ref=f2e1430]:
+              - generic [ref=f2e1431]:
+                - link "Carrete Spinning Pesca Señuelos Stradic 4000 XHG FM" [ref=f2e1433] [cursor=pointer]:
+                  - /url: /es/p/carrete-spinning-pesca-senuelos-stradic-4000-xhg-fm/384197/m9018011
+                  - img "Carrete Spinning Pesca Señuelos Stradic 4000 XHG FM" [ref=f2e1437]
+                - generic [ref=f2e1441]:
+                  - link "Carrete Spinning Pesca Señuelos Stradic 4000 XHG FM" [ref=f2e1444] [cursor=pointer]:
+                    - /url: /es/p/carrete-spinning-pesca-senuelos-stradic-4000-xhg-fm/384197/m9018011
+                  - generic [ref=f2e1449]: 199,99 €
+          - listitem "Artículo 6" [ref=f2e1450]:
+            - article "Kit Señuelos Flexibles Montados Natori SHD 105 / GRB 110 RTC" [ref=f2e1451]:
+              - generic [ref=f2e1452]:
+                - link "Carrete Casting Curado M 201 Manivela Izquierda Diestros" [ref=f2e1454] [cursor=pointer]:
+                  - /url: /es/p/carrete-casting-curado-m-201-manivela-izquierda-diestros/384205/m9018006
+                  - img "Carrete Casting Curado M 201 Manivela Izquierda Diestros" [ref=f2e1458]
+                - generic [ref=f2e1462]:
+                  - link "Carrete Casting Curado M 201 Manivela Izquierda Diestros" [ref=f2e1465] [cursor=pointer]:
+                    - /url: /es/p/carrete-casting-curado-m-201-manivela-izquierda-diestros/384205/m9018006
+                  - generic [ref=f2e1469]:
+                    - generic [ref=f2e1470]: 197,99 €
+                    - generic "Precio anterior" [ref=f2e1471]: 219,99 €
+                    - generic [ref=f2e1472]: 22 € de descuento
+          - listitem "Artículo 7" [ref=f2e1473]:
+            - article "Caña Ukiyo-500 240 Sepia Calamar" [ref=f2e1474]:
+              - generic [ref=f2e1475]:
+                - link "Carrete Casting Señuelos Grandes Tranx B 301 Manivela Izquierda Diestros" [ref=f2e1477] [cursor=pointer]:
+                  - /url: /es/p/carrete-casting-senuelos-grandes-tranx-b-301-manivela-izquierda-diestros/384204/m9018005
+                  - img "Carrete Casting Señuelos Grandes Tranx B 301 Manivela Izquierda Diestros" [ref=f2e1481]
+                - generic [ref=f2e1485]:
+                  - link "Carrete Casting Señuelos Grandes Tranx B 301 Manivela Izquierda Diestros" [ref=f2e1488] [cursor=pointer]:
+                    - /url: /es/p/carrete-casting-senuelos-grandes-tranx-b-301-manivela-izquierda-diestros/384204/m9018005
+                  - generic [ref=f2e1492]:
+                    - generic [ref=f2e1493]: 296,99 €
+                    - generic "Precio anterior" [ref=f2e1494]: 329,99 €
+                    - generic [ref=f2e1495]: 33 € de descuento
+          - listitem "Artículo 8" [ref=f2e1496]:
+            - article "Sedal 4X4 500 m" [ref=f2e1497]:
+              - generic [ref=f2e1498]:
+                - link "Carrete Pesca Depredadores R100 3000" [ref=f2e1500] [cursor=pointer]:
+                  - /url: /es/p/carrete-pesca-depredadores-r100-3000/379042/m8992703
+                  - img "Carrete Pesca Depredadores R100 3000" [ref=f2e1504]
+                - generic [ref=f2e1508]:
+                  - link "Carrete Pesca Depredadores R100 3000" [ref=f2e1511] [cursor=pointer]:
+                    - /url: /es/p/carrete-pesca-depredadores-r100-3000/379042/m8992703
+                  - generic [ref=f2e1512]:
+                    - generic [ref=f2e1514]:
+                      - img "Calificación 4,9 de 5" [ref=f2e1517]:
+                        - img [ref=f2e1518]
+                        - img [ref=f2e1520]
+                        - img [ref=f2e1522]
+                        - img [ref=f2e1524]
+                        - img [ref=f2e1526]
+                      - generic [ref=f2e1528]: (14)
+                    - generic [ref=f2e1532]: 9,99 €
+          - listitem "Artículo 9" [ref=f2e1533]:
+            - article "Caña Pesca Señuelos Mar Spinning Ilicium 500 2,70 m 10-35 g" [ref=f2e1534]:
+              - generic [ref=f2e1535]:
+                - link "Carrete Pesca RFT 100 3000" [ref=f2e1537] [cursor=pointer]:
+                  - /url: /es/p/carrete-pesca-rft-100-3000/336883/m8664929
+                  - img "Carrete Pesca RFT 100 3000" [ref=f2e1541]
+                - generic [ref=f2e1545]:
+                  - link "Carrete Pesca RFT 100 3000" [ref=f2e1548] [cursor=pointer]:
+                    - /url: /es/p/carrete-pesca-rft-100-3000/336883/m8664929
+                  - generic [ref=f2e1549]:
+                    - generic [ref=f2e1551]:
+                      - img "Calificación 4,6 de 5" [ref=f2e1554]:
+                        - img [ref=f2e1555]
+                        - img [ref=f2e1557]
+                        - img [ref=f2e1559]
+                        - img [ref=f2e1561]
+                        - img [ref=f2e1563]
+                      - generic [ref=f2e1566]: (146)
+                    - generic [ref=f2e1570]: 14,99 €
+          - listitem "Artículo 10" [ref=f2e1571]:
+            - article "Caña Pesca Caperlan WXM-100 Spinning 2,10 m 7-21 g" [ref=f2e1572]:
+              - generic [ref=f2e1573]:
+                - link "Carrete Pesca RFT 100 - 5000" [ref=f2e1575] [cursor=pointer]:
+                  - /url: /es/p/carrete-pesca-rft-100-5000/336807/m8664948
+                  - img "Carrete Pesca RFT 100 - 5000" [ref=f2e1579]
+                - generic [ref=f2e1583]:
+                  - link "Carrete Pesca RFT 100 - 5000" [ref=f2e1586] [cursor=pointer]:
+                    - /url: /es/p/carrete-pesca-rft-100-5000/336807/m8664948
+                  - generic [ref=f2e1587]:
+                    - generic [ref=f2e1589]:
+                      - img "Calificación 4,7 de 5" [ref=f2e1592]:
+                        - img [ref=f2e1593]
+                        - img [ref=f2e1595]
+                        - img [ref=f2e1597]
+                        - img [ref=f2e1599]
+                        - img [ref=f2e1601]
+                      - generic [ref=f2e1604]: (107)
+                    - generic [ref=f2e1608]: 16,99 €
+        - group "Barra de desplazamiento deslizante-group" [ref=f2e1609]:
+          - scrollbar "Barra de desplazamiento deslizante" [ref=f2e1610]
+          - slider "Pulgar de barra de desplazamiento" [ref=f2e1611]
+    - generic [ref=f2e464]:
+      - heading "Obtén el pack" [level=2] [ref=f2e466]
+      - generic [ref=f2e467]:
+        - generic [ref=f2e468]:
+          - generic [ref=f2e469]:
+            - generic "Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1" [ref=f2e471] [cursor=pointer]:
+              - img [ref=f2e473]
+              - checkbox "Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1" [checked] [ref=f2e475]
+            - article [ref=f2e476]:
+              - generic [ref=f2e477]:
+                - link "Ir a Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1" [ref=f2e479] [cursor=pointer]:
+                  - /url: /es/p/carrete-pesca-spinning-sienna-fg-4000-8-5kg-3-1/X8593890/m8593890
+                  - img "Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1" [ref=f2e483]
+                - generic [ref=f2e487]:
+                  - generic [ref=f2e489]: Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1
+                  - generic [ref=f2e493]:
+                    - generic [ref=f2e494]: 29,99 €
+                    - generic "Precio anterior" [ref=f2e495]: 39,99 €
+                    - generic [ref=f2e496]: 25% de descuento
+          - generic [ref=f2e497]:
+            - generic "Hilo Trenzado Pesca Señuelos TX4 Caqui 4 Tramos" [ref=f2e499] [cursor=pointer]:
+              - img [ref=f2e501]
+              - checkbox "Hilo Trenzado Pesca Señuelos TX4 Caqui 4 Tramos" [checked] [ref=f2e503]
+            - article [ref=f2e504]:
+              - generic [ref=f2e505]:
+                - link "Ir a Hilo Trenzado Pesca Señuelos TX4 Caqui 4 Tramos" [ref=f2e507] [cursor=pointer]:
+                  - /url: /es/p/hilo-trenzado-pesca-senuelos-tx4-caqui-4-tramos/362170/c109m8933473
+                  - img "Hilo Trenzado Pesca Señuelos TX4 Caqui 4 Tramos" [ref=f2e511]
+                - generic [ref=f2e515]:
+                  - generic [ref=f2e517]: Hilo Trenzado Pesca Señuelos TX4 Caqui 4 Tramos
+                  - generic [ref=f2e522]: 7,99 €
+        - generic [ref=f2e524]:
+          - generic [ref=f2e526]:
+            - generic [ref=f2e527]: Total
+            - generic [ref=f2e528]: 37,98 €
+          - button "Elige opciones" [ref=f2e531] [cursor=pointer]
+    - complementary "Reseñas" [ref=f2e1612]:
+      - generic [ref=f2e1613]:
+        - heading "Reseñas" [level=2] [ref=f2e1614]
+        - generic [ref=f2e1615]:
+          - generic [ref=f2e1616]:
+            - generic [ref=f2e1617]:
+              - generic [ref=f2e1618]: 4,7
+              - generic [ref=f2e1620]: de 5
+              - generic [ref=f2e1621]: Valoración de 4.65 sobre 5
+              - link "Leer 142 reseñas" [ref=f2e1624] [cursor=pointer]:
+                - /url: /es/r/carrete-pesca-spinning-sienna-fg-4000-8-5kg-3-1/X8593890/m8593890
+                - generic [ref=f2e1625]: Leer 142 reseñas
+                - img [ref=f2e1627]
+            - list [ref=f2e1630]:
+              - generic [ref=f2e1631]: Distribución de calificaciones para 142 reseñas
+              - listitem [ref=f2e1632]:
+                - generic [ref=f2e1633]: Filtrar solo por opiniones de 5 estrellas para el producto Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1
+                - generic [ref=f2e1634]:
+                  - generic [ref=f2e1635]: "5"
+                  - img [ref=f2e1636]
+                - meter [ref=f2e1638]:
+                  - generic [ref=f2e1640]: "Porcentaje completado: 76.1%"
+                - generic [ref=f2e1641]: "108"
+              - listitem [ref=f2e1642]:
+                - generic [ref=f2e1643]: Filtrar solo por opiniones de 4 estrellas para el producto Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1
+                - generic [ref=f2e1644]:
+                  - generic [ref=f2e1645]: "4"
+                  - img [ref=f2e1646]
+                - meter [ref=f2e1648]:
+                  - generic [ref=f2e1650]: "Porcentaje completado: 17.6%"
+                - generic [ref=f2e1651]: "25"
+              - listitem [ref=f2e1652]:
+                - generic [ref=f2e1653]: Filtrar solo por opiniones de 3 estrellas para el producto Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1
+                - generic [ref=f2e1654]:
+                  - generic [ref=f2e1655]: "3"
+                  - img [ref=f2e1656]
+                - meter [ref=f2e1658]:
+                  - generic [ref=f2e1660]: "Porcentaje completado: 2.8%"
+                - generic [ref=f2e1661]: "4"
+              - listitem [ref=f2e1662]:
+                - generic [ref=f2e1663]: Filtrar solo por opiniones de 2 estrellas para el producto Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1
+                - generic [ref=f2e1664]:
+                  - generic [ref=f2e1665]: "2"
+                  - img [ref=f2e1666]
+                - meter [ref=f2e1668]:
+                  - generic [ref=f2e1670]: "Porcentaje completado: 2.1%"
+                - generic [ref=f2e1671]: "3"
+              - listitem [ref=f2e1672]:
+                - generic [ref=f2e1673]: Filtrar solo por opiniones de 1 estrellas para el producto Carrete Pesca Spinning Sienna FG 4000 8,5kg 3+1
+                - generic [ref=f2e1674]:
+                  - generic [ref=f2e1675]: "1"
+                  - img [ref=f2e1676]
+                - meter [ref=f2e1678]:
+                  - generic [ref=f2e1680]: "Porcentaje completado: 1.4%"
+                - generic [ref=f2e1681]: "2"
+            - heading "Aprende cómo funcionan las reseñas" [level=5] [ref=f2e1684]:
+              - button "Aprende cómo funcionan las reseñas" [ref=f2e1685] [cursor=pointer]
+              - img [ref=f2e1686] [cursor=pointer]
+          - generic [ref=f2e1688]:
+            - generic [ref=f2e1689]:
+              - generic [ref=f2e1692]:
+                - article [ref=f2e1693]:
+                  - heading "Eficaz y manejable" [level=3] [ref=f2e1695]
+                  - img "Calificación 5 de 5" [ref=f2e1697]:
+                    - img [ref=f2e1698]
+                    - img [ref=f2e1700]
+                    - img [ref=f2e1702]
+                    - img [ref=f2e1704]
+                    - img [ref=f2e1706]
+                  - generic [ref=f2e1708]:
+                    - blockquote [ref=f2e1711]: Eficaz y manejable
+                    - list [ref=f2e1713]:
+                      - listitem [ref=f2e1714]:
+                        - generic [ref=f2e1715]:
+                          - text: 5/5
+                          - img [ref=f2e1716]
+                        - text: Ligereza
+                      - listitem [ref=f2e1718]:
+                        - generic [ref=f2e1719]:
+                          - text: 5/5
+                          - img [ref=f2e1720]
+                        - text: Fuerza de frenado
+                      - listitem [ref=f2e1722]:
+                        - generic [ref=f2e1723]:
+                          - text: 5/5
+                          - img [ref=f2e1724]
+                        - text: Rotación suave
+                      - listitem [ref=f2e1726]:
+                        - generic [ref=f2e1727]:
+                          - text: 5/5
+                          - img [ref=f2e1728]
+                        - text: Relación calidad-precio
+                      - listitem [ref=f2e1730]:
+                        - generic [ref=f2e1731]:
+                          - text: 5/5
+                          - img [ref=f2e1732]
+                        - text: Diseño
+                - generic [ref=f2e1734]:
+                  - generic [ref=f2e1736]:
+                    - generic [ref=f2e1737]: Antonio, España
+                    - generic [ref=f2e1738]: Comprador verificado
+                    - generic [ref=f2e1739]: Hace 2 semana(s)
+                  - 'link "Informar de esta opinión: Eficaz y manejable" [ref=f2e1741] [cursor=pointer]':
+                    - /url: https://reviews.decathlon.com/es_ES/abuse/97884c83-e07e-41dc-900d-c07848a5070d
+                    - generic [ref=f2e1742]: Informar
+              - generic [ref=f2e1745]:
+                - article [ref=f2e1746]:
+                  - heading "Le.encanta" [level=3] [ref=f2e1748]
+                  - img "Calificación 5 de 5" [ref=f2e1750]:
+                    - img [ref=f2e1751]
+                    - img [ref=f2e1753]
+                    - img [ref=f2e1755]
+                    - img [ref=f2e1757]
+                    - img [ref=f2e1759]
+                  - generic [ref=f2e1761]:
+                    - blockquote [ref=f2e1764]: Maravilloso
+                    - list [ref=f2e1766]:
+                      - listitem [ref=f2e1767]:
+                        - generic [ref=f2e1768]:
+                          - text: 5/5
+                          - img [ref=f2e1769]
+                        - text: Ligereza
+                      - listitem [ref=f2e1771]:
+                        - generic [ref=f2e1772]:
+                          - text: 5/5
+                          - img [ref=f2e1773]
+                        - text: Fuerza de frenado
+                      - listitem [ref=f2e1775]:
+                        - generic [ref=f2e1776]:
+                          - text: 5/5
+                          - img [ref=f2e1777]
+                        - text: Rotación suave
+                      - listitem [ref=f2e1779]:
+                        - generic [ref=f2e1780]:
+                          - text: 5/5
+                          - img [ref=f2e1781]
+                        - text: Relación calidad-precio
+                      - listitem [ref=f2e1783]:
+                        - generic [ref=f2e1784]:
+                          - text: 5/5
+                          - img [ref=f2e1785]
+                        - text: Diseño
+                - generic [ref=f2e1787]:
+                  - generic [ref=f2e1789]:
+                    - generic [ref=f2e1790]: Françoise, España
+                    - generic [ref=f2e1791]: Comprador verificado
+                    - generic [ref=f2e1792]: Hace 2 mes(es)
+                  - 'link "Informar de esta opinión: Le.encanta" [ref=f2e1794] [cursor=pointer]':
+                    - /url: https://reviews.decathlon.com/es_ES/abuse/8cb848c7-099a-442b-b024-ded3c08e422b
+                    - generic [ref=f2e1795]: Informar
+              - generic [ref=f2e1798]:
+                - article [ref=f2e1799]:
+                  - heading "Muy ligero, ágil y suave. Reco..." [level=3] [ref=f2e1801]
+                  - img "Calificación 5 de 5" [ref=f2e1803]:
+                    - img [ref=f2e1804]
+                    - img [ref=f2e1806]
+                    - img [ref=f2e1808]
+                    - img [ref=f2e1810]
+                    - img [ref=f2e1812]
+                  - generic [ref=f2e1814]:
+                    - blockquote [ref=f2e1817]: Muy ligero, ágil y suave. Recogida rapida
+                    - generic:
+                      - list
+                - generic [ref=f2e1818]:
+                  - generic [ref=f2e1820]:
+                    - generic [ref=f2e1821]: Pablo, España
+                    - generic [ref=f2e1822]: Comprador verificado
+                    - generic [ref=f2e1823]: Hace 2 mes(es)
+                  - 'link "Informar de esta opinión: Muy ligero, ágil y suave. Reco..." [ref=f2e1825] [cursor=pointer]':
+                    - /url: https://reviews.decathlon.com/es_ES/abuse/586287d0-5f9c-4bf9-9a18-327012ff86db
+                    - generic [ref=f2e1826]: Informar
+            - 'link "Mostrar más opiniones con {{rating}} estrellas" [ref=f2e1829] [cursor=pointer]':
+              - /url: /es/r/carrete-pesca-spinning-sienna-fg-4000-8-5kg-3-1/X8593890/m8593890
+              - generic [ref=f2e1830]: Mostrar más
+              - img [ref=f2e1832]
+  - contentinfo [ref=f2e541]:
+    - generic [ref=f2e542]:
+      - list [ref=f2e543]:
+        - listitem [ref=f2e544]:
+          - link "Devolución en 60 días Para productos de marca Decathlon" [ref=f2e545] [cursor=pointer]:
+            - /url: https://www.decathlon.es/es/devoluciones-y-reembolsos_lp-THGT6Y
+            - generic [ref=f2e546]: Devolución en 60 días
+            - generic [ref=f2e547]: Para productos de marca Decathlon
+        - listitem [ref=f2e548]:
+          - link "Date un respiro Financia hasta 15.000€" [ref=f2e549] [cursor=pointer]:
+            - /url: https://www.decathlon.es/es/c/legal/financiacion-decathlon_a46cd15b-0e2e-4b0a-97a8-fcc7890d829a
+            - generic [ref=f2e550]: Date un respiro
+            - generic [ref=f2e551]: Financia hasta 15.000€
+        - listitem [ref=f2e552]:
+          - link "Recompramos tu material Y recibe el importe en dinero" [ref=f2e553] [cursor=pointer]:
+            - /url: https://www.decathlon.es/es/Buyback_lp-NZ4666
+            - generic [ref=f2e554]: Recompramos tu material
+            - generic [ref=f2e555]: Y recibe el importe en dinero
+        - listitem [ref=f2e556]:
+          - link "Tu pedido disponible desde 1h en tienda" [ref=f2e557] [cursor=pointer]:
+            - /url: https://www.decathlon.es/es/c/legal/metodos-y-gastos-de-envio-decathlon_f7874964-bf4b-47d6-9f35-c0be39139626
+            - generic [ref=f2e558]: Tu pedido disponible
+            - generic [ref=f2e559]: desde 1h en tienda
+      - generic [ref=f2e560]:
+        - generic [ref=f2e561]:
+          - list [ref=f2e563]:
+            - listitem [ref=f2e564]:
+              - link "APP Decathlon" [ref=f2e565] [cursor=pointer]:
+                - /url: http://uqr.to/1trzf
+                - generic [ref=f2e567]: APP Decathlon
+            - listitem [ref=f2e568]:
+              - link "Hazte miembro" [ref=f2e569] [cursor=pointer]:
+                - /url: https://www.decathlon.es/es/servicios_fidelidad_lp-FZCSFR
+                - generic [ref=f2e571]: Hazte miembro
+          - generic [ref=f2e572]:
+            - link "Enlace a Facebook" [ref=f2e574] [cursor=pointer]:
+              - /url: https://es-es.facebook.com/decathlonespana
+              - img [ref=f2e575]
+            - link "Enlace a Twitter" [ref=f2e578] [cursor=pointer]:
+              - /url: https://x.com/DecathlonEspana
+              - img [ref=f2e579]
+            - link "Enlace a YouTube" [ref=f2e582] [cursor=pointer]:
+              - /url: https://www.youtube.com/user/DecathlonEsp
+              - img [ref=f2e583]
+            - link "Enlace a Instagram" [ref=f2e586] [cursor=pointer]:
+              - /url: https://www.instagram.com/decathlon_espana/
+              - img [ref=f2e587]
+            - link "Linkedin link" [ref=f2e591] [cursor=pointer]:
+              - /url: https://es.linkedin.com/company/decathlon-group
+              - img [ref=f2e592]
+        - generic [ref=f2e596]:
+          - generic [ref=f2e598]:
+            - heading "TE AYUDAMOS" [level=3] [ref=f2e599]
+            - list [ref=f2e601]:
+              - listitem [ref=f2e602]:
+                - link "Ayuda y atención al cliente" [ref=f2e603] [cursor=pointer]:
+                  - /url: /es/ayuda-atencion-cliente-decathlon_lp-4WILOD
+                  - generic [ref=f2e604]: Ayuda y atención al cliente
+              - listitem [ref=f2e605]:
+                - link "Métodos y gastos de envío" [ref=f2e606] [cursor=pointer]:
+                  - /url: https://www.decathlon.es/es/c/legal/metodos-y-gastos-de-envio-decathlon_f7874964-bf4b-47d6-9f35-c0be39139626
+                  - generic [ref=f2e607]: Métodos y gastos de envío
+              - listitem [ref=f2e608]:
+                - link "Métodos de pago" [ref=f2e609] [cursor=pointer]:
+                  - /url: https://www.decathlon.es/es/c/legal/metodos-de-pago-decathlon_576dfe10-3a7f-4fdd-8975-c9681f2a19d2
+                  - generic [ref=f2e610]: Métodos de pago
+              - listitem [ref=f2e611]:
+                - link "Factura electrónica" [ref=f2e612] [cursor=pointer]:
+                  - /url: /es/factura-electronica_lp-ROVA3C
+                  - generic [ref=f2e613]: Factura electrónica
+              - listitem [ref=f2e614]:
+                - link "Devoluciones y reembolsos" [ref=f2e615] [cursor=pointer]:
+                  - /url: /es/lp/c/devoluciones-y-reembolsos
+                  - generic [ref=f2e616]: Devoluciones y reembolsos
+              - listitem [ref=f2e617]:
+                - link "Soporte técnico" [ref=f2e618] [cursor=pointer]:
+                  - /url: https://support.decathlon.es/
+                  - generic [ref=f2e619]: Soporte técnico
+              - listitem [ref=f2e620]:
+                - link "Consejos deportivos" [ref=f2e621] [cursor=pointer]:
+                  - /url: https://consejosdeportivos.decathlon.es/
+                  - generic [ref=f2e622]: Consejos deportivos
+          - generic [ref=f2e624]:
+            - heading "SERVICIOS" [level=3] [ref=f2e625]
+            - list [ref=f2e627]:
+              - listitem [ref=f2e628]:
+                - link "Recompramos tu material" [ref=f2e629] [cursor=pointer]:
+                  - /url: /es/Buyback_lp-NZ4666
+                  - generic [ref=f2e630]: Recompramos tu material
+              - listitem [ref=f2e631]:
+                - link "Decathlon Segunda Vida" [ref=f2e632] [cursor=pointer]:
+                  - /url: /es/productos-segunda-mano
+                  - generic [ref=f2e633]: Decathlon Segunda Vida
+              - listitem [ref=f2e634]:
+                - link "Alquiler" [ref=f2e635] [cursor=pointer]:
+                  - /url: https://rental.decathlon.com/es/es
+                  - generic [ref=f2e636]: Alquiler
+              - listitem [ref=f2e637]:
+                - link "Mantenimiento y reparación" [ref=f2e638] [cursor=pointer]:
+                  - /url: /es/servicios/servicio-postventa
+                  - generic [ref=f2e639]: Mantenimiento y reparación
+              - listitem [ref=f2e640]:
+                - link "Personalización" [ref=f2e641] [cursor=pointer]:
+                  - /url: /es/servicios/personalizacion
+                  - generic [ref=f2e642]: Personalización
+              - listitem [ref=f2e643]:
+                - link "Tarjeta regalo" [ref=f2e644] [cursor=pointer]:
+                  - /url: /es/giftcard
+                  - generic [ref=f2e645]: Tarjeta regalo
+              - listitem [ref=f2e646]:
+                - link "Garantía y seguros" [ref=f2e647] [cursor=pointer]:
+                  - /url: /es/extension-garantia-y-seguros_lp-M85FGO
+                  - generic [ref=f2e648]: Garantía y seguros
+              - listitem [ref=f2e649]:
+                - link "Financiación" [ref=f2e650] [cursor=pointer]:
+                  - /url: https://www.decathlon.es/es/c/legal/financiacion-decathlon_a46cd15b-0e2e-4b0a-97a8-fcc7890d829a
+                  - generic [ref=f2e651]: Financiación
+          - generic [ref=f2e653]:
+            - heading "CAMPAÑAS" [level=3] [ref=f2e654]
+            - list [ref=f2e656]:
+              - listitem [ref=f2e657]:
+                - link "Black Friday" [ref=f2e658] [cursor=pointer]:
+                  - /url: https://www.decathlon.es/es/black-friday_lp-002MV7
+                  - generic [ref=f2e659]: Black Friday
+              - listitem [ref=f2e660]:
+                - link "Cyber Monday" [ref=f2e661] [cursor=pointer]:
+                  - /url: https://www.decathlon.es/es/cyber-monday_lp-UDUBLF
+                  - generic [ref=f2e662]: Cyber Monday
+              - listitem [ref=f2e663]:
+                - link "Amigo invisible" [ref=f2e664] [cursor=pointer]:
+                  - /url: https://www.decathlon.es/es/regalos-amigo-invisible_lp-FNL5Z4
+                  - generic [ref=f2e665]: Amigo invisible
+              - listitem [ref=f2e666]:
+                - link "Regalos deportivos" [ref=f2e667] [cursor=pointer]:
+                  - /url: https://www.decathlon.es/es/regalos-deportivos-originales_lp-RB7TTO
+                  - generic [ref=f2e668]: Regalos deportivos
+              - listitem [ref=f2e669]:
+                - link "Outlet" [ref=f2e670] [cursor=pointer]:
+                  - /url: https://www.decathlon.es/es/outlet-deporte_lp-RS93H9
+                  - generic [ref=f2e671]: Outlet
+              - listitem [ref=f2e672]:
+                - link "Rebajas" [ref=f2e673] [cursor=pointer]:
+                  - /url: https://www.decathlon.es/es/rebajas_lp-LTGCC9
+                  - generic [ref=f2e674]: Rebajas
+              - listitem [ref=f2e675]:
+                - link "Blue Monday" [ref=f2e676] [cursor=pointer]:
+                  - /url: https://www.decathlon.es/es/blue-monday_lp-GSO123
+                  - generic [ref=f2e677]: Blue Monday
+              - listitem [ref=f2e678]:
+                - link "Descuentos" [ref=f2e679] [cursor=pointer]:
+                  - /url: https://www.decathlon.es/es/descuentos-deportes_lp-AM1NRA
+                  - generic [ref=f2e680]: Descuentos
+              - listitem [ref=f2e681]:
+                - link "Marcas deportivas" [ref=f2e682] [cursor=pointer]:
+                  - /url: https://www.decathlon.es/es/marcas-deportivas_lp-BV84CU
+                  - generic [ref=f2e683]: Marcas deportivas
+              - listitem [ref=f2e684]:
+                - link "Códigos promocionales" [ref=f2e685] [cursor=pointer]:
+                  - /url: https://www.decathlon.es/es/codigo-promo_lp-6TBA7L
+                  - generic [ref=f2e686]: Códigos promocionales
+          - generic [ref=f2e688]:
+            - heading "DECATHLON EMPRESA" [level=3] [ref=f2e689]
+            - list [ref=f2e691]:
+              - listitem [ref=f2e692]:
+                - link "Quiénes somos" [ref=f2e693] [cursor=pointer]:
+                  - /url: https://sostenibilidad.decathlon.es/decathlon-espana
+                  - generic [ref=f2e694]: Quiénes somos
+              - listitem [ref=f2e695]:
+                - link "Tiendas Decathlon" [ref=f2e696] [cursor=pointer]:
+                  - /url: /es/store-locator
+                  - generic [ref=f2e697]: Tiendas Decathlon
+              - listitem [ref=f2e698]:
+                - link "Trabaja con nosotros" [ref=f2e699] [cursor=pointer]:
+                  - /url: http://trabajaconnosotros.decathlon.es/
+                  - generic [ref=f2e700]: Trabaja con nosotros
+              - listitem [ref=f2e701]:
+                - link "Sala de prensa" [ref=f2e702] [cursor=pointer]:
+                  - /url: http://saladeprensa.decathlon.es/
+                  - generic [ref=f2e703]: Sala de prensa
+              - listitem [ref=f2e704]:
+                - link "Canal ético" [ref=f2e705] [cursor=pointer]:
+                  - /url: https://decathlon.whispli.com/es/Spain_Alert?locale=es
+                  - generic [ref=f2e706]: Canal ético
+              - listitem [ref=f2e707]:
+                - link "Decathlon Marketplace" [ref=f2e708] [cursor=pointer]:
+                  - /url: /es/decathlon-marketplace_lp-RCL0YK
+                  - generic [ref=f2e709]: Decathlon Marketplace
+              - listitem [ref=f2e710]:
+                - link "Vende en Decathlon.es" [ref=f2e711] [cursor=pointer]:
+                  - /url: /es/c/lp/pagina-de-aterrizaje-vendedor-conviertete-en-socio-de-decathlon-marketplace_81fe3e30-9d43-4f14-a224-668de00c2de5
+                  - generic [ref=f2e712]: Vende en Decathlon.es
+              - listitem [ref=f2e713]:
+                - link "Decathlon afiliados" [ref=f2e714] [cursor=pointer]:
+                  - /url: https://afiliacion.decathlon.es/affiliates
+                  - generic [ref=f2e715]: Decathlon afiliados
+              - listitem [ref=f2e716]:
+                - link "Sostenibilidad" [ref=f2e717] [cursor=pointer]:
+                  - /url: https://sostenibilidad.decathlon.es/
+                  - generic [ref=f2e718]: Sostenibilidad
+              - listitem [ref=f2e719]:
+                - link "Decathlon Live" [ref=f2e720] [cursor=pointer]:
+                  - /url: /es/live-shopping-decathlon_lp-995QE0
+                  - generic [ref=f2e721]: Decathlon Live
+              - listitem [ref=f2e722]:
+                - link "Tu opinión cuenta" [ref=f2e723] [cursor=pointer]:
+                  - /url: /es/tu-opinion-cuenta_lp-VSSRJ8
+                  - generic [ref=f2e724]: Tu opinión cuenta
+          - generic [ref=f2e726]:
+            - heading "Venta a profesionales" [level=3] [ref=f2e727]
+            - list [ref=f2e729]:
+              - listitem [ref=f2e730]:
+                - link "Centros educativos" [ref=f2e731] [cursor=pointer]:
+                  - /url: /es/material-deportivo-escolar_lp-U6AI2S
+                  - generic [ref=f2e732]: Centros educativos
+              - listitem [ref=f2e733]:
+                - link "Wellness corporativo" [ref=f2e734] [cursor=pointer]:
+                  - /url: /es/material-deportivo-para-empresas_lp-LL0MFZ
+                  - generic [ref=f2e735]: Wellness corporativo
+              - listitem [ref=f2e736]:
+                - link "Bienestar y turismo activo" [ref=f2e737] [cursor=pointer]:
+                  - /url: /es/material-deportivo-para-empresas_lp-LL0MFZ
+                  - generic [ref=f2e738]: Bienestar y turismo activo
+              - listitem [ref=f2e739]:
+                - link "Material movilidad sostenible" [ref=f2e740] [cursor=pointer]:
+                  - /url: /es/material-deportivo-para-empresas_lp-LL0MFZ
+                  - generic [ref=f2e741]: Material movilidad sostenible
+              - listitem [ref=f2e742]:
+                - link "Realizar un presupuesto" [ref=f2e743] [cursor=pointer]:
+                  - /url: https://presupuestos.decathlon.es/
+                  - generic [ref=f2e744]: Realizar un presupuesto
+          - generic [ref=f2e746]:
+            - heading "Venta a clubes deportivos" [level=3] [ref=f2e747]
+            - list [ref=f2e749]:
+              - listitem [ref=f2e750]:
+                - link "Venta a clubes deportivos" [ref=f2e751] [cursor=pointer]:
+                  - /url: /es/material-deportivo-para-clubes_lp-SKPQID
+                  - generic [ref=f2e752]: Venta a clubes deportivos
+              - listitem [ref=f2e753]:
+                - link "Equipaciones deportivas" [ref=f2e754] [cursor=pointer]:
+                  - /url: /es/material-deportivo-para-clubes_lp-SKPQID
+                  - generic [ref=f2e755]: Equipaciones deportivas
+              - listitem [ref=f2e756]:
+                - link "Material de entrenamiento" [ref=f2e757] [cursor=pointer]:
+                  - /url: /es/material-deportivo-para-clubes_lp-SKPQID
+                  - generic [ref=f2e758]: Material de entrenamiento
+      - link "Ir a la página de inicio" [ref=f2e760] [cursor=pointer]:
+        - /url: /es
+        - img [ref=f2e761]
+      - generic [ref=f2e764]:
+        - img [ref=f2e766]
+        - generic [ref=f2e777]: Proveedor de pago de marketplace
+        - link "C.G.U." [ref=f2e778] [cursor=pointer]:
+          - /url: https://www.lemonway.com/es/
+          - generic [ref=f2e779]: C.G.U.
+      - generic [ref=f2e781]:
+        - link "Condiciones Generales de la Venta" [ref=f2e782] [cursor=pointer]:
+          - /url: /es/c/legal/condiciones-generales-de-la-venta-decathlon_6f0403c8-3c49-414b-986e-21983e949c89
+          - generic [ref=f2e783]: Condiciones Generales de la Venta
+        - link "Condiciones Generales de Uso" [ref=f2e784] [cursor=pointer]:
+          - /url: /es/c/legal/condiciones-generales-de-uso-decathlon_77b37f0b-e345-45ea-b39e-5a34559140e7
+          - generic [ref=f2e785]: Condiciones Generales de Uso
+        - link "C.G. Segunda Vida" [ref=f2e786] [cursor=pointer]:
+          - /url: /es/c/legal/condiciones-generales-segunda-vida-decathlon_063f1d6c-a3f4-43af-836e-9a5588e62a8f
+          - generic [ref=f2e787]: C.G. Segunda Vida
+        - link "C.G. Taller" [ref=f2e788] [cursor=pointer]:
+          - /url: /es/c/legal/condiciones-generales-taller-decathlon_427c930a-b6cc-496b-88ec-181b6314d416
+          - generic [ref=f2e789]: C.G. Taller
+        - link "C.G. Alquiler" [ref=f2e790] [cursor=pointer]:
+          - /url: /es/c/legal/condiciones-generales-alquiler-decathlon_0c8d6287-68f5-4e61-a576-913a85effc6c
+          - generic [ref=f2e791]: C.G. Alquiler
+        - link "C.G. Tarjeta regalo" [ref=f2e792] [cursor=pointer]:
+          - /url: /es/c/legal/condiciones-generales-tarjeta-regalo-decathlon_322bd987-ca69-45e6-ad77-94846b3d3bbf
+          - generic [ref=f2e793]: C.G. Tarjeta regalo
+        - link "C.G.V. B2B" [ref=f2e794] [cursor=pointer]:
+          - /url: /es/c/legal/condiciones-generales-de-venta-b2b-decathlon_67e19ac4-4172-40ac-a0d4-22f6f0a8d084
+          - generic [ref=f2e795]: C.G.V. B2B
+        - link "Menciones legales" [ref=f2e796] [cursor=pointer]:
+          - /url: /es/c/legal/menciones-legales-decathlon_4c6c2516-af5a-446b-b349-4daeadd386e6
+          - generic [ref=f2e797]: Menciones legales
+        - link "Referencias legales Marketplace" [ref=f2e798] [cursor=pointer]:
+          - /url: /es/c/legal/referencias-legales-marketplace-decathlon_2c23e250-12e8-4ec4-8314-3a17db73574d
+          - generic [ref=f2e799]: Referencias legales Marketplace
+        - link "Declaración de Accesibilidad" [ref=f2e800] [cursor=pointer]:
+          - /url: /es/c/legal/declaracion-de-accesibilidad_b19e31c1-69e9-4639-b864-fa47c2f8a784
+          - generic [ref=f2e801]: Declaración de Accesibilidad
+        - link "Política de privacidad" [ref=f2e802] [cursor=pointer]:
+          - /url: /es/c/legal/politica-privacidad-como-utilizamos-tus-datos-personales-decathlon_b7db7b59-2c8d-4554-a4ab-7631a69cae6a
+          - generic [ref=f2e803]: Política de privacidad
+        - link "Cookies" [ref=f2e804] [cursor=pointer]:
+          - /url: /es/c/legal/politica-de-cookies-decathlon_1581196c-70b5-447f-b140-c2acc562d4db
+          - generic [ref=f2e805]: Cookies
+        - button "Configurar mis cookies" [ref=f2e806] [cursor=pointer]:
+          - generic [ref=f2e807]: Configurar mis cookies
+        - link "Reportar contenido ilegal" [ref=f2e808] [cursor=pointer]:
+          - /url: https://dktmarketplace.retool.com/form/acc0cf0d-6eee-4098-bb2e-849dad5a93b8?locale=ES
+          - generic [ref=f2e809]: Reportar contenido ilegal
+        - link "Reportar una vulnerabilidad" [ref=f2e810] [cursor=pointer]:
+          - /url: https://vdp.decathlon.net/
+          - generic [ref=f2e811]: Reportar una vulnerabilidad
+        - link "Tax free" [ref=f2e812] [cursor=pointer]:
+          - /url: /es/c/legal/tax-free-decathlon_0cf12609-9abb-4c32-9cfe-b2ff15121317
+          - generic [ref=f2e813]: Tax free
+        - link "Comunicación de seguridad" [ref=f2e814] [cursor=pointer]:
+          - /url: /es/c/legal/comunicados-de-seguridad-decathlon_9717c488-f45b-4691-9a16-c0430ac6336a
+          - generic [ref=f2e815]: Comunicación de seguridad
+        - link "Clasificación de productos" [ref=f2e816] [cursor=pointer]:
+          - /url: /es/c/legal/transparencia-en-la-clasificacion-de-los-productos-decathlon_59a93f32-daf1-47da-a065-49287fca9b4a
+          - generic [ref=f2e817]: Clasificación de productos
+        - link "Informe Anual de Transparencia" [ref=f2e818] [cursor=pointer]:
+          - /url: /es/c/legal/informe-anual-de-transparencia_4021ed4a-0e76-461c-ab9f-e9750d79cb70
+          - generic [ref=f2e819]: Informe Anual de Transparencia
+      - generic [ref=f2e821]: ©2026 Decathlon
+  - alert [ref=f2e822]

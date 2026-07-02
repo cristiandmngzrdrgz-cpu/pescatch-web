@@ -1,4 +1,4 @@
-import { getDeals, getFeaturedDeals } from '@/data/queries'
+import { getDeals, getFeaturedDeals, getDealCountsByCategory } from '@/data/queries'
 import { getPosts } from '@/data/blog-queries'
 import { DealCard } from '@/components/deals/deal-card'
 import Image from 'next/image'
@@ -6,6 +6,7 @@ import { Fish, ArrowRight, Clock, Zap, Star, Shield, BadgeCheck, Users, BookOpen
 import Link from 'next/link'
 import { CATEGORIES } from '@/types'
 import type { BlogPost } from '@/types'
+import { TimeAgo } from '@/components/ui/time-ago'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,11 +28,7 @@ export default async function HomePage() {
   ])
 
   const totalDeals = latest.length
-  const categoryDealCounts = new Map<string, number>()
-  const categoryResults = await Promise.all(CATEGORIES.map(cat => getDeals({ category: cat.slug }).then(d => [cat.slug, d.length] as const)))
-  for (const [slug, count] of categoryResults) {
-    categoryDealCounts.set(slug, count)
-  }
+  const categoryDealCounts = new Map(Object.entries(await getDealCountsByCategory()))
 
   const totalSavings = latest.reduce((sum, d) => sum + Math.max(0, d.originalPrice - d.salePrice), 0)
   const bestPriceMap = new Map<string, { bestPrice: number; bestStore: string; storeCount: number }>()
@@ -79,8 +76,8 @@ export default async function HomePage() {
                   style={{ background: 'rgba(255,184,0,0.12)', border: '1px solid rgba(255,184,0,0.3)', color: '#FFB800' }}>
                   <BadgeCheck className="h-4 w-4" />
                   <span className="font-semibold">+{totalDeals} ofertas</span>
-                </div>
-              </div>
+            </div>
+          </div>
 
               <h1 className="text-[2.5rem] sm:text-[3.5rem] lg:text-[4rem] font-extrabold leading-[1.05] tracking-tight mb-5"
                 style={{ color: '#E8F0FE', textShadow: '0 2px 20px rgba(0,0,0,0.3)' }}>
@@ -364,7 +361,6 @@ export default async function HomePage() {
           </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             {latest.slice(0, 4).map((deal) => {
-              const hoursAgo = Math.floor((Date.now() - new Date(deal.publishedAt).getTime()) / 3600000) // eslint-disable-line react-hooks/purity
               return (
                 <Link key={deal.id} href={`/deals/${deal.slug}`}
                   className="group flex gap-5 p-5 rounded-2xl transition-all duration-300 hover:-translate-y-0.5 glow-cyan"
@@ -376,7 +372,7 @@ export default async function HomePage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 text-xs" style={{ color: '#4A6080' }}>
                       <Clock className="h-3.5 w-3.5" />
-                      {hoursAgo < 1 ? 'Hace minutos' : hoursAgo < 24 ? `Hace ${hoursAgo} horas` : `Hace ${Math.floor(hoursAgo / 24)} días`}
+                      <TimeAgo publishedAt={deal.publishedAt} />
                       <span className="mx-1.5" style={{ color: '#1E3A5F' }}>·</span>
                       <span className="font-semibold uppercase tracking-wider text-[0.65rem]" style={{ color: '#00D4FF' }}>{CATEGORIES.find(c => c.id === deal.category)?.name || deal.category}</span>
                     </div>
@@ -385,11 +381,15 @@ export default async function HomePage() {
                     </h3>
                     <div className="flex items-baseline gap-2 mt-2">
                       <span className="text-lg font-bold" style={{ color: '#FFB800' }}>{deal.salePrice.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span>
+                      {deal.discountPercent > 0 && (
+                      <>
                       <span className="text-xs line-through" style={{ color: '#4A6080' }}>{deal.originalPrice.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span>
                       <span className="ml-auto text-[0.65rem] font-bold px-2 py-0.5 rounded-full"
                         style={{ background: 'rgba(255,184,0,0.12)', color: '#FFB800', border: '1px solid rgba(255,184,0,0.2)' }}>
                         -{deal.discountPercent}%
                       </span>
+                      </>
+                      )}
                     </div>
                   </div>
                 </Link>
@@ -412,27 +412,35 @@ export default async function HomePage() {
               <h2 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: '#E8F0FE' }}>Mayores Descuentos</h2>
               <p className="mt-2 text-lg" style={{ color: '#8BA3C7' }}>Los chollos con los porcentajes de ahorro más brutales</p>
             </div>
+            {topDiscounts.length > 0 && (
             <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
               {topDiscounts.map((deal) => (
                 <Link key={deal.id} href={`/deals/${deal.slug}`}
                   className="flex-shrink-0 w-[260px] snap-start p-6 text-center rounded-2xl transition-all duration-300 hover:-translate-y-1 glow-amber"
                   style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
+                  {deal.discountPercent > 0 && (
                   <span className="inline-block font-extrabold text-2xl px-5 py-2 rounded-full mb-4"
                     style={{ background: '#FFB800', color: '#0B1120', boxShadow: '0 0 20px rgba(255,184,0,0.3)' }}>
                     -{deal.discountPercent}%
                   </span>
+                  )}
                   <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-[#00D4FF] transition-colors" style={{ color: '#E8F0FE' }}>{deal.title}</h3>
                   <div className="mt-3">
+                    {deal.discountPercent > 0 && (
                     <span className="line-through text-sm" style={{ color: '#4A6080' }}>{deal.originalPrice.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span>
+                    )}
                     <div className="font-bold text-xl mt-0.5" style={{ color: '#FFB800', textShadow: '0 0 10px rgba(255,184,0,0.2)' }}>{deal.salePrice.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</div>
                   </div>
+                  {deal.discountPercent > 0 && (
                   <div className="mt-4 flex items-center justify-center gap-1 text-xs" style={{ color: '#4A6080' }}>
                     <Zap className="h-3.5 w-3.5" style={{ color: '#FFB800' }} />
                     <span>Ahorras {(deal.originalPrice - deal.salePrice).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span>
                   </div>
+                  )}
                 </Link>
               ))}
             </div>
+            )}
           </div>
         </section>
       )}

@@ -253,6 +253,20 @@ export async function getFeaturedDeals(includeHidden = false): Promise<Deal[]> {
   return loadDeals(sql)
 }
 
+export async function getDealCountsByCategory(): Promise<Record<string, number>> {
+  const db = getDb()
+  await seedDatabase()
+
+  const result = await db.execute(
+    "SELECT category, COUNT(*) as count FROM deals WHERE hidden = 0 GROUP BY category"
+  )
+  const map: Record<string, number> = {}
+  for (const row of result.rows) {
+    map[row.category as string] = Number(row.count)
+  }
+  return map
+}
+
 export async function getCategories(): Promise<string[]> {
   const db = getDb()
   await seedDatabase()

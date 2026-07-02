@@ -11,6 +11,10 @@
     "test:watch": "vitest",
     "sync": "npx tsx scripts/sync.ts",
     "sync:local": "npx tsx scripts/sync.ts",
+    "refresh-prices": "npx tsx scripts/refresh-prices.ts",
+"discover": "npx tsx scripts/discover/index.ts",
+"discover:run": "npx tsx scripts/discover/run.ts",
+"discover:apply": "npx tsx scripts/discover/apply.ts",
     "dev:start": "next dev",
     "dev:up": "start-server-and-test dev:start http://localhost:3000"
   },
@@ -24,6 +28,7 @@
     "lucide-react": "^1.21.0",
     "marked": "^18.0.5",
     "next": "16.2.9",
+    "playwright": "^1.61.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "shadcn": "^4.12.0",

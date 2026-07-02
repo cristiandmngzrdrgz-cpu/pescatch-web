@@ -4,6 +4,7 @@ import { formatPrice, formatDate } from '@/lib/utils'
 import type { Metadata } from 'next'
 import { buildAmazonUrl } from '@/lib/amazon-affiliate'
 import Image from 'next/image'
+import { ImageCarousel } from '@/components/deals/image-carousel'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 }
 import { Badge } from '@/components/ui/badge'
-import { BadgeCheck, Store, Truck, Package, BarChart3, Tag, Share2, ArrowRight, Star, Clock, Zap } from 'lucide-react'
+import { BadgeCheck, Store, Truck, Package, BarChart3, Tag, Share2, ArrowRight, Star, Clock, Zap, Fish } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { DealCard } from '@/components/deals/deal-card'
@@ -94,28 +95,22 @@ export default async function DealDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         {/* Gallery + Main Content */}
         <div className="lg:col-span-3">
-          <div className="relative aspect-[4/3] rounded-2xl overflow-hidden group"
-            style={{ background: 'linear-gradient(135deg, #1A2535, rgba(0,212,255,0.05))' }}>
-            <Image
-              src={deal.imageUrl}
-              alt={deal.title}
-              fill
-              sizes="(max-width: 1024px) 100vw, 60vw"
-              className="object-cover group-hover:scale-105 transition-transform duration-700"
-            />
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-              style={{ boxShadow: 'inset 0 0 60px rgba(0,212,255,0.1)' }} />
-            <div className="absolute top-4 left-4">
-              <Badge className="text-sm font-extrabold px-3 py-1.5 rounded-full border-0 transition-all duration-300"
-                style={deal.discountPercent >= 50
-                  ? { background: '#FF4757', color: '#FFFFFF', boxShadow: '0 0 15px rgba(255,71,87,0.3)' }
-                  : { background: '#FFB800', color: '#0B1120', boxShadow: '0 0 15px rgba(255,184,0,0.3)' }
-                }>
-                -{deal.discountPercent}%
-              </Badge>
-            </div>
-            {deal.stockStatus === 'limited' && (
-              <div className="absolute top-4 right-4">
+          <ImageCarousel
+            images={deal.images.filter(i => i).length > 0 ? deal.images : (deal.imageUrl ? [deal.imageUrl] : [])}
+            title={deal.title}
+            badge={
+              deal.discountPercent > 0 ? (
+                <Badge className="text-sm font-extrabold px-3 py-1.5 rounded-full border-0 transition-all duration-300"
+                  style={deal.discountPercent >= 50
+                    ? { background: '#FF4757', color: '#FFFFFF', boxShadow: '0 0 15px rgba(255,71,87,0.3)' }
+                    : { background: '#FFB800', color: '#0B1120', boxShadow: '0 0 15px rgba(255,184,0,0.3)' }
+                  }>
+                  -{deal.discountPercent}%
+                </Badge>
+              ) : undefined
+            }
+            stockBadge={
+              deal.stockStatus === 'limited' ? (
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full"
                   style={{
                     background: 'rgba(255,159,67,0.15)',
@@ -126,23 +121,9 @@ export default async function DealDetailPage({
                   <Clock className="h-3 w-3" />
                   Stock limitado
                 </span>
-              </div>
-            )}
-          </div>
-
-          {deal.images.length > 1 && (
-            <div className="flex gap-3 mt-3 overflow-x-auto pb-2 scrollbar-hide">
-              {deal.images.map((img, i) => (
-                <div key={i} className="relative h-20 w-20 flex-shrink-0 rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-[0_0_15px_rgba(0,212,255,0.25)]"
-                  style={{
-                    border: '2px solid transparent',
-                    background: 'linear-gradient(135deg, #1A2535, rgba(0,212,255,0.05))',
-                  }}>
-                  <Image src={img} alt={`${deal.title} ${i + 1}`} fill sizes="80px" className="object-cover" />
-                </div>
-              ))}
-            </div>
-          )}
+              ) : undefined
+            }
+          />
 
           {/* Analysis + Specs */}
           <div className="mt-10 space-y-8">
@@ -246,10 +227,12 @@ export default async function DealDetailPage({
               <span className="text-xl line-through" style={{ color: '#4A6080' }}>
                 {formatPrice(deal.originalPrice)}
               </span>
+              {deal.discountPercent > 0 && (
               <span className="ml-auto inline-flex items-center font-extrabold text-sm px-3 py-1.5 rounded-full"
                 style={{ background: 'rgba(255,184,0,0.12)', color: '#FFB800', border: '1px solid rgba(255,184,0,0.2)' }}>
                 Ahorras {deal.discountPercent}%
               </span>
+              )}
             </div>
 
             <div className="space-y-2.5 text-sm" style={{ color: '#8BA3C7' }}>

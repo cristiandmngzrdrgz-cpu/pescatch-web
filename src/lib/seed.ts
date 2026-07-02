@@ -113,11 +113,17 @@ export async function seedDatabase() {
 
 async function seedPost(slug: string, title: string, excerpt: string, category: string, tags: string[], content: string, productsData: string, relatedAsins: string[]) {
   const db = getDb()
+
+  // No pisar un post que ya existe: si el admin lo editó desde /admin/blog,
+  // ese contenido es la fuente de verdad. El seed solo crea posts que faltan.
+  const existing = await db.execute({ sql: 'SELECT id FROM posts WHERE slug = ?', args: [slug] })
+  if (existing.rows.length > 0) return
+
   const now = new Date().toISOString()
   const fullContent = content + `\n\n<!-- PRODUCTS_DATA: ${productsData} -->`
 
   await db.execute({
-    sql: `INSERT OR REPLACE INTO posts (id, title, slug, excerpt, content, featuredImage, author, category, tags, relatedAsins, hidden, publishedAt, createdAt, updatedAt)
+    sql: `INSERT INTO posts (id, title, slug, excerpt, content, featuredImage, author, category, tags, relatedAsins, hidden, publishedAt, createdAt, updatedAt)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       `post_${Date.now()}_${slug}`,

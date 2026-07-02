@@ -61,13 +61,15 @@ export function DealCard({ deal, bestPriceStore, storeCount }: DealCardProps) {
                 Mejor Precio
               </span>
             )}
-            <span className="inline-block font-extrabold text-xs px-2.5 py-1.5 rounded-full transition-all duration-300"
-              style={deal.discountPercent >= 50
-                ? { background: '#FF4757', color: '#FFFFFF', boxShadow: '0 0 12px rgba(255,71,87,0.3)' }
-                : { background: '#FFB800', color: '#0B1120', boxShadow: '0 0 12px rgba(255,184,0,0.25)' }
-              }>
-              -{deal.discountPercent}%
-            </span>
+            {deal.discountPercent > 0 && (
+              <span className="inline-block font-extrabold text-xs px-2.5 py-1.5 rounded-full transition-all duration-300"
+                style={deal.discountPercent >= 50
+                  ? { background: '#FF4757', color: '#FFFFFF', boxShadow: '0 0 12px rgba(255,71,87,0.3)' }
+                  : { background: '#FFB800', color: '#0B1120', boxShadow: '0 0 12px rgba(255,184,0,0.25)' }
+                }>
+                -{deal.discountPercent}%
+              </span>
+            )}
           </div>
           {deal.stockStatus === 'limited' && (
             <div className="absolute top-3 left-3">

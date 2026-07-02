@@ -72,7 +72,7 @@ function rawRowsToSyncRows(headers: string[], rawRows: string[][]): SyncRow[] {
       const value = row[index]?.trim() || ''
       if (!value) return
 
-      if (['amazonPrice', 'decathlonPrice', 'aliexpressPrice', 'amazonShipping', 'decathlonShipping', 'aliexpressShipping', 'fishingTackleBaitPrice', 'fishingTackleBaitShipping', 'totalFishingTacklePrice', 'totalFishingTackleShipping', 'pureFishingPrice', 'pureFishingShipping'].includes(header)) {
+      if (['amazonPrice', 'decathlonPrice', 'aliexpressPrice', 'amazonShipping', 'decathlonShipping', 'aliexpressShipping'].includes(header)) {
         syncRow[header] = parseFloat(value.replace(',', '.')) || undefined
       } else if (header === 'featured') {
         syncRow[header] = value.toLowerCase() === 'si' || value.toLowerCase() === 'yes'

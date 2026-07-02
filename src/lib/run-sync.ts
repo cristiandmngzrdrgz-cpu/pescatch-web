@@ -5,9 +5,6 @@ import { readGoogleSheets } from './sync/reader-sheets'
 import { decathlonAdapter } from './sync/decathlon-adapter'
 import { amazonAdapter } from './sync/amazon-adapter'
 import { aliexpressAdapter } from './sync/aliexpress-adapter'
-import { fishingTackleBaitAdapter } from './sync/fishing-tackle-bait-adapter'
-import { totalFishingTackleAdapter } from './sync/total-fishing-tackle-adapter'
-import { pureFishingAdapter } from './sync/pure-fishing-adapter'
 import type { SyncRow, SyncResult, StoreAdapter } from './sync/types'
 
 export interface SyncRunResult extends SyncResult {
@@ -116,9 +113,6 @@ async function processRow(
       { storeId: 'amazon', adapter: amazonAdapter, manualPrice: row.amazonPrice, manualUrl: row.amazonUrl, manualShipping: row.amazonShipping, manualStock: row.amazonStock },
       { storeId: 'decathlon', adapter: decathlonAdapter, manualPrice: row.decathlonPrice, manualUrl: row.decathlonUrl, manualShipping: row.decathlonShipping, manualStock: row.decathlonStock },
       { storeId: 'aliexpress', adapter: aliexpressAdapter, manualPrice: row.aliexpressPrice, manualUrl: row.aliexpressUrl, manualShipping: row.aliexpressShipping, manualStock: row.aliexpressStock },
-      { storeId: 'fishing-tackle-bait', adapter: fishingTackleBaitAdapter, manualPrice: row.fishingTackleBaitPrice, manualUrl: row.fishingTackleBaitUrl, manualShipping: row.fishingTackleBaitShipping, manualStock: row.fishingTackleBaitStock },
-      { storeId: 'total-fishing-tackle', adapter: totalFishingTackleAdapter, manualPrice: row.totalFishingTacklePrice, manualUrl: row.totalFishingTackleUrl, manualShipping: row.totalFishingTackleShipping, manualStock: row.totalFishingTackleStock },
-      { storeId: 'pure-fishing', adapter: pureFishingAdapter, manualPrice: row.pureFishingPrice, manualUrl: row.pureFishingUrl, manualShipping: row.pureFishingShipping, manualStock: row.pureFishingStock },
     ]
 
     for (const store of stores) {
@@ -134,7 +128,7 @@ async function processRow(
       const dealSlug = storeIndex === 0 ? pSlug : `${pSlug}_${store.storeId}`
       storeIndex++
 
-      const originalPrice = Math.round(price * 1.3 * 100) / 100
+      const originalPrice = price
 
       const dealId = await upsertDeal(
         matched.id,

@@ -76,13 +76,18 @@ export async function updateProduct(
   now: string,
 ): Promise<void> {
   const db = getDb()
+  const fields = ["name = ?", "slug = ?", "brand = ?", "category = ?", "subcategory = ?", "description = ?", "updatedAt = ?"]
+  const args: InValue[] = [name, slug, brand, category, subcategory, description, now]
+
+  if (imageUrl) {
+    fields.push("imageUrl = ?")
+    args.push(imageUrl)
+  }
+
+  args.push(id)
   await db.execute({
-    sql: `UPDATE products SET
-      name = ?, slug = ?, brand = ?,
-      category = ?, subcategory = ?, imageUrl = ?,
-      description = ?, updatedAt = ?
-    WHERE id = ?`,
-    args: [name, slug, brand, category, subcategory, imageUrl, description, now, id],
+    sql: `UPDATE products SET ${fields.join(", ")} WHERE id = ?`,
+    args: args,
   })
 }
 

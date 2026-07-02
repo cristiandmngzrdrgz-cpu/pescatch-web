@@ -63,7 +63,7 @@ export default async function AdminDashboard() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-sm truncate" style={{ color: '#E8F0FE' }}>{deal.title}</div>
-                  <div className="text-xs" style={{ color: '#4A6080' }}>{CATEGORIES.find(c => c.id === deal.category)?.name || deal.category} · -{deal.discountPercent}%</div>
+                  <div className="text-xs" style={{ color: '#4A6080' }}>{CATEGORIES.find(c => c.id === deal.category)?.name || deal.category}{deal.discountPercent > 0 ? ` · -${deal.discountPercent}%` : ''}</div>
                 </div>
                 <Link
                   href={`/admin/deals/${deal.id}/edit`}

@@ -20,18 +20,7 @@ export interface SyncRow {
   aliexpressUrl?: string
   aliexpressShipping?: number
   aliexpressStock?: string
-  fishingTackleBaitPrice?: number
-  fishingTackleBaitUrl?: string
-  fishingTackleBaitShipping?: number
-  fishingTackleBaitStock?: string
-  totalFishingTacklePrice?: number
-  totalFishingTackleUrl?: string
-  totalFishingTackleShipping?: number
-  totalFishingTackleStock?: string
-  pureFishingPrice?: number
-  pureFishingUrl?: string
-  pureFishingShipping?: number
-  pureFishingStock?: string
+
 }
 
 export interface SyncResult {
