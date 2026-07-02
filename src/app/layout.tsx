@@ -76,7 +76,7 @@ export const metadata: Metadata = {
     creator: '@pescatches',
   },
   verification: {
-    google: 'google-site-verification-code',
+    google: 'gU3kKy_QVUPCls6f6yd4cWu5gmLoin8OFW8Qzq5FohI',
   },
 }
 
