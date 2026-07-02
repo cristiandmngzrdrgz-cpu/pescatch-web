@@ -1,5 +1,6 @@
 import { getDeals } from '@/data/queries'
-import { DealCard } from '@/components/deals/deal-card'
+import { ProductCard } from '@/components/deals/product-card'
+import { groupDealsByProduct } from '@/lib/group-deals'
 import { STORES, CATEGORIES } from '@/types'
 import { Search, X } from 'lucide-react'
 import Link from 'next/link'
@@ -241,9 +242,9 @@ export default async function SearchPage({
 
       {/* Results */}
       {deals.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {deals.map((deal) => (
-            <DealCard key={deal.id} deal={deal} />
+        <div className="grid grid-cols-1 gap-4">
+          {groupDealsByProduct(deals).map((group) => (
+            <ProductCard key={group.productId || group.slug} group={group} />
           ))}
         </div>
       ) : (

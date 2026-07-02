@@ -92,6 +92,24 @@ export interface Subcategory {
   name: string
 }
 
+export interface ProductGroup {
+  productId: string
+  title: string
+  slug: string
+  review: string
+  technicalSpecs: Record<string, string>
+  pros: string[]
+  cons: string[]
+  imageUrl: string
+  images: string[]
+  category: string
+  deals: Deal[]
+  bestPrice: number
+  bestStore: string
+  storeCount: number
+  discountPercent: number
+}
+
 export interface Comment {
   id: number
   dealId: string

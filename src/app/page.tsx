@@ -1,12 +1,13 @@
 import { getDeals, getFeaturedDeals, getDealCountsByCategory } from '@/data/queries'
 import { getPosts } from '@/data/blog-queries'
-import { DealCard } from '@/components/deals/deal-card'
+import { ProductCard } from '@/components/deals/product-card'
+import { groupDealsByProduct } from '@/lib/group-deals'
+import { formatPrice } from '@/lib/utils'
 import Image from 'next/image'
 import { Fish, ArrowRight, Clock, Zap, Star, Shield, BadgeCheck, Users, BookOpen, ChevronRight, Anchor, Wind, Target, Backpack, Shirt, Ship } from 'lucide-react'
 import Link from 'next/link'
 import { CATEGORIES } from '@/types'
 import type { BlogPost } from '@/types'
-import { TimeAgo } from '@/components/ui/time-ago'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,17 +32,9 @@ export default async function HomePage() {
   const categoryDealCounts = new Map(Object.entries(await getDealCountsByCategory()))
 
   const totalSavings = latest.reduce((sum, d) => sum + Math.max(0, d.originalPrice - d.salePrice), 0)
-  const bestPriceMap = new Map<string, { bestPrice: number; bestStore: string; storeCount: number }>()
-  for (const deal of latest) {
-    if (!deal.productId) continue
-    const prev = bestPriceMap.get(deal.productId) ?? { bestPrice: Infinity, bestStore: '', storeCount: 0 }
-    prev.storeCount++
-    if (deal.salePrice < prev.bestPrice) {
-      prev.bestPrice = deal.salePrice
-      prev.bestStore = deal.store.name
-    }
-    bestPriceMap.set(deal.productId, prev)
-  }
+  const groupedFeatured = groupDealsByProduct(featured)
+  const groupedLatest = groupDealsByProduct(latest)
+  const groupedTopDiscounts = groupDealsByProduct(topDiscounts)
 
   return (
     <div>
@@ -253,7 +246,7 @@ export default async function HomePage() {
       )}
 
       {/* Featured Deals */}
-      {featured.length > 0 && (
+      {groupedFeatured.length > 0 && (
         <section className="py-16 md:py-20" style={{ background: '#111827' }}>
           <div className="mx-auto max-w-7xl px-4">
             <div className="text-center mb-12">
@@ -265,15 +258,10 @@ export default async function HomePage() {
               <h2 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: '#E8F0FE' }}>Chollos Destacados</h2>
               <p className="mt-2 text-lg" style={{ color: '#8BA3C7' }}>Las mejores ofertas seleccionadas por nuestro equipo</p>
             </div>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {featured.map((deal) => {
-                const cmp = deal.productId ? bestPriceMap.get(deal.productId) : undefined
-                return (
-                  <DealCard key={deal.id} deal={deal}
-                    bestPriceStore={cmp?.bestStore}
-                    storeCount={cmp?.storeCount} />
-                )
-              })}
+            <div className="grid grid-cols-1 gap-4">
+              {groupedFeatured.map((group) => (
+                <ProductCard key={group.productId || group.slug} group={group} />
+              ))}
             </div>
           </div>
         </section>
@@ -359,48 +347,16 @@ export default async function HomePage() {
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: '#E8F0FE' }}>Últimos Chollos</h2>
             <p className="mt-2 text-lg" style={{ color: '#8BA3C7' }}>Las ofertas más recientes añadidas a PesCatch</p>
           </div>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            {latest.slice(0, 4).map((deal) => {
-              return (
-                <Link key={deal.id} href={`/deals/${deal.slug}`}
-                  className="group flex gap-5 p-5 rounded-2xl transition-all duration-300 hover:-translate-y-0.5 glow-cyan"
-                  style={{ background: '#0B1120', border: '1px solid #1E3A5F' }}>
-                  <div className="w-[100px] h-[100px] shrink-0 rounded-xl flex items-center justify-center overflow-hidden"
-                    style={{ background: 'linear-gradient(135deg, #1A2535, rgba(0,212,255,0.1))' }}>
-                    <Fish className="h-9 w-9 transition-colors duration-300 group-hover:text-[#00D4FF]" style={{ color: '#4A6080' }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 text-xs" style={{ color: '#4A6080' }}>
-                      <Clock className="h-3.5 w-3.5" />
-                      <TimeAgo publishedAt={deal.publishedAt} />
-                      <span className="mx-1.5" style={{ color: '#1E3A5F' }}>·</span>
-                      <span className="font-semibold uppercase tracking-wider text-[0.65rem]" style={{ color: '#00D4FF' }}>{CATEGORIES.find(c => c.id === deal.category)?.name || deal.category}</span>
-                    </div>
-                    <h3 className="font-semibold text-sm mt-1.5 line-clamp-2 group-hover:text-[#00D4FF] transition-colors duration-300" style={{ color: '#E8F0FE' }}>
-                      {deal.title}
-                    </h3>
-                    <div className="flex items-baseline gap-2 mt-2">
-                      <span className="text-lg font-bold" style={{ color: '#FFB800' }}>{deal.salePrice.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span>
-                      {deal.discountPercent > 0 && (
-                      <>
-                      <span className="text-xs line-through" style={{ color: '#4A6080' }}>{deal.originalPrice.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span>
-                      <span className="ml-auto text-[0.65rem] font-bold px-2 py-0.5 rounded-full"
-                        style={{ background: 'rgba(255,184,0,0.12)', color: '#FFB800', border: '1px solid rgba(255,184,0,0.2)' }}>
-                        -{deal.discountPercent}%
-                      </span>
-                      </>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              )
-            })}
+          <div className="grid grid-cols-1 gap-4">
+            {groupedLatest.slice(0, 4).map((group) => (
+              <ProductCard key={group.productId || group.slug} group={group} />
+            ))}
           </div>
         </div>
       </section>
 
       {/* Top Discounts */}
-      {topDiscounts.length > 0 && (
+      {groupedTopDiscounts.length > 0 && (
         <section className="py-16 md:py-20" style={{ background: '#0B1120' }}>
           <div className="mx-auto max-w-7xl px-4">
             <div className="text-center mb-12">
@@ -412,35 +368,29 @@ export default async function HomePage() {
               <h2 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: '#E8F0FE' }}>Mayores Descuentos</h2>
               <p className="mt-2 text-lg" style={{ color: '#8BA3C7' }}>Los chollos con los porcentajes de ahorro más brutales</p>
             </div>
-            {topDiscounts.length > 0 && (
             <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
-              {topDiscounts.map((deal) => (
-                <Link key={deal.id} href={`/deals/${deal.slug}`}
+              {groupedTopDiscounts.map((group) => (
+                <Link key={group.productId || group.slug} href={`/deals/${group.slug}`}
                   className="flex-shrink-0 w-[260px] snap-start p-6 text-center rounded-2xl transition-all duration-300 hover:-translate-y-1 glow-amber"
                   style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
-                  {deal.discountPercent > 0 && (
+                  {group.discountPercent > 0 && (
                   <span className="inline-block font-extrabold text-2xl px-5 py-2 rounded-full mb-4"
                     style={{ background: '#FFB800', color: '#0B1120', boxShadow: '0 0 20px rgba(255,184,0,0.3)' }}>
-                    -{deal.discountPercent}%
+                    -{group.discountPercent}%
                   </span>
                   )}
-                  <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-[#00D4FF] transition-colors" style={{ color: '#E8F0FE' }}>{deal.title}</h3>
+                  <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-[#00D4FF] transition-colors" style={{ color: '#E8F0FE' }}>{group.title}</h3>
                   <div className="mt-3">
-                    {deal.discountPercent > 0 && (
-                    <span className="line-through text-sm" style={{ color: '#4A6080' }}>{deal.originalPrice.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span>
-                    )}
-                    <div className="font-bold text-xl mt-0.5" style={{ color: '#FFB800', textShadow: '0 0 10px rgba(255,184,0,0.2)' }}>{deal.salePrice.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</div>
+                    <span className="font-bold text-xl" style={{ color: '#FFB800', textShadow: '0 0 10px rgba(255,184,0,0.2)' }}>{formatPrice(group.bestPrice)}</span>
                   </div>
-                  {deal.discountPercent > 0 && (
-                  <div className="mt-4 flex items-center justify-center gap-1 text-xs" style={{ color: '#4A6080' }}>
-                    <Zap className="h-3.5 w-3.5" style={{ color: '#FFB800' }} />
-                    <span>Ahorras {(deal.originalPrice - deal.salePrice).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span>
+                  {group.storeCount > 1 && (
+                  <div className="mt-2 text-xs" style={{ color: '#4A6080' }}>
+                    {group.storeCount} tiendas · Mejor en {group.bestStore}
                   </div>
                   )}
                 </Link>
               ))}
             </div>
-            )}
           </div>
         </section>
       )}
