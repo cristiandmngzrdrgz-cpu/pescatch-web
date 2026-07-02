@@ -5,6 +5,7 @@ import { CATEGORIES } from '@/types'
 import Link from 'next/link'
 import { Fish } from 'lucide-react'
 import type { Metadata } from 'next'
+import { generateBreadcrumbSchema, generateCollectionPageSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,10 +13,27 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const category = CATEGORIES.find(c => c.slug === slug)
   if (!category) return { title: 'Categoría no encontrada | PesCatch' }
-  return {
-    title: `${category.name} — Chollos y Ofertas | PesCatch`,
-    description: category.description || `Las mejores ofertas en ${category.name.toLowerCase()} de pesca. Encuentra chollos en Amazon, Decathlon y AliExpress.`,
-  }
+
+  const canonicalUrl = `${BASE_URL}/categories/${slug}`
+
+  return buildMetadata(
+    {
+      title: `${category.name} — Chollos y Ofertas | PesCatch`,
+      description: category.description || `Las mejores ofertas en ${category.name.toLowerCase()} de pesca. Encuentra chollos en Amazon, Decathlon y AliExpress.`,
+      openGraph: {
+        title: `${category.name} — Chollos de ${category.name} | PesCatch`,
+        description: category.description || `Encuentra los mejores chollos en ${category.name.toLowerCase()} de pesca.`,
+        type: 'website',
+        url: canonicalUrl,
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: `${category.name} — Chollos | PesCatch`,
+        description: category.description || `Los mejores chollos en ${category.name.toLowerCase()} al mejor precio.`,
+      },
+    },
+    canonicalUrl,
+  )
 }
 
 export default async function CategoryPage({
@@ -41,7 +59,23 @@ export default async function CategoryPage({
 
   const deals = await getDeals({ category: category.slug })
 
+  const breadcrumbs = generateBreadcrumbSchema([
+    { name: 'Inicio', url: '/' },
+    { name: 'Categorías', url: '/categories' },
+    { name: category.name, url: `${BASE_URL}/categories/${slug}` },
+  ])
+
+  const collectionSchema = generateCollectionPageSchema({
+    title: `${category.name} — Chollos y Ofertas`,
+    description: category.description || `Las mejores ofertas en ${category.name.toLowerCase()} de pesca.`,
+    url: `${BASE_URL}/categories/${slug}`,
+    itemCount: deals.length,
+    items: deals.map(d => ({ name: d.title, url: `${BASE_URL}/deals/${d.slug}` })),
+  })
+
   return (
+    <>
+      <JsonLd data={[collectionSchema, breadcrumbs]} />
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-8">
         <Link href="/categories" className="text-sm transition-colors duration-200 hover:text-[#00D4FF] mb-3 inline-block"
@@ -85,5 +119,6 @@ export default async function CategoryPage({
         </div>
       )}
     </div>
+    </>
   )
 }

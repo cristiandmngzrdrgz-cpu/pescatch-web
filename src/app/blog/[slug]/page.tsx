@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { buildAmazonUrl } from '@/lib/amazon-affiliate'
+import { generateBlogPostingSchema, generateBreadcrumbSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
 
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
@@ -53,16 +54,33 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   try {
     const post = await getPostBySlug(slug)
     if (!post) return {}
-    return {
-      title: `${post.title} | PesCatch Blog`,
-      description: post.excerpt,
-      openGraph: {
+    const canonicalUrl = `${BASE_URL}/blog/${slug}`
+    
+    return buildMetadata(
+      {
         title: `${post.title} | PesCatch Blog`,
         description: post.excerpt,
-        type: 'article',
-        images: post.featuredImage ? [{ url: post.featuredImage }] : [],
+        openGraph: {
+          title: `${post.title} | PesCatch Blog`,
+          description: post.excerpt,
+          type: 'article',
+          images: post.featuredImage ? [{ url: post.featuredImage }] : [],
+          url: canonicalUrl,
+          publishedTime: post.publishedAt,
+          modifiedTime: post.updatedAt,
+          authors: [post.author],
+          section: post.category,
+          tags: post.tags,
+        },
+        twitter: {
+          card: 'summary_large_image',
+          title: `${post.title} | PesCatch Blog`,
+          description: post.excerpt,
+          images: post.featuredImage ? [post.featuredImage] : [],
+        },
       },
-    }
+      canonicalUrl
+    )
   } catch { return {} }
 }
 
@@ -178,7 +196,28 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   const toc = extractToc(clean)
 
+  const blogSchema = generateBlogPostingSchema({
+    title: post.title,
+    excerpt: post.excerpt,
+    content: post.content,
+    featuredImage: post.featuredImage,
+    author: post.author,
+    publishedAt: post.publishedAt,
+    updatedAt: post.updatedAt,
+    slug: post.slug,
+    tags: post.tags,
+    category: post.category,
+  })
+
+  const breadcrumbs = generateBreadcrumbSchema([
+    { name: 'Inicio', url: '/' },
+    { name: 'Blog', url: '/blog' },
+    { name: post.title, url: `${BASE_URL}/blog/${slug}` },
+  ])
+
   return (
+    <>
+      <JsonLd data={[blogSchema, breadcrumbs]} />
     <div className="mx-auto max-w-7xl px-4 py-12">
       <nav className="flex items-center gap-2 text-sm mb-8" style={{ color: '#4A6080' }}>
         <Link href="/" className="hover:text-[#00D4FF] transition-colors">Inicio</Link>
@@ -413,5 +452,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </div>
       </div>
     </div>
+    </>
   )
 }

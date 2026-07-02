@@ -6,6 +6,7 @@ import { AdminLogin } from './admin-login'
 
 export const metadata: Metadata = {
   title: 'Panel Admin - PesCatch',
+  robots: { index: false, follow: false },
 }
 
 export default async function AdminLayout({

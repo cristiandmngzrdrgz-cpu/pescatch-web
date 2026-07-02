@@ -3,8 +3,8 @@ import { getDealBySlug, getRelatedDeals, getDealsByProduct } from '@/data/querie
 import { formatPrice, formatDate } from '@/lib/utils'
 import type { Metadata } from 'next'
 import { buildAmazonUrl } from '@/lib/amazon-affiliate'
-import Image from 'next/image'
 import { ImageCarousel } from '@/components/deals/image-carousel'
+import { generateProductSchema, generateBreadcrumbSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,14 +14,31 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!deal) return {}
   const title = `${deal.title} — ${formatPrice(deal.salePrice)} | PesCatch`
   const description = deal.description?.slice(0, 160) || `Oferta en ${deal.title} — ${deal.store?.name ?? ''} — ${formatPrice(deal.salePrice)}`
-  return {
-    title,
-    description,
-    openGraph: { title, description, type: 'website', images: deal.imageUrl ? [{ url: deal.imageUrl }] : [] },
-  }
+  const canonicalUrl = `${BASE_URL}/deals/${slug}`
+  
+  return buildMetadata(
+    {
+      title,
+      description,
+      openGraph: { 
+        title, 
+        description, 
+        type: 'website', 
+        images: deal.imageUrl ? [{ url: deal.imageUrl }] : [],
+        url: canonicalUrl,
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description,
+        images: deal.imageUrl ? [deal.imageUrl] : [],
+      },
+    },
+    canonicalUrl
+  )
 }
 import { Badge } from '@/components/ui/badge'
-import { BadgeCheck, Store, Truck, Package, BarChart3, Tag, Share2, ArrowRight, Star, Clock, Zap, Fish } from 'lucide-react'
+import { BadgeCheck, Store, Truck, Package, BarChart3, Tag, Share2, ArrowRight, Star, Clock, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { DealCard } from '@/components/deals/deal-card'
@@ -46,37 +63,34 @@ export default async function DealDetailPage({
   const storeDeals = deal.productId ? await getDealsByProduct(deal.productId) : []
   const category = CATEGORIES.find(c => c.id === deal.category)
 
-  const dealSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: deal.title,
+  const breadcrumbs = generateBreadcrumbSchema([
+    { name: 'Inicio', url: '/' },
+    { name: 'Chollos', url: '/search' },
+    ...(category ? [{ name: category.name, url: `/categories/${category.slug}` }] : []),
+    { name: deal.title, url: `${BASE_URL}/deals/${slug}` },
+  ])
+
+  const productSchema = generateProductSchema({
+    title: deal.title,
     description: deal.description,
-    image: deal.imageUrl,
-    offers: {
-      '@type': 'Offer',
-      price: deal.salePrice,
-      priceCurrency: 'EUR',
-      availability: deal.stockStatus === 'in_stock' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-      url: buildAmazonUrl(deal.affiliateUrl),
-      priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // eslint-disable-line react-hooks/purity
-    },
-    brand: { '@type': 'Brand', name: deal.store.name },
+    imageUrl: deal.imageUrl,
+    salePrice: deal.salePrice,
+    originalPrice: deal.originalPrice,
+    currency: deal.currency,
+    stockStatus: deal.stockStatus,
+    affiliateUrl: deal.store.id === 'amazon' ? buildAmazonUrl(deal.affiliateUrl) : deal.affiliateUrl,
+    storeName: deal.store.name,
+    rating: deal.rating,
+    reviewCount: deal.reviewCount,
     sku: deal.id,
-    aggregateRating: deal.rating != null ? {
-      '@type': 'AggregateRating',
-      ratingValue: deal.rating,
-      reviewCount: deal.reviewCount,
-    } : undefined,
-  }
+    brand: deal.brand,
+  })
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(dealSchema) }}
-      />
+      <JsonLd data={[productSchema, breadcrumbs]} />
+      <div className="mx-auto max-w-7xl px-4 py-8">
 
-    <div className="mx-auto max-w-7xl px-4 py-8">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm mb-8 overflow-x-auto whitespace-nowrap" style={{ color: '#4A6080' }}>
         <Link href="/" className="hover:text-[#00D4FF] transition-colors">Inicio</Link>

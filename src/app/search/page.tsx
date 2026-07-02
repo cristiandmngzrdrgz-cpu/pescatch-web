@@ -5,6 +5,8 @@ import { STORES, CATEGORIES } from '@/types'
 import { Search, X } from 'lucide-react'
 import Link from 'next/link'
 import type { DealFilters } from '@/types'
+import type { Metadata } from 'next'
+import { generateSearchResultsPageSchema, generateBreadcrumbSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,6 +48,42 @@ function buildUrl(
   }
   const qs = sp.toString()
   return qs ? `/search?${qs}` : '/search'
+}
+
+export async function generateMetadata({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }): Promise<Metadata> {
+  const sp = await searchParams
+  const query = sp.q ? (Array.isArray(sp.q) ? sp.q[0] : sp.q) : ''
+
+  const title = query
+    ? `Resultados para "${query}" | PesCatch`
+    : 'Todos los chollos | PesCatch'
+  const description = query
+    ? `Busca y compara ofertas de material de pesca para "${query}" en Amazon, Decathlon y AliExpress.`
+    : 'Todos los chollos y ofertas de material de pesca. Carretes, cañas, señuelos y accesorios al mejor precio.'
+  const canonicalUrl = `${BASE_URL}/search${query ? `?q=${encodeURIComponent(query)}` : ''}`
+
+  return buildMetadata(
+    {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: 'website',
+        url: canonicalUrl,
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description,
+      },
+      robots: {
+        index: true,
+        follow: true,
+      },
+    },
+    canonicalUrl,
+  )
 }
 
 function Chip({ label, href }: { label: string; href: string }) {
@@ -107,8 +145,24 @@ export default async function SearchPage({
 
   const hasActiveFilters = Boolean(query || categoryFilter || storeFilter || minDiscount || minPrice || maxPrice)
 
+  const breadcrumbs = generateBreadcrumbSchema([
+    { name: 'Inicio', url: '/' },
+    { name: 'Buscar', url: '/search' },
+    ...(query ? [{ name: query, url: `${BASE_URL}/search?q=${encodeURIComponent(query)}` }] : []),
+  ])
+
+  const searchSchema = generateSearchResultsPageSchema(query, deals.length)
+
   return (
+    <>
+      <JsonLd data={[searchSchema, breadcrumbs]} />
     <div className="mx-auto max-w-7xl px-4 py-8">
+      <nav className="flex items-center gap-2 text-sm mb-6" style={{ color: '#4A6080' }}>
+        <Link href="/" className="hover:text-[#00D4FF] transition-colors">Inicio</Link>
+        <span style={{ color: '#1E3A5F' }}>/</span>
+        <span style={{ color: '#E8F0FE' }}>{query ? `Resultados para "${query}"` : 'Todos los chollos'}</span>
+      </nav>
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: '#E8F0FE' }}>
@@ -265,5 +319,6 @@ export default async function SearchPage({
         </div>
       )}
     </div>
+    </>
   )
 }

@@ -5,12 +5,24 @@ import { CATEGORIES } from '@/types'
 import Link from 'next/link'
 import { Fish } from 'lucide-react'
 import type { Metadata } from 'next'
+import { generateBreadcrumbSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  title: 'Categorías de Pesca — Carretes, Cañas, Señuelos y más | PesCatch',
-  description: 'Explora chollos de pesca por categoría: carretes, cañas, señuelos, accesorios, ropa y náutica. Encuentra las mejores ofertas en material de pesca en España.',
+export async function generateMetadata(): Promise<Metadata> {
+  return buildMetadata(
+    {
+      title: 'Categorías de Pesca — Carretes, Cañas, Señuelos y más | PesCatch',
+      description: 'Explora chollos de pesca por categoría: carretes, cañas, señuelos, accesorios, ropa y náutica. Encuentra las mejores ofertas en material de pesca en España.',
+      openGraph: {
+        title: 'Categorías de Pesca | PesCatch',
+        description: 'Explora chollos de pesca por categoría: carretes, cañas, señuelos, accesorios, ropa y náutica.',
+        type: 'website',
+        url: `${BASE_URL}/categories`,
+      },
+    },
+    `${BASE_URL}/categories`,
+  )
 }
 
 export default async function CategoriesPage() {
@@ -20,7 +32,14 @@ export default async function CategoriesPage() {
     categoryDeals.set(slug, deals)
   }
 
+  const breadcrumbs = generateBreadcrumbSchema([
+    { name: 'Inicio', url: '/' },
+    { name: 'Categorías', url: '/categories' },
+  ])
+
   return (
+    <>
+      <JsonLd data={[breadcrumbs]} />
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="text-center mb-12">
         <div className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider"
@@ -89,5 +108,6 @@ export default async function CategoriesPage() {
         })}
       </div>
     </div>
+    </>
   )
 }

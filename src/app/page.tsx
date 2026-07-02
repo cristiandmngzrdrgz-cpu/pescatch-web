@@ -8,8 +8,26 @@ import { Fish, ArrowRight, Clock, Zap, Star, Shield, BadgeCheck, Users, BookOpen
 import Link from 'next/link'
 import { CATEGORIES } from '@/types'
 import type { BlogPost } from '@/types'
+import type { Metadata } from 'next'
+import { buildMetadata, BASE_URL } from '@/lib/seo/schemas'
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata(): Promise<Metadata> {
+  return buildMetadata(
+    {
+      title: 'PesCatch - Chollos de Material de Pesca',
+      description: 'Los mejores chollos y ofertas de material de pesca en España. Carretes, cañas, señuelos y accesorios al mejor precio en Amazon, Decathlon y AliExpress. Guías y comparativas escritas por pescadores.',
+      openGraph: {
+        title: 'PesCatch - Chollos de Material de Pesca',
+        description: 'Los mejores chollos y ofertas de material de pesca en España. Ahorra hasta un 50%.',
+        type: 'website',
+        url: BASE_URL,
+      },
+    },
+    BASE_URL,
+  )
+}
 
 const categoryIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   carretes: Anchor,

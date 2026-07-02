@@ -3,12 +3,30 @@ import type { BlogPost } from '@/types'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Calendar, ArrowRight, BookOpen, Clock, Fish } from 'lucide-react'
+import type { Metadata } from 'next'
+import { generateBreadcrumbSchema, generateCollectionPageSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata = {
-  title: 'Blog de Pesca - Guías, Comparativas y Consejos | PesCatch',
-  description: 'Comparativas de productos, guías de pesca y consejos para pescadores.',
+export async function generateMetadata(): Promise<Metadata> {
+  return buildMetadata(
+    {
+      title: 'Blog de Pesca - Guías, Comparativas y Consejos | PesCatch',
+      description: 'Comparativas de productos, guías de pesca y consejos para pescadores. Análisis honestos escritos por pescadores para ayudarte a elegir el mejor equipo.',
+      openGraph: {
+        title: 'Blog de Pesca | PesCatch',
+        description: 'Comparativas de productos, guías de pesca y consejos para pescadores.',
+        type: 'website',
+        url: `${BASE_URL}/blog`,
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: 'Blog de Pesca | PesCatch',
+        description: 'Comparativas de productos y guías de pesca.',
+      },
+    },
+    `${BASE_URL}/blog`,
+  )
 }
 
 function readingTime(content: string): string {
@@ -31,7 +49,22 @@ export default async function BlogPage() {
     console.error('Blog page error:', e)
   }
 
+  const breadcrumbs = generateBreadcrumbSchema([
+    { name: 'Inicio', url: '/' },
+    { name: 'Blog', url: '/blog' },
+  ])
+
+  const collectionSchema = generateCollectionPageSchema({
+    title: 'Blog de Pesca',
+    description: 'Comparativas de productos, guías de pesca y consejos para pescadores.',
+    url: `${BASE_URL}/blog`,
+    itemCount: posts.length,
+    items: posts.map(p => ({ name: p.title, url: `${BASE_URL}/blog/${p.slug}` })),
+  })
+
   return (
+    <>
+      <JsonLd data={[collectionSchema, breadcrumbs]} />
     <div className="mx-auto max-w-7xl px-4 py-12">
       <div className="mb-12">
         <div className="flex items-center gap-3 mb-4">
@@ -117,5 +150,6 @@ export default async function BlogPage() {
         </div>
       )}
     </div>
+    </>
   )
 }
