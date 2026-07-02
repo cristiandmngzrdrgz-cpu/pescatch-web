@@ -20,6 +20,28 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   return NextResponse.json(deal)
 }
 
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const authError = await adminApiCheck()
+  if (authError) return authError
+
+  const { id } = await params
+  const { hidden } = await request.json()
+  const db = (await import('@/lib/db')).getDb()
+
+  const check = await db.execute({ sql: 'SELECT id FROM deals WHERE id = ?', args: [id] })
+  if (check.rows.length === 0) {
+    return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
+  }
+
+  await db.execute({
+    sql: 'UPDATE deals SET hidden = ?, updatedAt = ? WHERE id = ?',
+    args: [hidden ? 1 : 0, new Date().toISOString(), id],
+  })
+
+  const deal = await getDealById(id)
+  return NextResponse.json(deal)
+}
+
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const authError = await adminApiCheck()
   if (authError) return authError

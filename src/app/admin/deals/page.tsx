@@ -26,6 +26,18 @@ export default function AdminDealsPage() {
     if (res.ok) setDeals(prev => prev.filter(d => d.id !== id))
   }
 
+  const handleToggleHidden = async (id: string, current: boolean) => {
+    const res = await fetch(`/api/deals/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hidden: !current }),
+    })
+    if (res.ok) {
+      const updated = await res.json()
+      setDeals(prev => prev.map(d => d.id === id ? updated : d))
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -74,6 +86,7 @@ export default function AdminDealsPage() {
                   <th className="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider" style={{ color: '#8BA3C7' }}>Tienda</th>
                   <th className="text-right px-5 py-3.5 font-semibold text-xs uppercase tracking-wider" style={{ color: '#8BA3C7' }}>Precio</th>
                   <th className="text-right px-5 py-3.5 font-semibold text-xs uppercase tracking-wider" style={{ color: '#8BA3C7' }}>Dto.</th>
+                  <th className="text-center px-5 py-3.5 font-semibold text-xs uppercase tracking-wider" style={{ color: '#8BA3C7' }}>Oculto</th>
                   <th className="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider" style={{ color: '#8BA3C7' }}>Estado</th>
                   <th className="text-left px-5 py-3.5 font-semibold text-xs uppercase tracking-wider" style={{ color: '#8BA3C7' }}>Fecha</th>
                   <th className="text-right px-5 py-3.5 font-semibold text-xs uppercase tracking-wider" style={{ color: '#8BA3C7' }}></th>
@@ -111,6 +124,14 @@ export default function AdminDealsPage() {
                     <td className="px-5 py-3.5 text-right font-bold" style={{ color: '#FFB800' }}>{formatPrice(deal.salePrice)}</td>
                     <td className="px-5 py-3.5 text-right">
                       <span className="font-bold" style={{ color: '#EF4444' }}>-{deal.discountPercent}%</span>
+                    </td>
+                    <td className="px-5 py-3.5 text-center">
+                      <input
+                        type="checkbox"
+                        checked={!!deal.hidden}
+                        onChange={() => handleToggleHidden(deal.id, !!deal.hidden)}
+                        className="cursor-pointer accent-cyan-500 h-4 w-4"
+                      />
                     </td>
                     <td className="px-5 py-3.5">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold"
