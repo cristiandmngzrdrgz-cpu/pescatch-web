@@ -119,12 +119,12 @@ export async function upsertDeal(
     const dealId = existing.rows[0].id as string
 
     await db.execute({
-      sql: `UPDATE deals SET
-        title = ?, slug = ?, originalPrice = ?, salePrice = ?, shippingCost = ?, discountPercent = ?,
-        stockStatus = ?, affiliateUrl = ?, storeName = ?, storeUrl = ?,
-        storeReputation = ?, storeCommissionRate = ?, updatedAt = ?
-      WHERE id = ?`,
-      args: [title, slug, originalPrice, salePrice, shippingCost, discountPercent, stockStatus, affiliateUrl, storeName, store.url || '', store.reputation, store.commissionRate || 0, now, dealId],
+       sql: `UPDATE deals SET
+         title = ?, slug = ?, originalPrice = ?, salePrice = ?, shippingCost = ?, discountPercent = ?,
+         stockStatus = ?, affiliateUrl = ?, storeName = ?, storeUrl = ?,
+         storeReputation = ?, storeCommissionRate = ?, expiresAt = ?, updatedAt = ?
+       WHERE id = ?`,
+       args: [title, slug, originalPrice, salePrice, shippingCost, discountPercent, stockStatus, affiliateUrl, storeName, store.url || '', store.reputation, store.commissionRate || 0, null, now, dealId],
     })
 
     return dealId
@@ -142,8 +142,8 @@ export async function upsertDeal(
       stockStatus, stockCount, rating, reviewCount,
       technicalSpecs, review, pros, cons,
       votesUp, votesDown, featured, commission,
-      ean, asin, publishedAt, createdAt, updatedAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ean, asin, expiresAt, publishedAt, createdAt, updatedAt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       dealId, productId, title, slug, '',
       originalPrice, salePrice, shippingCost,
@@ -154,7 +154,7 @@ export async function upsertDeal(
       stockStatus, 0, 0, 0,
       '{}', '', '[]', '[]',
       0, 0, 0, 0,
-      '', '', now, now, now,
+      '', '', null, now, now, now,
     ] as InValue[],
   })
 

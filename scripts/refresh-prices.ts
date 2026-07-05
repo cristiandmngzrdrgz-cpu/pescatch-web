@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import { getDb, initSchema, migrateSchema } from '../src/lib/db'
+import { getDb } from '../src/lib/db'
 import { scrapeStore, updateDealInDb } from '../src/lib/price-scraper'
 
 interface DealRow {
@@ -15,15 +15,12 @@ interface DealRow {
 }
 
 async function main() {
-  await initSchema()
-  await migrateSchema()
-
   const db = getDb()
 
   const result = await db.execute(
     `SELECT id, productId, title, storeId, storeName, affiliateUrl, salePrice, ean, asin
      FROM deals
-     WHERE hidden = 0 AND affiliateUrl != ''
+     WHERE status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now')) AND affiliateUrl != ''
      ORDER BY storeId, title`
   )
 

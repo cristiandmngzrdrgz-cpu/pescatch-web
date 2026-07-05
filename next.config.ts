@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'm.media-amazon.com' },
       { protocol: 'https', hostname: 'contents.mediadecathlon.com' },
       { protocol: 'https', hostname: 'ae01.alicdn.com' },
+      { protocol: 'https', hostname: 'ae-pic-a1.aliexpress-media.com' },
+      { protocol: 'https', hostname: '**.aliexpress-media.com' },
+      { protocol: 'https', hostname: '**.public.blob.vercel-storage.com' },
     ],
   },
   turbopack: {

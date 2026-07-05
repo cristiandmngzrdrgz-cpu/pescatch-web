@@ -30,7 +30,9 @@ export function AdminLogin() {
         return
       }
 
-      window.location.reload()
+      // Recarga completa (no navegación de cliente): así garantizamos que
+      // el servidor relea la cookie recién creada, aunque ya estemos en /admin.
+      window.location.href = '/admin'
     } catch {
       setError(true)
       setLoading(false)

@@ -48,11 +48,16 @@ function mapRowToDeal(row: Record<string, unknown>): Deal {
     createdAt: row.createdAt as string,
     updatedAt: row.updatedAt as string,
     featured: Boolean(row.featured),
-    hidden: Boolean(row.hidden),
+    status: (row.status as Deal['status']) || 'published',
     commission: row.commission as number,
     ean: (row.ean as string) || '',
     asin: (row.asin as string) || '',
     brand: (row.brand as string) || '',
+    expiresAt: (row.expiresAt as string) || undefined,
+    metaTitle: (row.metaTitle as string) || undefined,
+    metaDescription: (row.metaDescription as string) || undefined,
+    canonicalUrl: (row.canonicalUrl as string) || undefined,
+    focusKeyword: (row.focusKeyword as string) || undefined,
   }
 }
 
@@ -187,7 +192,7 @@ export async function getDeals(filters?: DealFilters, includeHidden = false): Pr
   let sql = 'SELECT * FROM deals WHERE 1=1'
   const params: InValue[] = []
 
-  if (!includeHidden) sql += ' AND hidden = 0'
+  if (!includeHidden) sql += " AND status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now'))"
 
   if (filters) {
     if (filters.category) {
@@ -197,6 +202,10 @@ export async function getDeals(filters?: DealFilters, includeHidden = false): Pr
     if (filters.subcategory) {
       sql += ' AND subcategory = ?'
       params.push(filters.subcategory)
+    }
+    if (filters.brand) {
+      sql += ' AND LOWER(brand) = LOWER(?)'
+      params.push(filters.brand)
     }
     if (filters.store) {
       sql += ' AND storeId = ?'
@@ -238,7 +247,7 @@ export async function getDeals(filters?: DealFilters, includeHidden = false): Pr
 export async function getDealBySlug(slug: string, includeHidden = false): Promise<Deal | undefined> {
   const sql = includeHidden
     ? 'SELECT * FROM deals WHERE slug = ?'
-    : 'SELECT * FROM deals WHERE slug = ? AND hidden = 0'
+    : "SELECT * FROM deals WHERE slug = ? AND status = 'published'"
   return loadDeal(sql, [slug])
 }
 
@@ -249,7 +258,7 @@ export async function getDealById(id: string): Promise<Deal | undefined> {
 export async function getFeaturedDeals(includeHidden = false): Promise<Deal[]> {
   const sql = includeHidden
     ? 'SELECT * FROM deals WHERE featured = 1 ORDER BY publishedAt DESC'
-    : 'SELECT * FROM deals WHERE featured = 1 AND hidden = 0 ORDER BY publishedAt DESC'
+    : "SELECT * FROM deals WHERE featured = 1 AND status = 'published' ORDER BY publishedAt DESC"
   return loadDeals(sql)
 }
 
@@ -258,7 +267,7 @@ export async function getDealCountsByCategory(): Promise<Record<string, number>>
   await seedDatabase()
 
   const result = await db.execute(
-    "SELECT category, COUNT(*) as count FROM deals WHERE hidden = 0 GROUP BY category"
+    "SELECT category, COUNT(*) as count FROM deals WHERE status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now')) GROUP BY category"
   )
   const map: Record<string, number> = {}
   for (const row of result.rows) {
@@ -287,7 +296,7 @@ export async function getSubcategories(category: string): Promise<string[]> {
 }
 
 export async function getRelatedDeals(deal: Deal, limit = 4, includeHidden = false): Promise<Deal[]> {
-  const hiddenClause = includeHidden ? '' : ' AND hidden = 0'
+  const hiddenClause = includeHidden ? '' : " AND status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now'))"
   return loadDeals(
     `SELECT * FROM deals
      WHERE id != ?${hiddenClause} AND (category = ? OR tags LIKE ?)
@@ -362,7 +371,7 @@ export async function getProductByEan(ean: string): Promise<Product | undefined>
 export async function getDealsByProduct(productId: string, includeHidden = false): Promise<Deal[]> {
   const sql = includeHidden
     ? 'SELECT * FROM deals WHERE productId = ? ORDER BY salePrice ASC'
-    : 'SELECT * FROM deals WHERE productId = ? AND hidden = 0 ORDER BY salePrice ASC'
+    : "SELECT * FROM deals WHERE productId = ? AND status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now')) ORDER BY salePrice ASC"
   return loadDeals(sql, [productId])
 }
 
@@ -431,7 +440,8 @@ export async function createDeal(data: Record<string, unknown>): Promise<Deal> {
   const num = (v: unknown, fallback = 0): number => Number(v) || fallback
   const json = (v: unknown): string => JSON.stringify(v || [])
 
-  const insertArgs: InValue[] = [
+  const statusVal = data.status || 'draft'
+  const insertArgs: InValue[] = ([
     id,
     str(data.productId),
     str(data.title), str(data.slug), str(data.description),
@@ -446,10 +456,12 @@ export async function createDeal(data: Record<string, unknown>): Promise<Deal> {
     num(data.rating), num(data.reviewCount),
     JSON.stringify(data.technicalSpecs || {}), str(data.review),
     json(data.pros), json(data.cons),
-     0, 0, data.featured ? 1 : 0, data.hidden ? 1 : 0, num(data.commission),
-    str(data.ean), str(data.asin),
+     0, 0, data.featured ? 1 : 0, statusVal, num(data.commission),
+    str(data.ean), str(data.asin), str(data.brand),
+    str(data.expiresAt),
+    str(data.metaTitle), str(data.metaDescription), str(data.canonicalUrl), str(data.focusKeyword),
     now, now, now,
-  ]
+  ]) as InValue[]
 
   await db.execute({
     sql: `INSERT INTO deals (
@@ -459,10 +471,11 @@ export async function createDeal(data: Record<string, unknown>): Promise<Deal> {
       affiliateUrl, category, subcategory, tags,
       stockStatus, stockCount, rating, reviewCount,
       technicalSpecs, review, pros, cons,
-      votesUp, votesDown, featured, hidden, commission,
-      ean, asin,
+      votesUp, votesDown, featured, status, commission,
+      ean, asin, brand, expiresAt,
+      metaTitle, metaDescription, canonicalUrl, focusKeyword,
       publishedAt, createdAt, updatedAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: insertArgs,
   })
 
@@ -488,7 +501,8 @@ export async function updateDeal(id: string, data: Record<string, unknown>): Pro
   const str = (v: unknown, fallback = ''): string => (v as string) || fallback
   const num = (v: unknown, fallback = 0): number => Number(v) || fallback
 
-  const updateArgs: InValue[] = [
+  const statusVal = data.status || 'published'
+  const updateArgs: InValue[] = ([
     str(data.productId), str(data.title), str(data.slug), str(data.description), originalPrice, salePrice,
     num(data.shippingCost), discountPercent, str(data.imageUrl),
     JSON.stringify(data.images || []),
@@ -500,10 +514,12 @@ export async function updateDeal(id: string, data: Record<string, unknown>): Pro
     num(data.rating), num(data.reviewCount),
     JSON.stringify(data.technicalSpecs || {}), str(data.review),
     JSON.stringify(data.pros || []), JSON.stringify(data.cons || []),
-    str(data.ean), str(data.asin),
-    data.featured ? 1 : 0, data.hidden ? 1 : 0, num(data.commission),
+    str(data.ean), str(data.asin), str(data.brand),
+    str(data.expiresAt),
+    str(data.metaTitle), str(data.metaDescription), str(data.canonicalUrl), str(data.focusKeyword),
+    data.featured ? 1 : 0, statusVal, num(data.commission),
     now, id,
-  ]
+  ]) as InValue[]
 
   await db.execute({
     sql: `UPDATE deals SET
@@ -513,8 +529,9 @@ export async function updateDeal(id: string, data: Record<string, unknown>): Pro
       affiliateUrl = ?, category = ?, subcategory = ?, tags = ?,
       stockStatus = ?, stockCount = ?, rating = ?, reviewCount = ?,
       technicalSpecs = ?, review = ?, pros = ?, cons = ?,
-      ean = ?, asin = ?,
-      featured = ?, hidden = ?, commission = ?, updatedAt = ?
+      ean = ?, asin = ?, brand = ?, expiresAt = ?,
+      metaTitle = ?, metaDescription = ?, canonicalUrl = ?, focusKeyword = ?,
+      featured = ?, status = ?, commission = ?, updatedAt = ?
     WHERE id = ?`,
     args: updateArgs,
   })
@@ -543,7 +560,7 @@ export async function voteDeal(id: string, vote: 'up' | 'down'): Promise<{ votes
 export async function getComments(dealId: string) {
   const db = getDb()
   const result = await db.execute({
-    sql: 'SELECT * FROM comments WHERE dealId = ? ORDER BY createdAt DESC',
+    sql: "SELECT * FROM comments WHERE dealId = ? AND status = 'published' ORDER BY createdAt DESC",
     args: [dealId],
   })
   return result.rows
@@ -552,7 +569,7 @@ export async function getComments(dealId: string) {
 export async function addComment(dealId: string, author: string, content: string) {
   const db = getDb()
   await db.execute({
-    sql: "INSERT INTO comments (dealId, author, content, createdAt) VALUES (?, ?, ?, datetime('now'))",
+    sql: "INSERT INTO comments (dealId, author, content, status, createdAt) VALUES (?, ?, ?, 'published', datetime('now'))",
     args: [dealId, author, content],
   })
   return getComments(dealId)
@@ -567,6 +584,24 @@ export async function getAllComments() {
     ORDER BY c.createdAt DESC
   `)
   return result.rows.map(r => r as Record<string, unknown>)
+}
+
+export async function approveComment(id: number): Promise<boolean> {
+  const db = getDb()
+  const result = await db.execute({
+    sql: "UPDATE comments SET status = 'published' WHERE id = ?",
+    args: [id],
+  })
+  return result.rowsAffected > 0
+}
+
+export async function rejectComment(id: number): Promise<boolean> {
+  const db = getDb()
+  const result = await db.execute({
+    sql: "UPDATE comments SET status = 'hidden' WHERE id = ?",
+    args: [id],
+  })
+  return result.rowsAffected > 0
 }
 
 export async function deleteComment(id: number): Promise<boolean> {

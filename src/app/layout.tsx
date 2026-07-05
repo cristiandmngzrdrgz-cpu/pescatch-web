@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
+import { Providers } from '@/components/providers'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -51,6 +52,7 @@ const websiteSchema = {
 }
 
 export const metadata: Metadata = {
+  metadataBase: new URL(BASE_URL),
   title: {
     default: 'PesCatch - Chollos de Pesca',
     template: '%s | PesCatch',
@@ -92,13 +94,14 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify([organizationSchema, websiteSchema]) }}
         />
-        <link rel="canonical" href={BASE_URL} />
         <link rel="alternate" type="application/rss+xml" title="PesCatch RSS Feed" href={`${BASE_URL}/rss.xml`} />
       </head>
       <body className="min-h-full flex flex-col" style={{ background: 'var(--background)', color: '#E8F0FE' }}>
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <Providers>
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   )

@@ -3,7 +3,9 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { formatPrice } from '@/lib/utils'
-import { Clock, Store, Truck, ChevronUp, Fish } from 'lucide-react'
+import { buildAmazonUrl } from '@/lib/amazon-affiliate'
+import { Clock, Store, Truck, ChevronUp, Fish, Star } from 'lucide-react'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { CATEGORIES } from '@/types'
 import type { Deal } from '@/types'
 import { useState } from 'react'
@@ -73,16 +75,21 @@ export function DealCard({ deal, bestPriceStore, storeCount }: DealCardProps) {
           </div>
           {deal.stockStatus === 'limited' && (
             <div className="absolute top-3 left-3">
-              <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full"
-                style={{
-                  background: 'rgba(255,159,67,0.15)',
-                  backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(255,159,67,0.3)',
-                  color: '#FF9F43',
-                }}>
-                <Clock className="h-3 w-3" />
-                Stock limitado
-              </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full"
+                    style={{
+                      background: 'rgba(255,159,67,0.15)',
+                      backdropFilter: 'blur(8px)',
+                      border: '1px solid rgba(255,159,67,0.3)',
+                      color: '#FF9F43',
+                    }}>
+                    <Clock className="h-3 w-3" />
+                    Stock limitado
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top">Quedan pocas unidades, date prisa</TooltipContent>
+              </Tooltip>
             </div>
           )}
           {deal.stockStatus === 'out_of_stock' && (
@@ -104,8 +111,27 @@ export function DealCard({ deal, bestPriceStore, storeCount }: DealCardProps) {
             {CATEGORIES.find(c => c.id === deal.category)?.name || deal.category}
           </div>
           <div className="flex items-center gap-1 text-xs mb-2" style={{ color: '#4A6080' }}>
-            <Store className="h-3 w-3" />
-            <span>{deal.store.name}</span>
+            <a
+              href={deal.store.id === 'amazon' ? buildAmazonUrl(deal.affiliateUrl) : deal.affiliateUrl}
+              target="_blank"
+              rel="nofollow sponsored"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-1 hover:text-[#00D4FF] transition-colors duration-200"
+            >
+              <Store className="h-3 w-3" />
+              <span>{deal.store.name}</span>
+            </a>
+            {deal.brand && (
+              <>
+                <span className="mx-0.5" style={{ color: '#1E3A5F' }}>·</span>
+                <Link href={`/marca/${deal.brand.toLowerCase().replace(/\s+/g, '-')}`}
+                  className="hover:text-[#00D4FF] transition-colors duration-200 font-medium"
+                  style={{ color: '#8BA3C7' }}
+                  onClick={(e) => e.stopPropagation()}>
+                  {deal.brand}
+                </Link>
+              </>
+            )}
             {showBestPrice && !isBestPrice && bestPriceStore && (
               <>
                 <span className="mx-0.5" style={{ color: '#1E3A5F' }}>·</span>
@@ -117,6 +143,14 @@ export function DealCard({ deal, bestPriceStore, storeCount }: DealCardProps) {
             style={{ color: '#E8F0FE' }}>
             {deal.title}
           </h3>
+          {deal.rating && (
+            <div className="flex items-center gap-1 mt-2">
+              <Star className="h-3.5 w-3.5" style={{ color: '#FFB800', fill: '#FFB800' }} />
+              <span className="text-xs font-medium" style={{ color: '#8BA3C7' }}>
+                {deal.rating}{deal.reviewCount ? ` · ${deal.reviewCount} valoraciones` : ''}
+              </span>
+            </div>
+          )}
           <div className="mt-4 flex items-baseline gap-2.5">
             <span className="text-2xl font-bold tracking-tight" style={{ color: '#FFB800', textShadow: '0 0 10px rgba(255,184,0,0.1)' }}>
               {formatPrice(deal.salePrice)}

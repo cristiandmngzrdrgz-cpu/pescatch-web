@@ -3,8 +3,9 @@ import { getPostBySlug } from '@/data/blog-queries'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { marked } from 'marked'
 import { buildAmazonUrl } from '@/lib/amazon-affiliate'
-import { generateBlogPostingSchema, generateBreadcrumbSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
+import { generateBlogPostingSchema, generateBreadcrumbSchema, generateFAQSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
 
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
@@ -54,15 +55,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   try {
     const post = await getPostBySlug(slug)
     if (!post) return {}
-    const canonicalUrl = `${BASE_URL}/blog/${slug}`
+    const title = post.metaTitle || `${post.title} | PesCatch Blog`
+    const description = post.metaDescription || post.excerpt
+    const canonicalUrl = post.canonicalUrl || `${BASE_URL}/blog/${slug}`
     
     return buildMetadata(
       {
-        title: `${post.title} | PesCatch Blog`,
-        description: post.excerpt,
+        title,
+        description,
         openGraph: {
-          title: `${post.title} | PesCatch Blog`,
-          description: post.excerpt,
+          title,
+          description,
           type: 'article',
           images: post.featuredImage ? [{ url: post.featuredImage }] : [],
           url: canonicalUrl,
@@ -74,8 +77,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         },
         twitter: {
           card: 'summary_large_image',
-          title: `${post.title} | PesCatch Blog`,
-          description: post.excerpt,
+          title,
+          description,
           images: post.featuredImage ? [post.featuredImage] : [],
         },
       },
@@ -91,6 +94,25 @@ function slugify(text: string): string {
     .substring(0, 60)
 }
 
+function extractFAQs(content: string): Array<{ question: string; answer: string }> {
+  const faqRegex = /^## (?:FAQ|Preguntas frecuentes|Preguntas)\s*([\s\S]*?)(?=^## |$(?![\s\S]))/m
+  const match = content.match(faqRegex)
+  if (!match) return []
+
+  const faqSection = match[1]
+  const qaRegex = /^### (.+?)\n([\s\S]+?)(?=^### |$(?![\s\S]))/gm
+  const faqs: Array<{ question: string; answer: string }> = []
+
+  let qaMatch
+  while ((qaMatch = qaRegex.exec(faqSection)) !== null) {
+    const question = qaMatch[1].trim()
+    const answer = qaMatch[2].trim().replace(/^-\s+/gm, '').replace(/\n/g, ' ')
+    faqs.push({ question, answer })
+  }
+
+  return faqs
+}
+
 interface TocEntry { id: string; text: string }
 
 function extractToc(md: string): TocEntry[] {
@@ -100,7 +122,7 @@ function extractToc(md: string): TocEntry[] {
     const match = line.match(/^## (.+)$/)
     if (match) {
       const text = match[1].replace(/\*\*(.+?)\*\*/g, '$1').split(' — ')[0].trim()
-      toc.push({ id: slugify(match[1]), text })
+      toc.push({ id: slugify(text), text })
     }
   }
   return toc
@@ -111,32 +133,56 @@ function bestStoreUrl(store: ProductStore): string {
   return store.url
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
 function mdToHtml(md: string, products: ProductEntry[]): string {
-  let html = md.replace(/<[^>]*>/g, '')
-    .replace(/^## (.+)$/gm, (_, heading) => {
-      const id = slugify(heading)
-      return `<div class="flex items-center gap-3 mt-10 mb-4"><div class="w-1 h-8 rounded-full" style="background:linear-gradient(180deg,#00D4FF,#FFB800)"></div><h2 id="${id}" class="text-2xl font-bold scroll-mt-24" style="color:#E8F0FE">${heading}</h2></div>`
-    })
-    .replace(/^### (.+)$/gm, '<h3 class="text-xl font-bold mt-8 mb-3" style="color:#E8F0FE">$1</h3>')
-    .replace(/^#### (.+)$/gm, '<h4 class="text-lg font-bold mt-6 mb-2" style="color:#8BA3C7">$1</h4>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#E8F0FE">$1</strong>')
-    .replace(/^---$/gm, '<hr style="border-color:#1E3A5F;margin:2rem 0">')
-    .replace(/^- (.+)$/gm, '<li style="color:#8BA3C7;margin-bottom:0.25rem">• $1</li>')
-    .replace(/\n\n/g, '</p><p class="mb-4 leading-relaxed" style="line-height:1.85;color:#8BA3C7">')
+  const imgMarkers: string[] = []
+  const processed = md.replace(/<!--PRODUCT_IMG:(\d+)-->/g, (_, num) => {
+    const idx = imgMarkers.length
+    imgMarkers.push(num)
+    return `\x00PRODUCT_IMG_${idx}\x00`
+  })
 
-  html = '<p class="mb-4 leading-relaxed" style="line-height:1.85;color:#8BA3C7">' + html + '</p>'
+  const safe = processed.replace(/<[^>]*>/g, '')
+  let html = marked.parse(safe) as string
 
-  html = html.replace(/<!--PRODUCT_IMG:(\d+)-->/g, (_, num) => {
-    const i = parseInt(num) - 1
+  html = html.replace(/\x00PRODUCT_IMG_(\d+)\x00/g, (_, idx) => {
+    const num = parseInt(imgMarkers[parseInt(idx, 10)], 10)
+    const i = num - 1
     const p = products[i]
     if (!p) return ''
     return `<div class="my-8 rounded-2xl overflow-hidden" style="position:relative;height:280px;background:linear-gradient(135deg,#1A2535,rgba(0,212,255,0.03));border:1px solid #1E3A5F">
-      <img src="${p.image}" alt="${p.title}" class="absolute inset-0 w-full h-full object-contain p-6" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%" />
+      <img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.title)}" class="absolute inset-0 w-full h-full object-contain p-6" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%" />
       <div class="absolute bottom-0 left-0 right-0 px-5 py-3" style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(180deg,transparent 0%,rgba(11,18,32,0.85) 100%)">
-        <span class="text-xs font-semibold" style="color:#00D4FF">${p.title}</span>
+        <span class="text-xs font-semibold" style="color:#00D4FF">${escapeHtml(p.title)}</span>
       </div>
     </div>`
   })
+
+  html = html.replace(/<h2 id="[^"]*">(.+?)<\/h2>/g, (_, text) => {
+    const clean = text.replace(/<[^>]*>/g, '')
+    const id = slugify(clean)
+    return `<div class="flex items-center gap-3 mt-10 mb-4"><div class="w-1 h-8 rounded-full" style="background:linear-gradient(180deg,#00D4FF,#FFB800)"></div><h2 id="${id}" class="text-2xl font-bold scroll-mt-24" style="color:#E8F0FE">${text}</h2></div>`
+  })
+
+  html = html.replace(/<h3 id="[^"]*">(.+?)<\/h3>/g, (_, text) => {
+    const clean = text.replace(/<[^>]*>/g, '')
+    const id = slugify(clean)
+    return `<h3 id="${id}" class="text-xl font-bold mt-8 mb-3" style="color:#E8F0FE">${text}</h3>`
+  })
+
+  html = html.replace(/<h4 id="[^"]*">(.+?)<\/h4>/g, (_, text) => {
+    const clean = text.replace(/<[^>]*>/g, '')
+    const id = slugify(clean)
+    return `<h4 id="${id}" class="text-lg font-bold mt-6 mb-2" style="color:#8BA3C7">${text}</h4>`
+  })
+
+  html = html.replace(/<strong>([^<]*)<\/strong>/g, '<strong style="color:#E8F0FE">$1</strong>')
+  html = html.replace(/<p>/g, '<p class="mb-4 leading-relaxed" style="line-height:1.85;color:#8BA3C7">')
+  html = html.replace(/<hr(?: \/)?>/g, '<hr style="border-color:#1E3A5F;margin:2rem 0">')
+  html = html.replace(/<li>/g, '<li style="color:#8BA3C7;margin-bottom:0.25rem">')
 
   return html
 }
@@ -215,9 +261,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     { name: post.title, url: `${BASE_URL}/blog/${slug}` },
   ])
 
+  const faqs = extractFAQs(post.content)
+  const faqSchema = faqs.length > 0 ? generateFAQSchema(faqs) : null
+
   return (
     <>
-      <JsonLd data={[blogSchema, breadcrumbs]} />
+      <JsonLd data={[blogSchema, breadcrumbs, ...(faqSchema ? [faqSchema] : [])]} />
     <div className="mx-auto max-w-7xl px-4 py-12">
       <nav className="flex items-center gap-2 text-sm mb-8" style={{ color: '#4A6080' }}>
         <Link href="/" className="hover:text-[#00D4FF] transition-colors">Inicio</Link>

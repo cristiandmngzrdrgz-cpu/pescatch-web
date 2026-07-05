@@ -35,16 +35,20 @@ export function generateProductSchema(deal: {
   sku: string
   brand?: string
 }) {
-  return {
+  const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: deal.title,
-    description: deal.description,
+    // description es obligatorio para Merchant Listings
+    description: deal.description || deal.title,
     image: deal.imageUrl,
+    sku: deal.sku,
     offers: {
       '@type': 'Offer',
       price: deal.salePrice,
       priceCurrency: deal.currency,
+      // description en Offer requerido para Fichas de comerciantes
+      description: deal.description || deal.title,
       availability: deal.stockStatus === 'in_stock'
         ? 'https://schema.org/InStock'
         : deal.stockStatus === 'limited'
@@ -57,14 +61,23 @@ export function generateProductSchema(deal: {
         name: deal.storeName,
       },
     },
-    brand: deal.brand ? { '@type': 'Brand', name: deal.brand } : undefined,
-    sku: deal.sku,
-    aggregateRating: deal.rating && deal.reviewCount ? {
+  }
+
+  if (deal.brand) {
+    schema.brand = { '@type': 'Brand', name: deal.brand }
+  }
+
+  if (deal.rating && deal.reviewCount) {
+    schema.aggregateRating = {
       '@type': 'AggregateRating',
       ratingValue: deal.rating,
       reviewCount: deal.reviewCount,
-    } : undefined,
+      bestRating: 5,
+      worstRating: 1,
+    }
   }
+
+  return schema
 }
 
 export function generateReviewSchema(reviews: Array<{
@@ -210,10 +223,16 @@ export function buildMetadata(
 }
 
 export function JsonLd({ data }: { data: Record<string, unknown> | Record<string, unknown>[] }) {
+  const schemas = Array.isArray(data) ? data : [data]
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-    />
+    <>
+      {schemas.map((schema, i) => (
+        <script
+          key={i}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
+    </>
   )
 }

@@ -26,10 +26,15 @@ function mapRowToPost(row: Record<string, unknown>): BlogPost {
     category: row.category as string,
     tags: JSON.parse((row.tags as string) || '[]'),
     relatedAsins: JSON.parse((row.relatedAsins as string) || '[]'),
-    hidden: Boolean(row.hidden),
+    status: (row.status as BlogPost['status']) || (Boolean(row.hidden) ? 'draft' : 'published'),
+    hidden: Boolean(row.hidden) || ((row.status as string) === 'draft'),
     publishedAt: row.publishedAt as string,
     createdAt: row.createdAt as string,
     updatedAt: row.updatedAt as string,
+    metaTitle: (row.metaTitle as string) || undefined,
+    metaDescription: (row.metaDescription as string) || undefined,
+    canonicalUrl: (row.canonicalUrl as string) || undefined,
+    focusKeyword: (row.focusKeyword as string) || undefined,
   }
 }
 
@@ -51,14 +56,14 @@ async function loadPost(sql: string, params: InValue[]): Promise<BlogPost | unde
 export async function getPosts(limit = 10, offset = 0, includeHidden = false): Promise<BlogPost[]> {
   const sql = includeHidden
     ? 'SELECT * FROM posts ORDER BY publishedAt DESC LIMIT ? OFFSET ?'
-    : 'SELECT * FROM posts WHERE hidden = 0 ORDER BY publishedAt DESC LIMIT ? OFFSET ?'
+    : "SELECT * FROM posts WHERE status = 'published' ORDER BY publishedAt DESC LIMIT ? OFFSET ?"
   return loadPosts(sql, [limit, offset])
 }
 
 export async function getPostBySlug(slug: string, includeHidden = false): Promise<BlogPost | undefined> {
   const sql = includeHidden
     ? 'SELECT * FROM posts WHERE slug = ?'
-    : 'SELECT * FROM posts WHERE slug = ? AND hidden = 0'
+    : "SELECT * FROM posts WHERE slug = ? AND status = 'published'"
   return loadPost(sql, [slug])
 }
 
@@ -69,7 +74,7 @@ export async function getPostById(id: string): Promise<BlogPost | undefined> {
 export async function getPostsByCategory(category: string, limit = 10, includeHidden = false): Promise<BlogPost[]> {
   const sql = includeHidden
     ? 'SELECT * FROM posts WHERE category = ? ORDER BY publishedAt DESC LIMIT ?'
-    : 'SELECT * FROM posts WHERE category = ? AND hidden = 0 ORDER BY publishedAt DESC LIMIT ?'
+    : "SELECT * FROM posts WHERE category = ? AND status = 'published' ORDER BY publishedAt DESC LIMIT ?"
   return loadPosts(sql, [category, limit])
 }
 
@@ -82,18 +87,22 @@ export async function createPost(data: Record<string, unknown>): Promise<BlogPos
 
   const str = (v: unknown, fallback = ''): string => (v as string) || fallback
   const json = (v: unknown): string => JSON.stringify(v || [])
+  const statusVal = data.status || (data.hidden ? 'draft' : 'published')
 
   await db.execute({
     sql: `INSERT INTO posts (
-      id, title, slug, excerpt, content, featuredImage, author, category, tags, relatedAsins, hidden,
+      id, title, slug, excerpt, content, featuredImage, author, category, tags, relatedAsins, hidden, status,
+      metaTitle, metaDescription, canonicalUrl, focusKeyword,
       publishedAt, createdAt, updatedAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id, str(data.title), str(data.slug), str(data.excerpt), str(data.content),
       str(data.featuredImage), str(data.author, 'PesCatch'), str(data.category),
-      json(data.tags), json(data.relatedAsins), data.hidden ? 1 : 0,
+      json(data.tags), json(data.relatedAsins),
+      statusVal !== 'published' ? 1 : 0, statusVal,
+      str(data.metaTitle), str(data.metaDescription), str(data.canonicalUrl), str(data.focusKeyword),
       str(data.publishedAt, now), now, now,
-    ],
+    ] as InValue[],
   })
 
   return (await getPostById(id))!
@@ -108,17 +117,21 @@ export async function updatePost(id: string, data: Record<string, unknown>): Pro
   const now = new Date().toISOString()
   const str = (v: unknown, fallback = ''): string => (v as string) || fallback
 
+  const statusVal = data.status || (data.hidden ? 'draft' : 'published')
   await db.execute({
     sql: `UPDATE posts SET
       title = ?, slug = ?, excerpt = ?, content = ?, featuredImage = ?,
-      author = ?, category = ?, tags = ?, relatedAsins = ?, hidden = ?, updatedAt = ?
+      author = ?, category = ?, tags = ?, relatedAsins = ?,
+      metaTitle = ?, metaDescription = ?, canonicalUrl = ?, focusKeyword = ?,
+      hidden = ?, status = ?, updatedAt = ?
     WHERE id = ?`,
     args: [
       str(data.title), str(data.slug), str(data.excerpt), str(data.content),
       str(data.featuredImage), str(data.author, 'PesCatch'), str(data.category),
       JSON.stringify(data.tags || []), JSON.stringify(data.relatedAsins || []),
-      data.hidden ? 1 : 0, now, id,
-    ],
+      str(data.metaTitle), str(data.metaDescription), str(data.canonicalUrl), str(data.focusKeyword),
+      statusVal !== 'published' ? 1 : 0, statusVal, now, id,
+    ] as InValue[],
   })
 
   return getPostById(id)

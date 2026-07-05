@@ -3,7 +3,9 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { formatPrice } from '@/lib/utils'
-import { Store, Truck, Fish, ChevronUp, Clock } from 'lucide-react'
+import { buildAmazonUrl } from '@/lib/amazon-affiliate'
+import { Store, Truck, Fish, ChevronUp, Clock, Star } from 'lucide-react'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { CATEGORIES, STORES } from '@/types'
 import type { ProductGroup } from '@/types'
 import { useState } from 'react'
@@ -104,6 +106,19 @@ export function ProductCard({ group }: ProductCardProps) {
               </div>
             )}
 
+            {/* Rating */}
+            {(() => {
+              const ratedDeal = deals.find(d => d.rating)
+              return ratedDeal ? (
+                <div className="flex items-center gap-1 mt-2">
+                  <Star className="h-3.5 w-3.5" style={{ color: '#FFB800', fill: '#FFB800' }} />
+                  <span className="text-xs font-medium" style={{ color: '#8BA3C7' }}>
+                    {ratedDeal.rating}{ratedDeal.reviewCount ? ` · ${ratedDeal.reviewCount} valoraciones` : ''}
+                  </span>
+                </div>
+              ) : null
+            })()}
+
             {/* Store price comparison */}
             <div className="flex flex-wrap items-center gap-2 mt-4">
               {deals.slice(0, 3).map((deal) => {
@@ -111,8 +126,12 @@ export function ProductCard({ group }: ProductCardProps) {
                 const isCheapest = deal.salePrice === bestPrice
                 const storeSlug = storeMeta?.slug || deal.store.slug || deal.store.id
                 return (
-                  <div key={deal.id}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                  <a key={deal.id}
+                    href={deal.store.id === 'amazon' ? buildAmazonUrl(deal.affiliateUrl) : deal.affiliateUrl}
+                    target="_blank"
+                    rel="nofollow sponsored"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer"
                     style={{
                       background: isCheapest ? 'rgba(38,222,129,0.08)' : '#1A2535',
                       border: `1px solid ${isCheapest ? 'rgba(38,222,129,0.3)' : '#1E3A5F'}`,
@@ -128,15 +147,20 @@ export function ProductCard({ group }: ProductCardProps) {
                       {formatPrice(deal.salePrice)}
                     </span>
                     {isCheapest && storeCount > 1 && (
-                      <span className="text-[0.55rem] font-bold px-1 py-0.5 rounded"
-                        style={{ background: 'rgba(38,222,129,0.2)', color: '#26DE81' }}>
-                        MEJOR
-                      </span>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-[0.55rem] font-bold px-1 py-0.5 rounded"
+                            style={{ background: 'rgba(38,222,129,0.2)', color: '#26DE81' }}>
+                            MEJOR
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">Mejor precio disponible</TooltipContent>
+                      </Tooltip>
                     )}
                     {deal.shippingCost === 0 && storeCount === 1 && (
                       <Truck className="h-3 w-3" style={{ color: '#4A6080' }} />
                     )}
-                  </div>
+                  </a>
                 )
               })}
               {deals.length > 3 && (

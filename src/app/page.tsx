@@ -4,12 +4,12 @@ import { ProductCard } from '@/components/deals/product-card'
 import { groupDealsByProduct } from '@/lib/group-deals'
 import { formatPrice } from '@/lib/utils'
 import Image from 'next/image'
-import { Fish, ArrowRight, Clock, Zap, Star, Shield, BadgeCheck, Users, BookOpen, ChevronRight, Anchor, Wind, Target, Backpack, Shirt, Ship } from 'lucide-react'
+import { Fish, ArrowRight, Clock, Zap, Star, Shield, BadgeCheck, Users, BookOpen, ChevronRight, Anchor, Wind, Target, Backpack, Shirt, Ship, Tag } from 'lucide-react'
 import Link from 'next/link'
 import { CATEGORIES } from '@/types'
 import type { BlogPost } from '@/types'
 import type { Metadata } from 'next'
-import { buildMetadata, BASE_URL } from '@/lib/seo/schemas'
+import { buildMetadata, BASE_URL, generateCollectionPageSchema, JsonLd } from '@/lib/seo/schemas'
 
 export const dynamic = 'force-dynamic'
 
@@ -54,7 +54,20 @@ export default async function HomePage() {
   const groupedLatest = groupDealsByProduct(latest)
   const groupedTopDiscounts = groupDealsByProduct(topDiscounts)
 
+  const itemListSchema = generateCollectionPageSchema({
+    title: 'Chollos de material de pesca - PesCatch',
+    description: 'Los mejores chollos y ofertas de material de pesca destacados en PesCatch',
+    url: BASE_URL,
+    itemCount: Math.min(featured.length, 20),
+    items: featured.slice(0, 20).map(d => ({
+      name: d.title,
+      url: `${BASE_URL}/deals/${d.slug}`,
+    })),
+  })
+
   return (
+    <>
+      <JsonLd data={[itemListSchema]} />
     <div>
       {/* HERO */}
       <section className="relative overflow-hidden min-h-[85vh] lg:min-h-[90vh] flex items-center">
@@ -353,6 +366,35 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Popular Brands */}
+      <section className="py-16 md:py-20" style={{ background: '#0B1A30' }}>
+        <div className="mx-auto max-w-7xl px-4">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider"
+              style={{ background: 'rgba(255,184,0,0.1)', border: '1px solid rgba(255,184,0,0.2)', color: '#FFB800' }}>
+              <Tag className="h-3 w-3" />
+              Marcas
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: '#E8F0FE' }}>Chollos por Marca</h2>
+            <p className="mt-2 text-lg" style={{ color: '#8BA3C7' }}>Explora las mejores ofertas de las marcas más populares</p>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3">
+            {['shimano', 'daiwa', 'abu-garcia', 'mitchell', 'penn', 'okuma', 'rapala', 'caperlan', 'yo-zuri', 'berkley'].map((brand) => (
+              <Link key={brand} href={`/marca/${brand}`}
+                className="group text-center p-4 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:border-[rgba(0,212,255,0.3)]"
+                style={{
+                  background: '#111827',
+                  border: '1px solid #1E3A5F',
+                }}>
+                <span className="text-sm font-semibold transition-colors duration-300 group-hover:text-[#00D4FF]" style={{ color: '#E8F0FE' }}>
+                  {brand.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Latest Deals */}
       <section className="py-16 md:py-20" style={{ background: '#111827' }}>
         <div className="mx-auto max-w-7xl px-4">
@@ -413,5 +455,6 @@ export default async function HomePage() {
         </section>
       )}
     </div>
+    </>
   )
 }

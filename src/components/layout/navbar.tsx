@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { Search, Menu, X, Fish, ChevronDown } from 'lucide-react'
+import { Search, Menu, X, Fish, ChevronDown, Tag } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { CATEGORIES } from '@/types'
 
@@ -78,6 +78,12 @@ export function Navbar() {
           <Link href="/blog" className="text-[0.925rem] font-medium transition-colors duration-200 hover:text-[#00D4FF]"
             style={{ color: '#8BA3C7' }}>
             Blog
+          </Link>
+          <Link href="/"
+            className="flex items-center gap-1 text-[0.925rem] font-medium transition-colors duration-200 hover:text-[#FFB800]"
+            style={{ color: '#8BA3C7' }}>
+            <Tag className="h-3.5 w-3.5" />
+            Marcas
           </Link>
         </nav>
 

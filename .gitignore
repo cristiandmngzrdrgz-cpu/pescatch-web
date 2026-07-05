@@ -41,6 +41,9 @@ yarn-error.log*
 pescatch.db
 pescatch.db-wal
 
+# uploads (now using Vercel Blob)
+/public/uploads/
+
 # temp files
 .playwright-mcp/
 .od-designs/

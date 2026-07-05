@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,8 +8,15 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { CATEGORIES, STORES } from '@/types'
 import type { Deal } from '@/types'
-import { ChevronLeft, Save, Pencil, Loader2, Plus, X } from 'lucide-react'
+import { slugify } from '@/lib/utils'
+import { ChevronLeft, Save, Pencil, Loader2, Plus, X, ExternalLink, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
+import { toast } from 'sonner'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import ImageUploader from '@/components/admin/ImageUploader'
+import { MetaFieldsForm } from '@/components/admin/MetaFieldsForm'
+import { useAutoSave } from '@/hooks/useAutoSave'
+import { useCtrlSubmit } from '@/hooks/useCtrlSubmit'
 
 export default function EditDealPage() {
   const router = useRouter()
@@ -21,11 +28,14 @@ export default function EditDealPage() {
   const id = params.id as string
 
   const [form, setForm] = useState({
-    title: '', slug: '', description: '',
+    title: '', slug: '', slugManuallyEdited: false, description: '',
     originalPrice: '', salePrice: '', shippingCost: '0',
     imageUrl: '', category: '', subcategory: '',
-    store: '', affiliateUrl: '', stockStatus: 'in_stock', review: '',
-    hidden: false, featured: false,
+    store: '', affiliateUrl: '', stockStatus: 'in_stock',
+    stockCount: '', review: '',
+    status: 'draft', featured: false,
+    ean: '', asin: '', brand: '', commission: '', expiresAt: '',
+    metaTitle: '', metaDescription: '', canonicalUrl: '', focusKeyword: '',
   })
 
   const [tags, setTags] = useState<string[]>([])
@@ -35,8 +45,25 @@ export default function EditDealPage() {
   const [cons, setCons] = useState<string[]>([])
   const [conInput, setConInput] = useState('')
   const [specs, setSpecs] = useState<{ key: string; value: string }[]>([])
+  const formRef = useRef<HTMLFormElement>(null)
 
   const [originalDeal, setOriginalDeal] = useState<Deal | null>(null)
+
+  const draftData = { ...form, tags, pros, cons, specs }
+  const { checkAndRestore } = useAutoSave('admin-draft-deal-' + id, draftData)
+  useCtrlSubmit(() => formRef.current?.requestSubmit(), saving)
+
+  useEffect(() => {
+    if (loading) return
+    checkAndRestore((draft) => {
+      const { tags: t, pros: p, cons: c, specs: sp, ...f } = draft as typeof draftData
+      setForm(prev => ({ ...prev, ...f, slugManuallyEdited: true }))
+      if (Array.isArray(t)) setTags(t)
+      if (Array.isArray(p)) setPros(p)
+      if (Array.isArray(c)) setCons(c)
+      if (Array.isArray(sp)) setSpecs(sp)
+    })
+  }, [checkAndRestore, loading])
 
   useEffect(() => {
     fetch(`/api/deals/${id}`)
@@ -45,13 +72,19 @@ export default function EditDealPage() {
         const data: Deal = await r.json()
         setOriginalDeal(data)
         setForm({
-          title: data.title, slug: data.slug, description: data.description,
+          title: data.title, slug: data.slug, slugManuallyEdited: true, description: data.description,
           originalPrice: data.originalPrice.toString(), salePrice: data.salePrice.toString(),
           shippingCost: data.shippingCost.toString(), imageUrl: data.imageUrl || '',
           category: data.category, subcategory: data.subcategory || '',
           store: data.store?.id || '', affiliateUrl: data.affiliateUrl || '',
-          stockStatus: data.stockStatus, review: data.review || '',
-          hidden: data.hidden || false, featured: data.featured || false,
+          stockStatus: data.stockStatus, stockCount: (data.stockCount || 0).toString(),
+          review: data.review || '',
+          status: data.status || 'draft', featured: data.featured || false,
+          ean: data.ean || '', asin: data.asin || '', brand: data.brand || '',
+          commission: (data.commission || 0).toString(),
+          expiresAt: data.expiresAt?.slice(0, 10) || '',
+          metaTitle: data.metaTitle || '', metaDescription: data.metaDescription || '',
+          canonicalUrl: data.canonicalUrl || '', focusKeyword: data.focusKeyword || '',
         })
         setTags(data.tags || [])
         setPros(data.pros || [])
@@ -66,7 +99,17 @@ export default function EditDealPage() {
 
   const updateField = (key: string, value: string | null) => {
     if (value === null) return
-    setForm(prev => ({ ...prev, [key]: value }))
+    setForm(prev => {
+      const next = { ...prev, [key]: value }
+      if (key === 'title' && !prev.slugManuallyEdited) {
+        next.slug = slugify(value)
+      }
+      return next
+    })
+  }
+
+  const regenerateSlug = () => {
+    setForm(prev => ({ ...prev, slug: slugify(prev.title) }))
   }
 
   const addTag = () => {
@@ -118,16 +161,21 @@ export default function EditDealPage() {
       affiliateUrl: form.affiliateUrl, category: form.category,
       subcategory: form.subcategory || '', tags,
       stockStatus: form.stockStatus,
+      stockCount: parseInt(form.stockCount) || 0,
       rating: originalDeal?.rating ?? 0,
       reviewCount: originalDeal?.reviewCount ?? 0,
       technicalSpecs: specsRecord,
       review: form.review,
       pros, cons,
       featured: form.featured,
-      hidden: form.hidden,
-      commission: originalDeal?.commission ?? 0,
-      ean: originalDeal?.ean ?? '',
-      asin: originalDeal?.asin ?? '',
+      status: form.status,
+      commission: parseFloat(form.commission) || 0,
+      ean: form.ean,
+      asin: form.asin,
+      brand: form.brand,
+      expiresAt: form.expiresAt || null,
+      metaTitle: form.metaTitle, metaDescription: form.metaDescription,
+      canonicalUrl: form.canonicalUrl, focusKeyword: form.focusKeyword,
     }
 
     try {
@@ -136,10 +184,18 @@ export default function EditDealPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-      if (!res.ok) throw new Error('Error al actualizar')
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        const detail = Array.isArray(err.issues) && err.issues.length > 0
+          ? err.issues.map((i: { path: string; message: string }) => `${i.path}: ${i.message}`).join(' · ')
+          : err.error
+        throw new Error(detail || 'Error al actualizar')
+      }
+      localStorage.removeItem('admin-draft-deal-' + id)
+      toast.success('Chollo actualizado correctamente')
       router.push('/admin/deals')
     } catch (err) {
-      alert('Error: ' + (err as Error).message)
+      toast.error((err as Error).message)
     } finally {
       setSaving(false)
     }
@@ -171,17 +227,32 @@ export default function EditDealPage() {
     <div>
       <div className="flex items-center gap-3 mb-8">
         <Link href="/admin/deals">
-          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl" style={{ border: '1px solid #1E3A5F', color: '#8BA3C7' }}>
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl" style={{ border: '1px solid #1E3A5F', color: '#8BA3C7' }} aria-label="Volver a la lista">
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Volver a la lista</TooltipContent>
+          </Tooltip>
         </Link>
         <div>
           <h1 className="text-2xl font-extrabold" style={{ color: '#E8F0FE' }}>Editar chollo</h1>
           <p className="text-sm" style={{ color: '#8BA3C7' }}>Modificando: {originalDeal?.title}</p>
         </div>
+        {originalDeal?.slug && (
+          <div className="ml-auto">
+            <Link href={`/deals/${originalDeal.slug}`} target="_blank">
+              <Button variant="outline" size="sm" className="h-9 px-3 rounded-xl text-xs" style={{ borderColor: '#1E3A5F', color: '#8BA3C7' }}>
+                <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                Ver en web
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
 
-      <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
+      <form ref={formRef} onSubmit={handleSubmit} className="max-w-2xl space-y-6">
         <div className="rounded-2xl p-6 space-y-5" style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
           <h2 className="font-bold flex items-center gap-2" style={{ color: '#E8F0FE' }}>
             <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#1A2535' }}>
@@ -195,7 +266,17 @@ export default function EditDealPage() {
           </div>
           <div>
             <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>Slug (URL)</label>
-            <Input value={form.slug} onChange={e => updateField('slug', e.target.value)} required className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
+            <div className="flex gap-2">
+              <Input value={form.slug} onChange={e => { updateField('slug', e.target.value); setForm(prev => ({ ...prev, slugManuallyEdited: true })) }} required className="h-11 rounded-xl flex-1" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button type="button" onClick={regenerateSlug} className="h-11 px-3 rounded-xl flex-shrink-0" style={{ background: '#1A2535', color: '#00D4FF', border: '1px solid #1E3A5F' }} aria-label="Regenerar slug">
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Regenerar slug desde el título</TooltipContent>
+              </Tooltip>
+            </div>
           </div>
           <div>
             <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>Descripción corta</label>
@@ -217,6 +298,10 @@ export default function EditDealPage() {
             <div>
               <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>Gastos de envío (€)</label>
               <Input type="number" step="0.01" value={form.shippingCost} onChange={e => updateField('shippingCost', e.target.value)} className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>Cantidad en stock</label>
+              <Input type="number" min="0" value={form.stockCount} onChange={e => updateField('stockCount', e.target.value)} placeholder="0" className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
             </div>
             <div>
               <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>Estado stock</label>
@@ -280,9 +365,14 @@ export default function EditDealPage() {
               className="h-11 rounded-xl flex-1"
               style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }}
             />
-            <Button type="button" onClick={addTag} className="h-11 px-4 rounded-xl" style={{ background: '#1A2535', color: '#00D4FF', border: '1px solid #1E3A5F' }}>
-              <Plus className="h-4 w-4" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button type="button" onClick={addTag} className="h-11 px-4 rounded-xl" style={{ background: '#1A2535', color: '#00D4FF', border: '1px solid #1E3A5F' }} aria-label="Añadir tag">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Añadir tag</TooltipContent>
+            </Tooltip>
           </div>
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -312,9 +402,14 @@ export default function EditDealPage() {
                   className="h-10 rounded-xl flex-1"
                   style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }}
                 />
-                <Button type="button" onClick={addPro} className="h-10 px-3 rounded-xl" style={{ background: '#1A2535', color: '#26DE81', border: '1px solid #1E3A5F' }}>
-                  <Plus className="h-4 w-4" />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button type="button" onClick={addPro} className="h-10 px-3 rounded-xl" style={{ background: '#1A2535', color: '#26DE81', border: '1px solid #1E3A5F' }} aria-label="Añadir punto fuerte">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Añadir punto fuerte</TooltipContent>
+                </Tooltip>
               </div>
               {pros.length > 0 && (
                 <ul className="space-y-1.5">
@@ -340,9 +435,14 @@ export default function EditDealPage() {
                   className="h-10 rounded-xl flex-1"
                   style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }}
                 />
-                <Button type="button" onClick={addCon} className="h-10 px-3 rounded-xl" style={{ background: '#1A2535', color: '#EF4444', border: '1px solid #1E3A5F' }}>
-                  <Plus className="h-4 w-4" />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button type="button" onClick={addCon} className="h-10 px-3 rounded-xl" style={{ background: '#1A2535', color: '#EF4444', border: '1px solid #1E3A5F' }} aria-label="Añadir punto débil">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Añadir punto débil</TooltipContent>
+                </Tooltip>
               </div>
               {cons.length > 0 && (
                 <ul className="space-y-1.5">
@@ -378,9 +478,14 @@ export default function EditDealPage() {
                 className="h-10 rounded-xl flex-1"
                 style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }}
               />
-              <button type="button" onClick={() => removeSpec(i)} className="p-2 hover:opacity-70 flex-shrink-0">
-                <X className="h-4 w-4" style={{ color: '#EF4444' }} />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button type="button" onClick={() => removeSpec(i)} className="p-2 hover:opacity-70 flex-shrink-0" aria-label="Eliminar especificación">
+                    <X className="h-4 w-4" style={{ color: '#EF4444' }} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Eliminar especificación</TooltipContent>
+              </Tooltip>
             </div>
           ))}
           <Button type="button" onClick={addSpec} variant="outline" className="h-10 rounded-xl" style={{ borderColor: '#1E3A5F', color: '#00D4FF', borderStyle: 'dashed' }}>
@@ -390,20 +495,44 @@ export default function EditDealPage() {
         </div>
 
         <div className="rounded-2xl p-6 space-y-5" style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
+          <h2 className="font-bold" style={{ color: '#E8F0FE' }}>Identificadores de producto</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>EAN</label>
+              <Input value={form.ean} onChange={e => updateField('ean', e.target.value)} placeholder="1234567890123" className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>ASIN (Amazon)</label>
+              <Input value={form.asin} onChange={e => updateField('asin', e.target.value)} placeholder="B0XXXXXXX" className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>Marca</label>
+              <Input value={form.brand} onChange={e => updateField('brand', e.target.value)} placeholder="Shimano, Daiwa..." className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>Comisión (%)</label>
+              <Input type="number" step="0.01" min="0" value={form.commission} onChange={e => updateField('commission', e.target.value)} placeholder="5" className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl p-6 space-y-5" style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
           <h2 className="font-bold" style={{ color: '#E8F0FE' }}>Enlaces e imagen</h2>
+          <ImageUploader value={form.imageUrl} onChange={v => updateField('imageUrl', v)} />
           <div>
             <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>URL de afiliado</label>
             <Input value={form.affiliateUrl} onChange={e => updateField('affiliateUrl', e.target.value)} className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>URL de imagen</label>
-            <Input value={form.imageUrl} onChange={e => updateField('imageUrl', e.target.value)} className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
           </div>
           <div>
             <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>Review / Análisis</label>
             <Textarea value={form.review} onChange={e => updateField('review', e.target.value)} rows={4} className="rounded-xl resize-none" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
           </div>
         </div>
+
+        <MetaFieldsForm
+          form={{ metaTitle: form.metaTitle, metaDescription: form.metaDescription, canonicalUrl: form.canonicalUrl, focusKeyword: form.focusKeyword }}
+          updateField={updateField}
+        />
 
         <div className="rounded-2xl p-6 space-y-5" style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
           <h2 className="font-bold" style={{ color: '#E8F0FE' }}>Visibilidad</h2>
@@ -421,26 +550,56 @@ export default function EditDealPage() {
                 <p className="text-xs mt-0.5" style={{ color: '#8BA3C7' }}>Aparece destacado en la página principal y listados.</p>
               </div>
             </label>
-            <label className="flex items-center gap-3 cursor-pointer" style={{ color: '#E8F0FE' }}>
-              <input
-                type="checkbox"
-                checked={form.hidden}
-                onChange={e => setForm(prev => ({ ...prev, hidden: e.target.checked }))}
-                className="h-4 w-4 rounded"
-                style={{ accentColor: '#EF4444' }}
-              />
-              <div>
-                <span className="font-semibold">Oculto</span>
-                <p className="text-xs mt-0.5" style={{ color: '#8BA3C7' }}>No se muestra en la web pública. Visible solo en el panel admin.</p>
-              </div>
-            </label>
+            <div>
+              <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>Fecha de expiración</label>
+              <Input type="date" value={form.expiresAt} onChange={e => updateField('expiresAt', e.target.value)} className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
+              <p className="text-xs mt-1" style={{ color: '#8BA3C7' }}>Opcional. Si se indica, la oferta se ocultará automáticamente al pasar esta fecha.</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => setForm(prev => ({ ...prev, status: 'draft' }))}
+                className="flex-1 flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 border"
+                style={{
+                  background: form.status === 'draft' ? 'rgba(255,184,0,0.1)' : '#0B1120',
+                  borderColor: form.status === 'draft' ? 'rgba(255,184,0,0.3)' : '#1E3A5F',
+                  color: '#E8F0FE',
+                }}
+              >
+                <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: form.status === 'draft' ? 'rgba(255,184,0,0.2)' : '#1A2535' }}>
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: '#FFB800', boxShadow: form.status === 'draft' ? '0 0 8px rgba(255,184,0,0.5)' : 'none' }} />
+                </div>
+                <div className="text-left">
+                  <span className="font-semibold text-sm">Borrador</span>
+                  <p className="text-xs mt-0.5" style={{ color: '#8BA3C7' }}>Guardado pero no visible en la web.</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setForm(prev => ({ ...prev, status: 'published' }))}
+                className="flex-1 flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 border"
+                style={{
+                  background: form.status === 'published' ? 'rgba(38,222,129,0.1)' : '#0B1120',
+                  borderColor: form.status === 'published' ? 'rgba(38,222,129,0.3)' : '#1E3A5F',
+                  color: '#E8F0FE',
+                }}
+              >
+                <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: form.status === 'published' ? 'rgba(38,222,129,0.2)' : '#1A2535' }}>
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: '#26DE81', boxShadow: form.status === 'published' ? '0 0 8px rgba(38,222,129,0.5)' : 'none' }} />
+                </div>
+                <div className="text-left">
+                  <span className="font-semibold text-sm">Publicado</span>
+                  <p className="text-xs mt-0.5" style={{ color: '#8BA3C7' }}>Visible para todos en la web.</p>
+                </div>
+              </button>
+            </div>
           </div>
         </div>
 
         <div className="flex gap-3 pt-4">
           <Button type="submit" disabled={saving} className="h-11 px-6 font-semibold rounded-xl" style={{ background: '#00D4FF', color: '#0B1120' }}>
             <Save className="h-4 w-4 mr-1.5" />
-            {saving ? 'Guardando...' : 'Guardar cambios'}
+            {saving ? 'Guardando...' : form.status === 'draft' ? 'Guardar borrador' : 'Guardar y publicar'}
           </Button>
           <Link href="/admin/deals">
             <Button type="button" variant="outline" className="h-11 px-6 rounded-xl" style={{ borderColor: '#1E3A5F', color: '#8BA3C7' }}>

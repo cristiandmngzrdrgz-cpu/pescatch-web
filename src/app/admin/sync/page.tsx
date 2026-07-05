@@ -165,9 +165,14 @@ export default function SyncPage() {
               <Clock className="h-5 w-5" style={{ color: '#8BA3C7' }} />
             </div>
             <div>
-              <p className="text-sm font-semibold" style={{ color: '#E8F0FE' }}>
-                {statsLoading ? '-' : stats?.lastSync ? timeAgo(stats.lastSync.created_at) : 'Nunca'}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold" style={{ color: '#E8F0FE' }}>
+                  {statsLoading ? '-' : stats?.lastSync ? timeAgo(stats.lastSync.created_at) : 'Nunca'}
+                </p>
+                {stats?.lastSync && (
+                  <span className={`inline-block w-2 h-2 rounded-full ${stats.lastSync.errors.length > 0 ? 'bg-red-500' : 'bg-green-500'}`} />
+                )}
+              </div>
               <p className="text-sm" style={{ color: '#8BA3C7' }}>Último sync</p>
             </div>
           </div>

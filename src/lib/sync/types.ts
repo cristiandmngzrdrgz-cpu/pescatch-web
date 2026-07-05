@@ -12,15 +12,17 @@ export interface SyncRow {
   amazonUrl?: string
   amazonShipping?: number
   amazonStock?: string
+  amazonOriginalPrice?: number
   decathlonPrice?: number
   decathlonUrl?: string
   decathlonShipping?: number
   decathlonStock?: string
+  decathlonOriginalPrice?: number
   aliexpressPrice?: number
   aliexpressUrl?: string
   aliexpressShipping?: number
   aliexpressStock?: string
-
+  aliexpressOriginalPrice?: number
 }
 
 export interface SyncResult {

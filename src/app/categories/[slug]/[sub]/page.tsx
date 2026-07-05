@@ -5,6 +5,7 @@ import { CATEGORIES } from '@/types'
 import Link from 'next/link'
 import { Fish } from 'lucide-react'
 import type { Metadata } from 'next'
+import { buildMetadata, BASE_URL, generateBreadcrumbSchema, generateCollectionPageSchema, JsonLd } from '@/lib/seo/schemas'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,10 +14,22 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const category = CATEGORIES.find(c => c.slug === slug)
   const subcategory = category?.subcategories.find(s => s.slug === sub)
   if (!category || !subcategory) return { title: 'Subcategoría no encontrada | PesCatch' }
-  return {
-    title: `${subcategory.name} de ${category.name} — Chollos y Ofertas | PesCatch`,
-    description: `Las mejores ofertas en ${subcategory.name.toLowerCase()} de ${category.name.toLowerCase()}. Chollos en material de pesca en Amazon, Decathlon y AliExpress.`,
-  }
+  const title = `${subcategory.name} de ${category.name} — Chollos y Ofertas | PesCatch`
+  const description = `Las mejores ofertas en ${subcategory.name.toLowerCase()} de ${category.name.toLowerCase()}. Chollos en material de pesca en Amazon, Decathlon y AliExpress.`
+  const canonicalUrl = `${BASE_URL}/categories/${slug}/${sub}`
+  return buildMetadata(
+    {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: 'website',
+        url: canonicalUrl,
+      },
+    },
+    canonicalUrl
+  )
 }
 
 export default async function SubcategoryPage({
@@ -43,8 +56,24 @@ export default async function SubcategoryPage({
 
   const deals = await getDeals({ category: category.slug, subcategory: sub })
 
+  const breadcrumbs = generateBreadcrumbSchema([
+    { name: 'Inicio', url: '/' },
+    { name: 'Categorías', url: '/categories' },
+    { name: category.name, url: `/categories/${category.slug}` },
+    { name: subcategory.name, url: `${BASE_URL}/categories/${slug}/${sub}` },
+  ])
+
+  const collectionSchema = generateCollectionPageSchema({
+    title: `${subcategory.name} de ${category.name}`,
+    description: `Ofertas en ${subcategory.name.toLowerCase()} de ${category.name.toLowerCase()}`,
+    url: `${BASE_URL}/categories/${slug}/${sub}`,
+    itemCount: deals.length,
+  })
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
+    <>
+      <JsonLd data={[breadcrumbs, collectionSchema]} />
+      <div className="mx-auto max-w-7xl px-4 py-8">
       <nav className="flex items-center gap-2 text-sm mb-6 overflow-x-auto whitespace-nowrap" style={{ color: '#4A6080' }}>
         <Link href="/" className="hover:text-[#00D4FF] transition-colors">Inicio</Link>
         <span style={{ color: '#1E3A5F' }}>/</span>
@@ -75,5 +104,6 @@ export default async function SubcategoryPage({
         </div>
       )}
     </div>
+    </>
   )
 }

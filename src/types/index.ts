@@ -41,6 +41,7 @@ export interface Deal {
   tags: string[]
   stockStatus: 'in_stock' | 'limited' | 'out_of_stock'
   stockCount?: number
+  expiresAt?: string
   rating?: number
   reviewCount?: number
   technicalSpecs: Record<string, string>
@@ -54,11 +55,15 @@ export interface Deal {
   createdAt: string
   updatedAt: string
   featured: boolean
-  hidden: boolean
+  status: 'draft' | 'published'
   commission: number
   ean?: string
   asin?: string
   brand?: string
+  metaTitle?: string
+  metaDescription?: string
+  canonicalUrl?: string
+  focusKeyword?: string
 }
 
 export interface PricePoint {
@@ -116,6 +121,7 @@ export interface Comment {
   author: string
   content: string
   createdAt: string
+  status?: string
   avatar?: string
 }
 
@@ -135,6 +141,7 @@ export interface DealFilters {
   category?: string
   subcategory?: string
   store?: string
+  brand?: string
   minDiscount?: number
   minPrice?: number
   maxPrice?: number
@@ -215,10 +222,15 @@ export interface BlogPost {
   category: string
   tags: string[]
   relatedAsins: string[]
+  status: 'draft' | 'published'
   hidden: boolean
   publishedAt: string
   createdAt: string
   updatedAt: string
+  metaTitle?: string
+  metaDescription?: string
+  canonicalUrl?: string
+  focusKeyword?: string
 }
 
 export const STORES: Store[] = [

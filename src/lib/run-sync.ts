@@ -109,10 +109,10 @@ async function processRow(
     const pName = product.name as string || ''
     let storeIndex = 0
 
-    const stores: { storeId: string; adapter: StoreAdapter; manualPrice?: number; manualUrl?: string; manualShipping?: number; manualStock?: string }[] = [
-      { storeId: 'amazon', adapter: amazonAdapter, manualPrice: row.amazonPrice, manualUrl: row.amazonUrl, manualShipping: row.amazonShipping, manualStock: row.amazonStock },
-      { storeId: 'decathlon', adapter: decathlonAdapter, manualPrice: row.decathlonPrice, manualUrl: row.decathlonUrl, manualShipping: row.decathlonShipping, manualStock: row.decathlonStock },
-      { storeId: 'aliexpress', adapter: aliexpressAdapter, manualPrice: row.aliexpressPrice, manualUrl: row.aliexpressUrl, manualShipping: row.aliexpressShipping, manualStock: row.aliexpressStock },
+    const stores: { storeId: string; adapter: StoreAdapter; manualPrice?: number; manualUrl?: string; manualShipping?: number; manualStock?: string; manualOriginalPrice?: number }[] = [
+      { storeId: 'amazon', adapter: amazonAdapter, manualPrice: row.amazonPrice, manualUrl: row.amazonUrl, manualShipping: row.amazonShipping, manualStock: row.amazonStock, manualOriginalPrice: row.amazonOriginalPrice },
+      { storeId: 'decathlon', adapter: decathlonAdapter, manualPrice: row.decathlonPrice, manualUrl: row.decathlonUrl, manualShipping: row.decathlonShipping, manualStock: row.decathlonStock, manualOriginalPrice: row.decathlonOriginalPrice },
+      { storeId: 'aliexpress', adapter: aliexpressAdapter, manualPrice: row.aliexpressPrice, manualUrl: row.aliexpressUrl, manualShipping: row.aliexpressShipping, manualStock: row.aliexpressStock, manualOriginalPrice: row.aliexpressOriginalPrice },
     ]
 
     for (const store of stores) {
@@ -128,7 +128,7 @@ async function processRow(
       const dealSlug = storeIndex === 0 ? pSlug : `${pSlug}_${store.storeId}`
       storeIndex++
 
-      const originalPrice = price
+      const originalPrice = store.manualOriginalPrice ?? price
 
       const dealId = await upsertDeal(
         matched.id,
@@ -171,7 +171,7 @@ async function processRow(
 export async function cleanupOrphanedDeals(): Promise<number> {
   const db = getDb()
   const result = await db.execute(
-    `UPDATE deals SET hidden = 1 WHERE productId != '' AND productId NOT IN (SELECT id FROM products) AND hidden = 0`
+    `UPDATE deals SET status = 'draft' WHERE productId != '' AND productId NOT IN (SELECT id FROM products) AND status = 'published'`
   )
   return Number(result.rowsAffected) || 0
 }

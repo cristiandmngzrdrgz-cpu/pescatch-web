@@ -21,7 +21,7 @@ export const CATEGORIES: Record<string, string[]> = {
     'caña feeder',
     'carrete feeder',
     'kit feeder',
-    'comida feeder',
+    'cebo feeder',
   ],
   'Señuelos': [
     'señuelos pesca baratos',

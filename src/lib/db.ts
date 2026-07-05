@@ -80,6 +80,7 @@ export async function initSchema() {
       tags TEXT NOT NULL DEFAULT '[]',
       stockStatus TEXT NOT NULL DEFAULT 'in_stock',
       stockCount INTEGER NOT NULL DEFAULT 0,
+      expiresAt TEXT,
       rating REAL NOT NULL DEFAULT 0,
       reviewCount INTEGER NOT NULL DEFAULT 0,
       technicalSpecs TEXT NOT NULL DEFAULT '{}',
@@ -89,8 +90,15 @@ export async function initSchema() {
       votesUp INTEGER NOT NULL DEFAULT 0,
       votesDown INTEGER NOT NULL DEFAULT 0,
       featured INTEGER NOT NULL DEFAULT 0,
-      hidden INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'published',
       commission REAL NOT NULL DEFAULT 0,
+      ean TEXT NOT NULL DEFAULT '',
+      asin TEXT NOT NULL DEFAULT '',
+      brand TEXT NOT NULL DEFAULT '',
+      metaTitle TEXT NOT NULL DEFAULT '',
+      metaDescription TEXT NOT NULL DEFAULT '',
+      canonicalUrl TEXT NOT NULL DEFAULT '',
+      focusKeyword TEXT NOT NULL DEFAULT '',
       publishedAt TEXT NOT NULL DEFAULT (datetime('now')),
       createdAt TEXT NOT NULL DEFAULT (datetime('now')),
       updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
@@ -108,6 +116,7 @@ export async function initSchema() {
       dealId TEXT NOT NULL,
       author TEXT NOT NULL DEFAULT 'Anónimo',
       content TEXT NOT NULL,
+      status TEXT DEFAULT 'published',
       createdAt TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (dealId) REFERENCES deals(id) ON DELETE CASCADE
     )`,
@@ -119,6 +128,11 @@ export async function initSchema() {
     'CREATE INDEX IF NOT EXISTS idx_deals_discount ON deals(discountPercent)',
     'CREATE INDEX IF NOT EXISTS idx_price_history_deal ON price_history(dealId)',
     'CREATE INDEX IF NOT EXISTS idx_comments_deal ON comments(dealId)',
+    `CREATE TABLE IF NOT EXISTS rate_limits (
+      key TEXT PRIMARY KEY,
+      count INTEGER NOT NULL DEFAULT 1,
+      reset_at TEXT NOT NULL
+    )`,
     `CREATE TABLE IF NOT EXISTS posts (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
@@ -131,6 +145,11 @@ export async function initSchema() {
       tags TEXT NOT NULL DEFAULT '[]',
       relatedAsins TEXT NOT NULL DEFAULT '[]',
       hidden INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'published',
+      metaTitle TEXT NOT NULL DEFAULT '',
+      metaDescription TEXT NOT NULL DEFAULT '',
+      canonicalUrl TEXT NOT NULL DEFAULT '',
+      focusKeyword TEXT NOT NULL DEFAULT '',
       publishedAt TEXT NOT NULL DEFAULT (datetime('now')),
       createdAt TEXT NOT NULL DEFAULT (datetime('now')),
       updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
@@ -147,6 +166,18 @@ export async function initSchema() {
       skipped INTEGER NOT NULL DEFAULT 0,
       hidden_orphans INTEGER NOT NULL DEFAULT 0,
       errors TEXT NOT NULL DEFAULT '[]'
+    )`,
+    `CREATE TABLE IF NOT EXISTS subscribers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT NOT NULL UNIQUE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )`,
+    `CREATE TABLE IF NOT EXISTS contact_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL DEFAULT '',
+      email TEXT NOT NULL DEFAULT '',
+      message TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )`,
   ])
 }
@@ -167,14 +198,47 @@ export async function migrateSchema() {
   if (!columnNames.includes('asin')) {
     await db.execute("ALTER TABLE deals ADD COLUMN asin TEXT NOT NULL DEFAULT ''")
   }
-  if (!columnNames.includes('hidden')) {
-    await db.execute("ALTER TABLE deals ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0")
+  if (!columnNames.includes('brand')) {
+    await db.execute("ALTER TABLE deals ADD COLUMN brand TEXT NOT NULL DEFAULT ''")
+  }
+  if (!columnNames.includes('status')) {
+    const hasHidden = columnNames.includes('hidden')
+    await db.execute("ALTER TABLE deals ADD COLUMN status TEXT NOT NULL DEFAULT 'published'")
+    if (hasHidden) {
+      await db.execute("UPDATE deals SET status = 'published' WHERE hidden = 0")
+      await db.execute("UPDATE deals SET status = 'draft' WHERE hidden = 1")
+    }
+    await db.execute("UPDATE deals SET status = 'draft' WHERE status IS NULL")
+  }
+  if (columnNames.includes('hidden')) {
+    await db.execute("ALTER TABLE deals DROP COLUMN hidden")
+  }
+  if (!columnNames.includes('expiresAt')) {
+    await db.execute("ALTER TABLE deals ADD COLUMN expiresAt TEXT")
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_deals_expires ON deals(expiresAt)')
+  }
+  if (!columnNames.includes('metaTitle')) {
+    await db.execute("ALTER TABLE deals ADD COLUMN metaTitle TEXT DEFAULT ''")
+    await db.execute("ALTER TABLE deals ADD COLUMN metaDescription TEXT DEFAULT ''")
+    await db.execute("ALTER TABLE deals ADD COLUMN canonicalUrl TEXT DEFAULT ''")
+    await db.execute("ALTER TABLE deals ADD COLUMN focusKeyword TEXT DEFAULT ''")
   }
 
   const postInfo = await db.execute("PRAGMA table_info(posts)")
   const postColumnNames = postInfo.rows.map(r => r.name as string)
   if (!postColumnNames.includes('hidden')) {
     await db.execute("ALTER TABLE posts ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0")
+  }
+  if (!postColumnNames.includes('status')) {
+    await db.execute("ALTER TABLE posts ADD COLUMN status TEXT NOT NULL DEFAULT 'published'")
+    await db.execute("UPDATE posts SET status = 'published' WHERE hidden = 0")
+    await db.execute("UPDATE posts SET status = 'draft' WHERE hidden = 1")
+  }
+  if (!postColumnNames.includes('metaTitle')) {
+    await db.execute("ALTER TABLE posts ADD COLUMN metaTitle TEXT DEFAULT ''")
+    await db.execute("ALTER TABLE posts ADD COLUMN metaDescription TEXT DEFAULT ''")
+    await db.execute("ALTER TABLE posts ADD COLUMN canonicalUrl TEXT DEFAULT ''")
+    await db.execute("ALTER TABLE posts ADD COLUMN focusKeyword TEXT DEFAULT ''")
   }
 
   const logInfo = await db.execute("PRAGMA table_info(sync_log)")
@@ -195,6 +259,13 @@ export async function migrateSchema() {
     if (!logColumns.includes('hidden_orphans')) {
       await db.execute("ALTER TABLE sync_log ADD COLUMN hidden_orphans INTEGER NOT NULL DEFAULT 0")
     }
+  }
+
+  const commentInfo = await db.execute("PRAGMA table_info(comments)")
+  const commentColumns = commentInfo.rows.map(r => r.name as string)
+  if (!commentColumns.includes('status')) {
+    await db.execute("ALTER TABLE comments ADD COLUMN status TEXT DEFAULT 'published'")
+    await db.execute("UPDATE comments SET status = 'published' WHERE status IS NULL")
   }
 }
 

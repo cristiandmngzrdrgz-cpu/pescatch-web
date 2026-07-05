@@ -1,7 +1,13 @@
 import type { ScrapedPrice } from './types'
 import { getNextUserAgent } from './user-agents'
 import { parseSpanishPrice } from './amazon'
-import { bravePage, braveAvailable } from './brave'
+import { braveAvailable } from './brave'
+import { chromium } from 'playwright'
+import * as path from 'path'
+import * as fs from 'fs'
+
+const BRAVE_PATH = 'C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe'
+const USER_DATA_DIR = path.resolve('temp', 'brave-decathlon-refresh')
 
 export async function scrapeDecathlon(url: string): Promise<ScrapedPrice | null> {
   const fetchResult = await tryFetch(url)
@@ -33,39 +39,71 @@ async function tryFetch(url: string): Promise<ScrapedPrice | null> {
 }
 
 async function tryBrave(url: string): Promise<ScrapedPrice | null> {
+  let context
   try {
-    const page = await bravePage(true)
+    if (!fs.existsSync(USER_DATA_DIR)) {
+      fs.mkdirSync(USER_DATA_DIR, { recursive: true })
+    }
 
-    await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 })
+    context = await chromium.launchPersistentContext(USER_DATA_DIR, {
+      executablePath: BRAVE_PATH,
+      headless: false,
+      locale: 'es-ES',
+      timezoneId: 'Europe/Madrid',
+      viewport: { width: 1920, height: 1080 },
+      args: [
+        '--disable-blink-features=AutomationControlled',
+        '--disable-features=IsolateOrigins,site-per-process',
+      ],
+    })
 
-    const data = await page.evaluate(() => {
+    const page = context.pages()[0] || await context.newPage()
+
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => false })
+    })
+
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 })
+    await page.waitForTimeout(4000)
+
+    const price = await page.evaluate(() => {
+      const sel = [
+        'meta[property="product:price:amount"]',
+        '[data-testid="product-price"]',
+        '[class*="price"]',
+        '#product-price',
+        '[itemprop="price"]',
+        '.price-tag',
+      ]
+      for (const s of sel) {
+        const el = document.querySelector(s)
+        if (el) {
+          const raw = el.getAttribute('content') || (el as HTMLElement).textContent || ''
+          const m = raw.match(/(\d+[.,]\d{2})/)
+          if (m) return m[1]
+        }
+      }
       const scripts = document.querySelectorAll('script[type="application/ld+json"]')
       for (const s of scripts) {
         try {
           const d = JSON.parse(s.textContent || '')
-          if (d['@type'] === 'Product' && d.offers) return d
+          if (d['@type'] === 'Product' && d.offers) {
+            const o = Array.isArray(d.offers) ? d.offers[0] : d.offers
+            if (o.price) return String(o.price)
+          }
         } catch {}
       }
       return null
     })
 
-    if (data && data.offers) {
-      const offer = Array.isArray(data.offers) ? data.offers[0] : data.offers
-      const price = parseSpanishPrice(String(offer.price ?? ''))
-      if (price > 0) {
-        const stock = String(offer.availability ?? '').includes('InStock')
-          ? 'in_stock' as const
-          : 'out_of_stock' as const
-        await page.close()
-        return { price, stock, url, shipping: price >= 30 ? 0 : 3.99 }
-      }
-    }
-
-    const html = await page.content()
-    await page.close()
-    return parseDecathlonHtml(html, url)
+    if (!price) return null
+    const parsed = parseSpanishPrice(price)
+    if (parsed <= 0 || parsed > 5000) return null
+    return { price: parsed, stock: 'in_stock', url, shipping: parsed >= 30 ? 0 : 3.99 }
   } catch {
     return null
+  } finally {
+    if (context) await context.close().catch(() => {})
   }
 }
 

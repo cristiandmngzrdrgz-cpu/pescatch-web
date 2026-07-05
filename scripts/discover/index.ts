@@ -2,14 +2,14 @@ import 'dotenv/config'
 import * as readline from 'readline'
 import { CATEGORIES } from './keywords'
 import {
-  searchAmazon,
-  scrapeAmazonBestsellers,
-  scrapeAmazonNewReleases,
   scrapeAmazonDetails,
   type AmazonCandidate,
 } from './amazon'
 import { appendRow, readAllRows } from '../../src/lib/sync/google-sheets-client'
+import { scrapeAliExpressAll } from './aliexpress-scraper'
 import brightdataCache from './brightdata-cache.json'
+import { scrapeDecathlonDeals, braveAvailable } from './decathlon-scraper'
+import { searchAmazonAll, scrapeBestsellersStealth, scrapeNewReleasesStealth } from './amazon-scraper'
 
 interface ScoredCandidate extends AmazonCandidate {
   score: number
@@ -38,7 +38,9 @@ function scoreCandidate(c: AmazonCandidate): number {
 
   if (c.brand) {
     const isPopular = POPULAR_BRANDS.some(b => c.brand!.toLowerCase().includes(b))
-    if (isPopular) score += 20
+    if (isPopular) score += 30
+  } else {
+    score -= 10
   }
 
   return score
@@ -75,79 +77,176 @@ async function discover() {
   const allCandidates: ScoredCandidate[] = []
   const seenAsins = new Set<string>()
 
-  // Fase 1: buscar por keywords en Amazon
-  console.log('── FASE 1: Búsqueda por keywords en Amazon ──')
-  for (const [category, kwList] of Object.entries(CATEGORIES)) {
-    for (const kw of kwList) {
-      process.stdout.write(`  🔍 "${kw}"... `)
-      const results = await searchAmazon(kw, category)
-      const newResults = results.filter(r => {
-        if (seenAsins.has(r.asin)) return false
-        seenAsins.add(r.asin)
-        return true
-      })
-      allCandidates.push(
-        ...newResults.map(r => ({ ...r, score: scoreCandidate(r), source: `Amazon: ${kw}`, isNew: true }))
-      )
-      console.log(`${newResults.length} nuevos`)
+  // Fase 1: Amazon keywords (stealth browser)
+  console.log('── FASE 1: Amazon keywords (stealth) ──')
+  if (braveAvailable()) {
+    console.log('  Lanzando navegador Brave...')
+    const amazonResults = await searchAmazonAll(CATEGORIES)
+    for (const r of amazonResults) {
+      if (seenAsins.has(r.asin)) continue
+      seenAsins.add(r.asin)
+      allCandidates.push({ ...r, score: scoreCandidate(r), source: `Amazon: ${r.keyword || 'keywords'}`, isNew: true })
     }
+    console.log(`  ${amazonResults.length} productos nuevos`)
+  } else {
+    console.log('  ❌ Brave no disponible. Saltando.')
   }
 
-  // Fase 2: Amazon bestsellers
-  console.log('\n── FASE 2: Amazon Bestsellers ──')
-  process.stdout.write('  🔥 Más vendidos pesca... ')
-  const bestsellers = await scrapeAmazonBestsellers('Pesca General')
-  const newBestsellers = bestsellers.filter(r => {
-    if (seenAsins.has(r.asin)) return false
-    seenAsins.add(r.asin)
-    return true
-  })
-  allCandidates.push(
-    ...newBestsellers.map(r => ({ ...r, score: scoreCandidate(r), source: 'Amazon Bestsellers', isNew: true }))
-  )
-  console.log(`${newBestsellers.length} nuevos`)
-
-  // Fase 3: Amazon new releases
-  process.stdout.write('  🆕 Novedades pesca... ')
-  const newReleases = await scrapeAmazonNewReleases('Pesca General')
-  const newNewReleases = newReleases.filter(r => {
-    if (seenAsins.has(r.asin)) return false
-    seenAsins.add(r.asin)
-    return true
-  })
-  allCandidates.push(
-    ...newNewReleases.map(r => ({ ...r, score: scoreCandidate(r), source: 'Amazon Novedades', isNew: true }))
-  )
-  console.log(`${newNewReleases.length} nuevos`)
-
-  // Fase 3: BrightData (Decathlon + AliExpress desde cache)
-  console.log('\n── FASE 3: BrightData (Decathlon + AliExpress) ──')
-  let bdNew = 0
-  for (const item of brightdataCache as Array<Record<string, string | number | null>>) {
-    const url = String(item.url || '').toLowerCase()
-    if (existingUrls.has(url)) continue
-    allCandidates.push({
-      asin: '',
-      title: String(item.title || ''),
-      price: Number(item.price) || 0,
-      originalPrice: Number(item.originalPrice) || null,
-      rating: Number(item.rating) || 0,
-      reviews: Number(item.reviews) || 0,
-      url: String(item.url || ''),
-      keyword: String(item.store || ''),
-      category: String(item.category || ''),
-      imageUrl: null,
-      brand: String(item.brand || '') || null,
-      ean: null,
-      score: Math.round((Number(item.rating) || 0) * 6) +
-        Math.min(25, Math.round(Math.log10((Number(item.reviews) || 1)) * 8)) +
-        ((Number(item.originalPrice) || 0) > (Number(item.price) || 0) ? 15 : 0),
-      source: `${item.store}: ${item.category || item.brand || ''}`,
-      isNew: true,
+  // Fase 2: Amazon bestsellers + new releases (stealth)
+  console.log('\n── FASE 2: Amazon Bestsellers + Novedades (stealth) ──')
+  if (braveAvailable()) {
+    process.stdout.write('  🔥 Más vendidos pesca... ')
+    const bestsellers = await scrapeBestsellersStealth('Pesca General')
+    const newBestsellers = bestsellers.filter(r => {
+      if (seenAsins.has(r.asin)) return false
+      seenAsins.add(r.asin)
+      return true
     })
-    bdNew++
+    allCandidates.push(
+      ...newBestsellers.map(r => ({ ...r, score: scoreCandidate(r), source: 'Amazon Bestsellers', isNew: true }))
+    )
+    console.log(`${newBestsellers.length} nuevos`)
+
+    process.stdout.write('  🆕 Novedades pesca... ')
+    const newReleases = await scrapeNewReleasesStealth('Pesca General')
+    const newNewReleases = newReleases.filter(r => {
+      if (seenAsins.has(r.asin)) return false
+      seenAsins.add(r.asin)
+      return true
+    })
+    allCandidates.push(
+      ...newNewReleases.map(r => ({ ...r, score: scoreCandidate(r), source: 'Amazon Novedades', isNew: true }))
+    )
+    console.log(`${newNewReleases.length} nuevos`)
+  } else {
+    console.log('  ❌ Brave no disponible. Saltando.')
   }
-  console.log(`  ${bdNew} productos desde BrightData cache`)
+
+  // Fase 3: AliExpress directo + fallback BrightData
+  console.log('\n── FASE 3: AliExpress directo ──')
+  let aeNew = 0
+  let aeFallback = false
+  try {
+    console.log('  Lanzando scraper AliExpress (Chromium)...')
+    const aliexpressProducts = await scrapeAliExpressAll({
+      onProgress: (keyword, count) => {
+        console.log(`    "${keyword}": +${count}`)
+      },
+    })
+    for (const p of aliexpressProducts) {
+      const url = p.url.toLowerCase()
+      if (existingUrls.has(url)) continue
+      allCandidates.push({
+        asin: '',
+        title: p.title,
+        price: p.price,
+        originalPrice: p.originalPrice,
+        rating: p.rating,
+        reviews: p.reviews,
+        url: p.url,
+        keyword: 'aliexpress',
+        category: p.category,
+        imageUrl: null,
+        brand: p.brand,
+        ean: null,
+        score: scoreCandidate({
+          asin: '', title: p.title, price: p.price, originalPrice: p.originalPrice,
+          rating: p.rating, reviews: p.reviews, url: p.url, keyword: 'aliexpress',
+          category: p.category, imageUrl: null, brand: p.brand, ean: null,
+        }),
+        source: 'AliExpress directo',
+        isNew: true,
+      })
+      aeNew++
+    }
+    console.log(`  ${aeNew} productos desde AliExpress directo`)
+  } catch (err) {
+    console.log(`  ⚠️ AliExpress scraper falló: ${err instanceof Error ? err.message : err}`)
+    aeFallback = true
+  }
+
+  if (aeFallback || aeNew === 0) {
+    if (aeFallback) console.log('  🔄 Fallback: BrightData cache')
+    else console.log('  ⚠️ AliExpress no encontró productos. Fallback: BrightData cache')
+    let bdNew = 0
+    for (const item of brightdataCache as Array<Record<string, string | number | null>>) {
+      const url = String(item.url || '').toLowerCase()
+      if (existingUrls.has(url)) continue
+      allCandidates.push({
+        asin: '',
+        title: String(item.title || ''),
+        price: Number(item.price) || 0,
+        originalPrice: Number(item.originalPrice) || null,
+        rating: Number(item.rating) || 0,
+        reviews: Number(item.reviews) || 0,
+        url: String(item.url || ''),
+        keyword: String(item.store || ''),
+        category: String(item.category || ''),
+        imageUrl: null,
+        brand: String(item.brand || '') || null,
+        ean: null,
+        score: (() => {
+          const s = Math.round((Number(item.rating) || 0) * 6) +
+            Math.min(25, Math.round(Math.log10((Number(item.reviews) || 1)) * 8))
+          const origP = Number(item.originalPrice) || 0
+          const saleP = Number(item.price) || 0
+          const disc = origP > saleP ? Math.min(25, Math.round(((origP - saleP) / origP) * 100 * 1.5)) : 0
+          const brandStr = String(item.brand || '')
+          const hasBrand = POPULAR_BRANDS.some(b => brandStr.toLowerCase().includes(b))
+          const brandPts = hasBrand ? 30 : (!brandStr ? -10 : 0)
+          return s + disc + brandPts
+        })(),
+        source: `${item.store}: ${item.category || item.brand || ''}`,
+        isNew: true,
+      })
+      bdNew++
+    }
+    console.log(`  ${bdNew} productos desde BrightData cache`)
+  }
+
+  // Fase 4: Decathlon direct scraper
+  console.log('\n── FASE 4: Decathlon directo ──')
+  if (braveAvailable()) {
+    console.log('  Lanzando scraper Decathlon (12 páginas)...')
+    const decathlonProducts = await scrapeDecathlonDeals({
+      onProgress: (page, added) => {
+        console.log(`    Página ${page}: +${added} productos`)
+      },
+    })
+    let dcNew = 0
+    for (const p of decathlonProducts) {
+      const url = p.url.toLowerCase()
+      if (existingUrls.has(url)) continue
+      const discount = p.discountPercent || (p.originalPrice && p.salePrice && p.originalPrice > p.salePrice
+        ? Math.round(((p.originalPrice - p.salePrice) / p.originalPrice) * 100)
+        : 0)
+      const score = Math.round((p.rating || 0) * 6) +
+        Math.min(25, Math.round(Math.log10((p.reviewsCount || 1)) * 8)) +
+        (discount >= 10 ? Math.min(25, Math.round(discount * 1.5)) : 0) +
+        (p.brand && POPULAR_BRANDS.some(b => p.brand!.toLowerCase().includes(b)) ? 30 : (p.brand ? 0 : -10))
+      allCandidates.push({
+        asin: '',
+        title: p.title,
+        price: p.salePrice || 0,
+        originalPrice: p.originalPrice,
+        rating: p.rating || 0,
+        reviews: p.reviewsCount || 0,
+        url: p.url,
+        keyword: 'decathlon',
+        category: p.category,
+        imageUrl: p.imageUrl,
+        brand: p.brand,
+        ean: null,
+        score,
+        source: 'Decathlon directo',
+        isNew: true,
+      })
+      dcNew++
+    }
+    console.log(`  ${dcNew} productos desde scraper directo`)
+  } else {
+    console.log('  ❌ Brave no disponible. Saltando.')
+  }
 
   // Mark existing products
   for (const c of allCandidates) {

@@ -4,6 +4,7 @@ import { formatPrice, formatDate } from '@/lib/utils'
 import type { Metadata } from 'next'
 import { buildAmazonUrl } from '@/lib/amazon-affiliate'
 import { ImageCarousel } from '@/components/deals/image-carousel'
+import { ShareButton } from '@/components/deals/share-button'
 import { generateProductSchema, generateBreadcrumbSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
 
 export const dynamic = 'force-dynamic'
@@ -12,9 +13,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const deal = await getDealBySlug(slug)
   if (!deal) return {}
-  const title = `${deal.title} — ${formatPrice(deal.salePrice)} | PesCatch`
-  const description = deal.description?.slice(0, 160) || `Oferta en ${deal.title} — ${deal.store?.name ?? ''} — ${formatPrice(deal.salePrice)}`
-  const canonicalUrl = `${BASE_URL}/deals/${slug}`
+  const title = deal.metaTitle || `${deal.title} — ${formatPrice(deal.salePrice)} | PesCatch`
+  const description = deal.metaDescription || deal.description?.slice(0, 160) || `Oferta en ${deal.title} — ${deal.store?.name ?? ''} — ${formatPrice(deal.salePrice)}`
+  const canonicalUrl = deal.canonicalUrl || `${BASE_URL}/deals/${slug}`
   
   return buildMetadata(
     {
@@ -42,6 +43,7 @@ import { BadgeCheck, Store, Truck, Package, BarChart3, Tag, Share2, ArrowRight, 
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { DealCard } from '@/components/deals/deal-card'
+import { PriceComparison } from '@/components/deals/price-comparison'
 import { PriceHistoryChart } from '@/components/deals/price-history-chart'
 import { VoteButtons } from '@/components/deals/vote-buttons'
 import { FavoriteButton } from '@/components/deals/favorites'
@@ -250,6 +252,16 @@ export default async function DealDetailPage({
             </div>
 
             <div className="space-y-2.5 text-sm" style={{ color: '#8BA3C7' }}>
+              {deal.brand && (
+                <Link href={`/marca/${deal.brand.toLowerCase().replace(/\s+/g, '-')}`}
+                  className="flex items-center gap-2.5 group">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'rgba(255,184,0,0.1)', boxShadow: '0 0 8px rgba(255,184,0,0.1)' }}>
+                    <Tag className="h-4 w-4" style={{ color: '#FFB800' }} />
+                  </div>
+                  <span className="font-medium transition-colors duration-200 group-hover:text-[#FFB800]" style={{ color: '#E8F0FE' }}>{deal.brand}</span>
+                </Link>
+              )}
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ background: 'rgba(0,212,255,0.1)', boxShadow: '0 0 8px rgba(0,212,255,0.1)' }}>
@@ -279,52 +291,7 @@ export default async function DealDetailPage({
           </div>
 
           {/* Multi-Store Price Comparison */}
-          {storeDeals.length > 1 && (
-            <div className="rounded-2xl p-5" style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
-              <h3 className="font-bold mb-3 text-sm flex items-center gap-2" style={{ color: '#E8F0FE' }}>
-                <Store className="h-4 w-4" style={{ color: '#00D4FF' }} />
-                Disponible en {storeDeals.length} tiendas
-              </h3>
-              <div className="space-y-2">
-                {storeDeals.map((sd) => {
-                  const isCheapest = sd.salePrice === Math.min(...storeDeals.map(d => d.salePrice))
-                  return (
-                      <a
-                        key={sd.id}
-                        href={sd.store.id === 'amazon' ? buildAmazonUrl(sd.affiliateUrl) : sd.affiliateUrl}
-                      target="_blank"
-                      rel="nofollow sponsored"
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 hover:border-[#00D4FF]/30 no-underline"
-                      style={{
-                        background: isCheapest ? 'rgba(38,222,129,0.06)' : 'rgba(255,255,255,0.02)',
-                        border: `1px solid ${isCheapest ? 'rgba(38,222,129,0.2)' : '#1E3A5F'}`,
-                      }}
-                    >
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                        style={{ background: 'rgba(0,212,255,0.1)' }}>
-                        <Store className="h-4 w-4" style={{ color: '#00D4FF' }} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-medium truncate" style={{ color: '#8BA3C7' }}>{sd.store.name}</div>
-                        {sd.shippingCost > 0 && (
-                          <div className="text-xs" style={{ color: '#4A6080' }}>+{formatPrice(sd.shippingCost)} envío</div>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-bold" style={{ color: isCheapest ? '#26DE81' : '#FFB800' }}>
-                          {formatPrice(sd.salePrice)}
-                        </div>
-                        {isCheapest && (
-                          <div className="text-xs font-semibold mt-0.5" style={{ color: '#26DE81' }}>Mejor precio</div>
-                        )}
-                      </div>
-                      <ArrowRight className="h-4 w-4 flex-shrink-0" style={{ color: '#4A6080' }} />
-                    </a>
-                  )
-                })}
-              </div>
-            </div>
-          )}
+          <PriceComparison deals={storeDeals} currentDealId={deal.id} />
 
           {/* CTA Buttons */}
           <div className="space-y-3">
@@ -343,11 +310,7 @@ export default async function DealDetailPage({
               <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </a>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1 h-11 rounded-xl transition-all duration-200 hover:border-[#00D4FF]/40"
-                style={{ border: '1px solid #1E3A5F', color: '#8BA3C7', background: '#111827' }}>
-                <Share2 className="h-4 w-4 mr-1.5" />
-                Compartir
-              </Button>
+              <ShareButton url={`${BASE_URL}/deals/${deal.slug}`} title={deal.title} />
               <FavoriteButton dealId={deal.id} />
             </div>
           </div>

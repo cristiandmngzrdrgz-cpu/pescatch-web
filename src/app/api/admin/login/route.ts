@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 const ADMIN_SECRET = process.env.ADMIN_SECRET
 
@@ -19,6 +20,12 @@ export async function POST(request: NextRequest) {
   // así que aquí simplemente no montamos ninguna cookie.
   if (!ADMIN_SECRET) {
     return NextResponse.json({ error: 'ADMIN_SECRET no configurado en el servidor' }, { status: 500 })
+  }
+
+  const ip = request.headers.get('x-forwarded-for') || 'unknown'
+  const allowed = await checkRateLimit(ip, 'login')
+  if (!allowed) {
+    return NextResponse.json({ error: 'Demasiados intentos. Intenta de nuevo en 15 minutos.' }, { status: 429 })
   }
 
   const { secret } = await request.json().catch(() => ({ secret: '' }))
