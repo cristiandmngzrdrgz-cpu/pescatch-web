@@ -22,6 +22,7 @@ interface ProductEntry {
   image: string
   scores: Record<string, number>
   stores: ProductStore[]
+  slug?: string
 }
 
 function extractProducts(content: string): { products: ProductEntry[]; clean: string } {
@@ -33,7 +34,7 @@ function extractProducts(content: string): { products: ProductEntry[]; clean: st
 
     let products: ProductEntry[]
     if (raw[0]?.stores) {
-      products = raw as ProductEntry[]
+      products = raw.map((r: Partial<ProductEntry> & { slug?: string }) => ({ ...r, slug: r.slug }))
     } else {
       products = raw.map((p: { asin?: string; title: string; price: string; rating: number; image: string; scores: Record<string, number> }) => ({
         title: p.title,
@@ -357,6 +358,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                         <span className="text-xs" style={{ color: '#A0B8D8' }}>{best.name}</span>
                         <span className="text-sm font-bold" style={{ color: '#FFB800' }}>{best.price}</span>
                       </a>
+                      {p.slug && (
+                        <Link href={`/deals/${p.slug}`}
+                          className="flex items-center justify-center gap-1 mt-1.5 text-[0.55rem] font-bold uppercase tracking-wider rounded-lg py-1.5 transition-all no-underline hover:bg-[#1A2535]"
+                          style={{ color: '#00D4FF', border: '1px solid rgba(0,212,255,0.15)' }}>
+                          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                          En PesCatch
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -432,11 +441,20 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                           <td className="p-4 text-center"><StarRating value={p.rating} /></td>
                           <td className="p-4 text-center hidden sm:table-cell" style={{ color: '#8BA3C7' }}>{best.name}</td>
                           <td className="p-4 text-right">
-                            <a href={bestStoreUrl(best)} target="_blank" rel="nofollow sponsored"
-                              className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full transition-all hover:gap-1.5 no-underline"
-                              style={{ background: '#00D4FF', color: '#0B1120' }}>
-                              Ver <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                            </a>
+                            <div className="flex items-center justify-end gap-2">
+                              {p.slug && (
+                                <Link href={`/deals/${p.slug}`}
+                                  className="text-[0.55rem] font-bold uppercase tracking-wider px-2 py-1 rounded-full no-underline transition-all hover:bg-[#1A2535]"
+                                  style={{ color: '#00D4FF', border: '1px solid rgba(0,212,255,0.15)' }}>
+                                  PesCatch
+                                </Link>
+                              )}
+                              <a href={bestStoreUrl(best)} target="_blank" rel="nofollow sponsored"
+                                className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full transition-all hover:gap-1.5 no-underline"
+                                style={{ background: '#00D4FF', color: '#0B1120' }}>
+                                Ver <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                              </a>
+                            </div>
                           </td>
                         </tr>
                       )
@@ -487,6 +505,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                           </div>
                         </a>
                       ))}
+                      {p.slug && (
+                        <Link href={`/deals/${p.slug}`}
+                          className="flex items-center justify-center gap-1 mt-2 text-[0.55rem] font-bold uppercase tracking-wider py-1.5 rounded-lg transition-all no-underline hover:bg-[#1A2535]"
+                          style={{ color: '#00D4FF', border: '1px solid rgba(0,212,255,0.15)' }}>
+                          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                          Ver en PesCatch
+                        </Link>
+                      )}
                     </div>
                   </div>
                 )})}

@@ -130,7 +130,6 @@ export function ProductCard({ group }: ProductCardProps) {
             {deals.slice(0, 3).map((deal) => {
               const storeMeta = STORES.find(s => s.id === deal.store.id || s.name === deal.store.name)
               const isCheapest = deal.salePrice === bestPrice
-              const storeSlug = storeMeta?.slug || deal.store.slug || deal.store.id
               const label = storeMeta?.name || storeLabel[deal.store.id] || deal.store.name
               return (
                 <a key={deal.id}

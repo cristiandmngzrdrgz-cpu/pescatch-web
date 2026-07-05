@@ -147,6 +147,15 @@ export interface DealFilters {
   maxPrice?: number
   sortBy?: 'discount' | 'price_asc' | 'price_desc' | 'newest' | 'popular'
   search?: string
+  page?: number
+  limit?: number
+}
+
+export interface PaginatedResult<T> {
+  items: T[]
+  total: number
+  page: number
+  totalPages: number
 }
 
 export const CATEGORIES: Category[] = [

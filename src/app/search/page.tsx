@@ -1,14 +1,20 @@
-import { getDeals } from '@/data/queries'
+import { getDealsPaginated } from '@/data/queries'
 import { ProductCard } from '@/components/deals/product-card'
+import { SearchPagination } from '@/components/search/search-pagination'
+import { PriceRangeSlider } from '@/components/search/price-range-slider'
+import { FilterDrawer } from '@/components/search/filter-drawer'
 import { groupDealsByProduct } from '@/lib/group-deals'
 import { STORES, CATEGORIES } from '@/types'
 import { Search, X } from 'lucide-react'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import type { DealFilters } from '@/types'
 import type { Metadata } from 'next'
 import { generateSearchResultsPageSchema, generateBreadcrumbSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
 
 export const dynamic = 'force-dynamic'
+
+const PAGE_SIZE = 12
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Mas recientes' },
@@ -46,6 +52,8 @@ function buildUrl(
     else if (value) sp.set(key, value)
     else sp.delete(key)
   }
+  // Resetear página al cambiar cualquier filtro
+  if (!('page' in overrides)) sp.delete('page')
   const qs = sp.toString()
   return qs ? `/search?${qs}` : '/search'
 }
@@ -119,6 +127,7 @@ export default async function SearchPage({
   const minPrice = getParam('minPrice')
   const maxPrice = getParam('maxPrice')
   const sortBy = getParam('sortBy') || 'newest'
+  const page = Math.max(1, Number(getParam('page')) || 1)
 
   const currentParams: Record<string, string> = {
     q: query,
@@ -130,7 +139,7 @@ export default async function SearchPage({
     sortBy,
   }
 
-  const deals = await getDeals({
+  const filters: DealFilters = {
     search: query || undefined,
     category: categoryFilter || undefined,
     store: storeFilter || undefined,
@@ -138,7 +147,9 @@ export default async function SearchPage({
     minPrice: minPrice ? Number(minPrice) : undefined,
     maxPrice: maxPrice ? Number(maxPrice) : undefined,
     sortBy: sortBy as DealFilters['sortBy'],
-  })
+  }
+
+  const { items: deals, total, totalPages } = await getDealsPaginated(filters, page, PAGE_SIZE)
 
   const categoryName = categoryFilter ? CATEGORIES.find(c => c.slug === categoryFilter)?.name : null
   const storeName = storeFilter ? STORE_LABELS[storeFilter] || storeFilter : null
@@ -169,13 +180,15 @@ export default async function SearchPage({
             {query ? `Resultados para "${query}"` : 'Todos los chollos'}
           </h1>
           <p className="text-sm mt-1" style={{ color: '#8BA3C7' }}>
-            {deals.length} chollo{deals.length !== 1 ? 's' : ''} encontrado{deals.length !== 1 ? 's' : ''}
+            {total} chollo{total !== 1 ? 's' : ''} encontrado{total !== 1 ? 's' : ''}
+            {totalPages > 1 && <span> · Página {page} de {totalPages}</span>}
           </p>
         </div>
       </div>
 
       {/* Filter bar */}
-      <div className="rounded-2xl p-5 mb-6 space-y-4" style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
+      <FilterDrawer>
+        <div className="rounded-2xl p-5 mb-6 space-y-4" style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
 
         {/* Store filter row */}
         <div className="flex items-center gap-2 flex-wrap">
@@ -252,37 +265,12 @@ export default async function SearchPage({
         {/* Price filter row */}
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-semibold uppercase tracking-wider mr-1 flex-shrink-0" style={{ color: '#4A6080' }}>Precio</span>
-          <form method="GET" action="/search" className="flex items-center gap-2 flex-wrap">
-            {query && <input type="hidden" name="q" defaultValue={query} />}
-            {categoryFilter && <input type="hidden" name="category" defaultValue={categoryFilter} />}
-            {storeFilter && <input type="hidden" name="store" defaultValue={storeFilter} />}
-            {minDiscount && <input type="hidden" name="minDiscount" defaultValue={minDiscount} />}
-            <input type="hidden" name="sortBy" defaultValue={sortBy} />
-            <input
-              type="number" name="minPrice" placeholder="Min"
-              defaultValue={minPrice || ''} min="0" step="0.01"
-              className="w-[72px] h-8 text-xs rounded-lg px-2.5"
-              style={{ background: '#0B1120', border: '1px solid #1E3A5F', color: '#E8F0FE' }}
-            />
-            <span style={{ color: '#4A6080' }}>-</span>
-            <input
-              type="number" name="maxPrice" placeholder="Max"
-              defaultValue={maxPrice || ''} min="0" step="0.01"
-              className="w-[72px] h-8 text-xs rounded-lg px-2.5"
-              style={{ background: '#0B1120', border: '1px solid #1E3A5F', color: '#E8F0FE' }}
-            />
-            <button
-              type="submit"
-              className="text-xs font-semibold px-3 h-8 rounded-lg transition-all"
-              style={{ background: '#1A2535', border: '1px solid #1E3A5F', color: '#8BA3C7' }}
-            >
-              Ir
-            </button>
-          </form>
+          <Suspense fallback={<div className="w-full max-w-xs h-5" />}>
+            <PriceRangeSlider min={0} max={500} step={5} />
+          </Suspense>
         </div>
-      </div>
-
-      {/* Active filter chips */}
+        </div>
+      </FilterDrawer>
       {hasActiveFilters && (
         <div className="flex items-center gap-2 flex-wrap mb-6">
           {query && <Chip label={`"${query}"`} href={buildUrl(currentParams, { q: null })} />}
@@ -296,18 +284,28 @@ export default async function SearchPage({
 
       {/* Results */}
       {deals.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4">
-          {groupDealsByProduct(deals).map((group) => (
-            <ProductCard key={group.productId || group.slug} group={group} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-4">
+            {groupDealsByProduct(deals).map((group) => (
+              <ProductCard key={group.productId || group.slug} group={group} />
+            ))}
+          </div>
+          <Suspense>
+            <SearchPagination
+              currentPage={page}
+              totalPages={totalPages}
+              total={total}
+              pageSize={PAGE_SIZE}
+            />
+          </Suspense>
+        </>
       ) : (
         <div className="text-center py-20 rounded-2xl" style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
           <Search className="h-12 w-12 mx-auto mb-4" style={{ color: '#4A6080' }} />
           <p className="text-lg mb-2" style={{ color: '#8BA3C7' }}>No se encontraron chollos</p>
           <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: '#4A6080' }}>
             {hasActiveFilters
-              ? 'Ningun chollo coincide con los filtros seleccionados. Prueba a ajustar los criterios.'
+              ? 'Ningún chollo coincide con los filtros seleccionados. Prueba a ajustar los criterios.'
               : 'No hay chollos disponibles actualmente. Vuelve pronto.'}
           </p>
           {hasActiveFilters && (
@@ -316,6 +314,19 @@ export default async function SearchPage({
               Limpiar filtros &rarr;
             </Link>
           )}
+
+          <div className="mt-8 pt-8" style={{ borderTop: '1px solid #1E3A5F' }}>
+            <p className="text-sm mb-4" style={{ color: '#8BA3C7' }}>¿No encuentras lo que buscas?</p>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {CATEGORIES.slice(0, 4).map((cat) => (
+                <Link key={cat.id} href={`/search?category=${cat.slug}`}
+                  className="text-xs font-semibold px-3.5 py-1.5 rounded-full transition-all duration-200 hover:border-[#00D4FF]/50 hover:text-[#00D4FF]"
+                  style={{ background: '#111827', border: '1px solid #1E3A5F', color: '#8BA3C7' }}>
+                  {cat.name}
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

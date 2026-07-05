@@ -1,24 +1,32 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
-import { Search, Menu, X, Fish, ChevronDown, Tag } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { useState, Suspense } from 'react'
+import { Menu, X, Fish, ChevronDown, Tag, Search } from 'lucide-react'
 import { CATEGORIES } from '@/types'
+import { SearchInput } from '@/components/search/search-input'
+import { Input } from '@/components/ui/input'
+
+function SearchFallback({ className = '' }: { className?: string }) {
+  return (
+    <div className={`relative ${className}`}>
+      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" style={{ color: '#4A6080' }} />
+      <Input
+        placeholder="Buscar chollos..."
+        className="pl-9 h-9 text-sm rounded-lg"
+        style={{
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(30,58,95,0.5)',
+          color: '#E8F0FE',
+        }}
+      />
+    </div>
+  )
+}
 
 export function Navbar() {
-  const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
-    }
-  }
 
   return (
     <header className="sticky top-0 z-50 w-full" style={{
@@ -90,23 +98,9 @@ export function Navbar() {
         <div className="flex-1" />
 
         <div className={`items-center gap-2 ${searchOpen ? 'flex flex-1' : 'hidden md:flex'}`}>
-          <form
-            onSubmit={handleSearch}
-            className="relative flex-1 max-w-sm"
-          >
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" style={{ color: '#4A6080' }} />
-            <Input
-              placeholder="Buscar chollos..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9 text-sm rounded-lg transition-all duration-200"
-              style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(30,58,95,0.5)',
-                color: '#E8F0FE',
-              }}
-            />
-          </form>
+          <Suspense fallback={<SearchFallback />}>
+            <SearchInput className="flex-1 max-w-sm" />
+          </Suspense>
         </div>
 
         <button
@@ -115,7 +109,7 @@ export function Navbar() {
           onClick={() => setSearchOpen(!searchOpen)}
           aria-label="Buscar"
         >
-          <Search className="h-5 w-5" />
+          <Menu className="h-5 w-5" />
         </button>
 
       </div>
@@ -127,24 +121,9 @@ export function Navbar() {
           borderColor: 'rgba(30,58,95,0.5)',
         }}>
           <div className="px-4 py-4">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                if (searchQuery.trim()) {
-                  window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`
-                }
-              }}
-              className="relative mb-4"
-            >
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" style={{ color: '#4A6080' }} />
-              <Input
-                placeholder="Buscar chollos..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-10 text-sm rounded-xl w-full"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(30,58,95,0.5)', color: '#E8F0FE' }}
-              />
-            </form>
+            <Suspense fallback={<SearchFallback className="mb-4" />}>
+              <SearchInput className="mb-4" />
+            </Suspense>
             <nav className="flex flex-col gap-1">
               {[
                 { href: '/', label: 'Inicio' },

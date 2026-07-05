@@ -95,6 +95,12 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify([organizationSchema, websiteSchema]) }}
         />
         <link rel="alternate" type="application/rss+xml" title="PesCatch RSS Feed" href={`${BASE_URL}/rss.xml`} />
+        <link rel="preconnect" href="https://m.media-amazon.com" />
+        <link rel="preconnect" href="https://contents.mediadecathlon.com" />
+        <link rel="preconnect" href="https://ae01.alicdn.com" />
+        <link rel="dns-prefetch" href="https://m.media-amazon.com" />
+        <link rel="dns-prefetch" href="https://contents.mediadecathlon.com" />
+        <link rel="dns-prefetch" href="https://ae01.alicdn.com" />
       </head>
       <body className="min-h-full flex flex-col" style={{ background: 'var(--background)', color: '#E8F0FE' }}>
         <Providers>

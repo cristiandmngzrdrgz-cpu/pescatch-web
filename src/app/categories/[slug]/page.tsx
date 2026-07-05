@@ -1,14 +1,19 @@
-import { getDeals } from '@/data/queries'
+import { getDealsPaginated, getDealCountsByStore } from '@/data/queries'
 import { ProductCard } from '@/components/deals/product-card'
+import { SearchPagination } from '@/components/search/search-pagination'
+import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { groupDealsByProduct } from '@/lib/group-deals'
 import { CATEGORIES } from '@/types'
 import type { DealFilters } from '@/types'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { Fish, ArrowUpDown, Store, Tag } from 'lucide-react'
 import type { Metadata } from 'next'
 import { generateBreadcrumbSchema, generateCollectionPageSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
 
 export const dynamic = 'force-dynamic'
+
+const PAGE_SIZE = 12
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
@@ -67,6 +72,8 @@ function buildFilterUrl(base: string, key: string, value: string, current: Recor
   } else {
     params.delete(key)
   }
+  // Resetear página al cambiar filtros para evitar páginas vacías
+  params.delete('page')
   const qs = params.toString()
   return qs ? `${base}?${qs}` : base
 }
@@ -86,7 +93,7 @@ export default async function CategoryPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ sortBy?: string; store?: string; minDiscount?: string; maxPrice?: string }>
+  searchParams: Promise<{ sortBy?: string; store?: string; minDiscount?: string; maxPrice?: string; page?: string }>
 }) {
   const { slug } = await params
   const sp = await searchParams
@@ -110,6 +117,8 @@ export default async function CategoryPage({
   if (sp.store) currentParams.store = sp.store
   if (sp.minDiscount) currentParams.minDiscount = sp.minDiscount
 
+  const page = Math.max(1, Number(sp.page) || 1)
+
   const filters: DealFilters = { category: category.slug }
   if (sp.sortBy && SORT_OPTIONS.some(o => o.value === sp.sortBy)) {
     filters.sortBy = sp.sortBy as DealFilters['sortBy']
@@ -117,7 +126,10 @@ export default async function CategoryPage({
   if (sp.store) filters.store = sp.store
   if (sp.minDiscount) filters.minDiscount = parseInt(sp.minDiscount, 10)
 
-  const deals = await getDeals(filters)
+  const [{ items: deals, total, totalPages }, storeCounts] = await Promise.all([
+    getDealsPaginated(filters, page, PAGE_SIZE),
+    getDealCountsByStore(category.slug),
+  ])
 
   const baseUrl = `/categories/${slug}`
   const breadcrumbs = generateBreadcrumbSchema([
@@ -141,12 +153,13 @@ export default async function CategoryPage({
       <JsonLd data={[collectionSchema, breadcrumbs]} />
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-8">
-        <Link href="/categories" className="text-sm transition-colors duration-200 hover:text-[#00D4FF] mb-3 inline-block"
-          style={{ color: '#4A6080' }}>
-          &larr; Todas las categorías
-        </Link>
+        <Breadcrumb items={[
+          { label: 'Inicio', href: '/' },
+          { label: 'Categorías', href: '/categories' },
+          { label: category.name },
+        ]} />
         <h1 className="text-3xl font-extrabold tracking-tight mb-2" style={{ color: '#E8F0FE' }}>{category.name}</h1>
-        <p style={{ color: '#8BA3C7' }}>{category.description} &middot; {deals.length} {deals.length === 1 ? 'chollo disponible' : 'chollos disponibles'}</p>
+        <p style={{ color: '#8BA3C7' }}>{category.description} &middot; {total} {total === 1 ? 'chollo disponible' : 'chollos disponibles'}{totalPages > 1 && <span> · Página {page} de {totalPages}</span>}</p>
       </div>
 
       {/* Subcategorías */}
@@ -190,13 +203,17 @@ export default async function CategoryPage({
           <Store className="h-3.5 w-3.5" style={{ color: '#4A6080' }} />
           <span className="text-xs mr-1" style={{ color: '#4A6080' }}>Tienda:</span>
           <div className="flex flex-wrap gap-1.5">
-            {STORE_OPTIONS.map(opt => (
-              <Pill key={opt.value}
-                href={buildFilterUrl(baseUrl, 'store', opt.value, currentParams)}
-                active={(sp.store || '') === opt.value}>
-                {opt.label}
-              </Pill>
-            ))}
+            {STORE_OPTIONS.map(opt => {
+              const count = opt.value ? (storeCounts[opt.value] || 0) : total
+              return (
+                <Pill key={opt.value}
+                  href={buildFilterUrl(baseUrl, 'store', opt.value, currentParams)}
+                  active={(sp.store || '') === opt.value}>
+                  {opt.label}
+                  {count > 0 && <span className="ml-1 opacity-60">({count})</span>}
+                </Pill>
+              )
+            })}
           </div>
         </div>
 
@@ -217,17 +234,41 @@ export default async function CategoryPage({
       </div>
 
       {deals.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4">
-          {groupDealsByProduct(deals).map((group) => (
-            <ProductCard key={group.productId || group.slug} group={group} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-4">
+            {groupDealsByProduct(deals).map((group) => (
+              <ProductCard key={group.productId || group.slug} group={group} />
+            ))}
+          </div>
+          <Suspense>
+            <SearchPagination
+              currentPage={page}
+              totalPages={totalPages}
+              total={total}
+              pageSize={PAGE_SIZE}
+              basePath={baseUrl}
+            />
+          </Suspense>
+        </>
       ) : (
         <div className="text-center py-16 rounded-2xl transition-all duration-200"
           style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
           <Fish className="h-10 w-10 mx-auto mb-3 opacity-50" style={{ color: '#4A6080' }} />
           <p className="mb-3" style={{ color: '#8BA3C7' }}>No hay chollos que coincidan con los filtros seleccionados.</p>
           <Link href={`/categories/${slug}`} className="font-semibold hover:underline transition-colors" style={{ color: '#00D4FF' }}>Limpiar filtros</Link>
+
+          <div className="mt-8 pt-8" style={{ borderTop: '1px solid #1E3A5F' }}>
+            <p className="text-sm mb-4" style={{ color: '#8BA3C7' }}>Explora otras categorías</p>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {CATEGORIES.filter(c => c.slug !== slug).slice(0, 4).map((cat) => (
+                <Link key={cat.id} href={`/categories/${cat.slug}`}
+                  className="text-xs font-semibold px-3.5 py-1.5 rounded-full transition-all duration-200 hover:border-[#00D4FF]/50 hover:text-[#00D4FF]"
+                  style={{ background: '#111827', border: '1px solid #1E3A5F', color: '#8BA3C7' }}>
+                  {cat.name}
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

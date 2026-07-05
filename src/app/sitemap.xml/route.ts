@@ -1,20 +1,24 @@
-import { getDeals } from '@/data/queries'
+import { getDeals, getBrands } from '@/data/queries'
 import { getPosts } from '@/data/blog-queries'
 import { CATEGORIES } from '@/types'
 
 const BASE_URL = 'https://pescatch.es'
 
 export async function GET() {
-  const [deals, posts] = await Promise.all([
+  const [deals, posts, brands] = await Promise.all([
     getDeals({ sortBy: 'newest' }),
     getPosts(5000),
+    getBrands(),
   ])
+
+  const brandSlug = (name: string) => name.toLowerCase().replace(/\s+/g, '-')
 
   const urls = [
     { loc: '/', priority: '1.0', changefreq: 'daily', lastmod: '' },
     { loc: '/categories', priority: '0.9', changefreq: 'weekly', lastmod: '' },
     { loc: '/search', priority: '0.8', changefreq: 'daily', lastmod: '' },
     { loc: '/blog', priority: '0.9', changefreq: 'weekly', lastmod: '' },
+    { loc: '/marcas', priority: '0.9', changefreq: 'weekly', lastmod: '' },
     ...CATEGORIES.map(cat => ({
       loc: `/categories/${cat.slug}`,
       priority: '0.8',
@@ -40,6 +44,12 @@ export async function GET() {
       priority: '0.8',
       changefreq: 'weekly' as const,
       lastmod: post.updatedAt ? post.updatedAt.slice(0, 10) : '',
+    })),
+    ...brands.map(b => ({
+      loc: `/marca/${brandSlug(b.brand)}`,
+      priority: '0.7',
+      changefreq: 'weekly' as const,
+      lastmod: '',
     })),
   ]
 

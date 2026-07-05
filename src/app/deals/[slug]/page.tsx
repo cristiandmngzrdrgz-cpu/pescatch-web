@@ -1,11 +1,16 @@
 import { notFound } from 'next/navigation'
 import { getDealBySlug, getRelatedDeals, getDealsByProduct } from '@/data/queries'
+import { getPostsByAsin } from '@/data/blog-queries'
 import { formatPrice, formatDate } from '@/lib/utils'
 import type { Metadata } from 'next'
+import dynamicImport from 'next/dynamic'
 import { buildAmazonUrl } from '@/lib/amazon-affiliate'
 import { ImageCarousel } from '@/components/deals/image-carousel'
 import { ShareButton } from '@/components/deals/share-button'
 import { generateProductSchema, generateBreadcrumbSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
+
+const PriceHistoryChart = dynamicImport(() => import('@/components/deals/price-history-chart').then(m => ({ default: m.PriceHistoryChart })))
+const CommentsSection = dynamicImport(() => import('@/components/deals/comments-section').then(m => ({ default: m.CommentsSection })))
 
 export const dynamic = 'force-dynamic'
 
@@ -39,15 +44,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   )
 }
 import { Badge } from '@/components/ui/badge'
-import { BadgeCheck, Store, Truck, Package, BarChart3, Tag, Share2, ArrowRight, Star, Clock, Zap, Shield, RefreshCw, ShoppingCart } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { BadgeCheck, Store, Truck, Package, BarChart3, Tag, ArrowRight, Star, Clock, Zap, Shield, RefreshCw, ShoppingCart } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { DealCard } from '@/components/deals/deal-card'
 import { PriceComparison } from '@/components/deals/price-comparison'
-import { PriceHistoryChart } from '@/components/deals/price-history-chart'
 import { VoteButtons } from '@/components/deals/vote-buttons'
 import { FavoriteButton } from '@/components/deals/favorites'
-import { CommentsSection } from '@/components/deals/comments-section'
 import { CATEGORIES, STORES } from '@/types'
 import Link from 'next/link'
 
@@ -72,6 +74,7 @@ export default async function DealDetailPage({
 
   const related = await getRelatedDeals(deal)
   const storeDeals = deal.productId ? await getDealsByProduct(deal.productId) : []
+  const blogPosts = deal.asin ? await getPostsByAsin(deal.asin) : []
   const category = CATEGORIES.find(c => c.id === deal.category)
   const storeMeta = STORES.find(s => s.id === deal.store.id || s.name === deal.store.name)
   const storeLabel = storeMeta?.name || deal.store.name
@@ -255,7 +258,6 @@ export default async function DealDetailPage({
                 background: 'rgba(255,71,87,0.1)',
                 border: '1px solid rgba(255,71,87,0.3)',
                 color: '#FF4757',
-                animation: 'pulse-glow-cyan 2s ease-in-out infinite',
               }}>
               <Zap className="h-5 w-5" />
               <span>Oferta por tiempo limitado — quedan {daysLeft} {daysLeft === 1 ? 'día' : 'días'}</span>
@@ -442,6 +444,52 @@ export default async function DealDetailPage({
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {related.map((d) => (
               <DealCard key={d.id} deal={d} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Related Blog Posts */}
+      {blogPosts.length > 0 && (
+        <section className="mt-12">
+          <Separator className="mb-10" style={{ background: '#1E3A5F' }} />
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider"
+              style={{ background: 'rgba(255,184,0,0.08)', border: '1px solid rgba(255,184,0,0.15)', color: '#FFB800' }}>
+              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+              Blog
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight" style={{ color: '#E8F0FE' }}>Artículos relacionados</h2>
+            <p className="mt-1" style={{ color: '#8BA3C7' }}>Aprende más sobre este producto en nuestro blog</p>
+          </div>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {blogPosts.map((post) => (
+              <Link key={post.id} href={`/blog/${post.slug}`}
+                className="group rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(0,212,255,0.1)]"
+                style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
+                {post.featuredImage && (
+                  <div className="aspect-video overflow-hidden">
+                    <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                  </div>
+                )}
+                <div className="p-5">
+                  <div className="flex items-center gap-2 mb-2">
+                    {post.category && (
+                      <span className="text-[0.65rem] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                        style={{ background: 'rgba(0,212,255,0.1)', color: '#00D4FF' }}>
+                        {post.category}
+                      </span>
+                    )}
+                    <span className="text-xs" style={{ color: '#4A6080' }}>{formatDate(post.publishedAt)}</span>
+                  </div>
+                  <h3 className="font-bold line-clamp-2 group-hover:text-[#00D4FF] transition-colors" style={{ color: '#E8F0FE' }}>
+                    {post.title}
+                  </h3>
+                  {post.excerpt && (
+                    <p className="text-sm mt-2 line-clamp-2" style={{ color: '#8BA3C7' }}>{post.excerpt}</p>
+                  )}
+                </div>
+              </Link>
             ))}
           </div>
         </section>

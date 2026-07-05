@@ -1,4 +1,4 @@
-import type { Deal, DealFilters, Product, Store } from '@/types'
+import type { Deal, DealFilters, PaginatedResult, Product, Store } from '@/types'
 import { getDb } from '@/lib/db'
 import { seedDatabase } from '@/lib/seed'
 import type { InValue } from '@libsql/client'
@@ -244,6 +244,81 @@ export async function getDeals(filters?: DealFilters, includeHidden = false): Pr
   return loadDeals(sql, params)
 }
 
+export async function getDealsPaginated(
+  filters?: DealFilters,
+  page = 1,
+  limit = 12,
+  includeHidden = false
+): Promise<PaginatedResult<Deal>> {
+  const db = getDb()
+  await seedDatabase()
+
+  let where = '1=1'
+  const params: InValue[] = []
+
+  if (!includeHidden) where += " AND status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now'))"
+
+  if (filters) {
+    if (filters.category) {
+      where += ' AND category = ?'
+      params.push(filters.category)
+    }
+    if (filters.subcategory) {
+      where += ' AND subcategory = ?'
+      params.push(filters.subcategory)
+    }
+    if (filters.brand) {
+      where += ' AND LOWER(brand) = LOWER(?)'
+      params.push(filters.brand)
+    }
+    if (filters.store) {
+      where += ' AND storeId = ?'
+      params.push(filters.store)
+    }
+    if (filters.search) {
+      const q = `%${filters.search.toLowerCase()}%`
+      where += ' AND (LOWER(title) LIKE ? OR LOWER(description) LIKE ? OR LOWER(tags) LIKE ? OR LOWER(storeName) LIKE ?)'
+      params.push(q, q, q, q)
+    }
+    if (filters.minDiscount) {
+      where += ' AND discountPercent >= ?'
+      params.push(filters.minDiscount)
+    }
+    if (filters.minPrice) {
+      where += ' AND salePrice >= ?'
+      params.push(filters.minPrice)
+    }
+    if (filters.maxPrice) {
+      where += ' AND salePrice <= ?'
+      params.push(filters.maxPrice)
+    }
+  }
+
+  const countResult = await db.execute({
+    sql: `SELECT COUNT(*) as total FROM deals WHERE ${where}`,
+    args: params,
+  })
+  const total = Number(countResult.rows[0]?.total ?? 0)
+  const totalPages = Math.ceil(total / limit)
+
+  let orderBy = 'ORDER BY publishedAt DESC'
+  if (filters?.sortBy) {
+    switch (filters.sortBy) {
+      case 'discount': orderBy = 'ORDER BY discountPercent DESC'; break
+      case 'price_asc': orderBy = 'ORDER BY salePrice ASC'; break
+      case 'price_desc': orderBy = 'ORDER BY salePrice DESC'; break
+      case 'newest': orderBy = 'ORDER BY publishedAt DESC'; break
+      case 'popular': orderBy = 'ORDER BY votesUp DESC'; break
+    }
+  }
+
+  const offset = (page - 1) * limit
+  const sql = `SELECT * FROM deals WHERE ${where} ${orderBy} LIMIT ${limit} OFFSET ${offset}`
+  const deals = await loadDeals(sql, params)
+
+  return { items: deals, total, page, totalPages }
+}
+
 export async function getDealBySlug(slug: string, includeHidden = false): Promise<Deal | undefined> {
   const sql = includeHidden
     ? 'SELECT * FROM deals WHERE slug = ?'
@@ -274,6 +349,50 @@ export async function getDealCountsByCategory(): Promise<Record<string, number>>
     map[row.category as string] = Number(row.count)
   }
   return map
+}
+
+export async function getDealCountsByStore(category?: string): Promise<Record<string, number>> {
+  const db = getDb()
+  await seedDatabase()
+
+  let sql = "SELECT storeId, COUNT(*) as count FROM deals WHERE status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now'))"
+  const params: InValue[] = []
+
+  if (category) {
+    sql += ' AND category = ?'
+    params.push(category)
+  }
+
+  sql += ' GROUP BY storeId'
+
+  const result = await db.execute({ sql, args: params })
+  const map: Record<string, number> = {}
+  for (const row of result.rows) {
+    map[row.storeId as string] = Number(row.count)
+  }
+  return map
+}
+
+export async function getBrands(): Promise<Array<{ brand: string; count: number; minPrice: number; maxDiscount: number }>> {
+  const db = getDb()
+  await seedDatabase()
+
+  const result = await db.execute(
+    `SELECT brand, COUNT(*) as count, MIN(salePrice) as minPrice,
+            MAX(discountPercent) as maxDiscount
+     FROM deals
+     WHERE status = 'published' AND brand != ''
+       AND (expiresAt IS NULL OR expiresAt > datetime('now'))
+     GROUP BY LOWER(brand)
+     ORDER BY count DESC, brand ASC`
+  )
+
+  return result.rows.map(r => ({
+    brand: r.brand as string,
+    count: Number(r.count),
+    minPrice: Number(r.minPrice),
+    maxDiscount: Number(r.maxDiscount),
+  }))
 }
 
 export async function getCategories(): Promise<string[]> {

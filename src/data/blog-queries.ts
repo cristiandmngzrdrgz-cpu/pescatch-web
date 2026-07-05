@@ -78,6 +78,16 @@ export async function getPostsByCategory(category: string, limit = 10, includeHi
   return loadPosts(sql, [category, limit])
 }
 
+export async function getPostsByAsin(asin: string, limit = 3): Promise<BlogPost[]> {
+  const db = getDb()
+  await seedDatabase()
+  const result = await db.execute({
+    sql: "SELECT * FROM posts WHERE status = 'published' AND relatedAsins LIKE ? ORDER BY publishedAt DESC LIMIT ?",
+    args: [`%${asin}%`, limit] as InValue[],
+  })
+  return result.rows.map(r => mapRowToPost(r as Record<string, unknown>))
+}
+
 export async function createPost(data: Record<string, unknown>): Promise<BlogPost> {
   const db = getDb()
   await seedDatabase()
