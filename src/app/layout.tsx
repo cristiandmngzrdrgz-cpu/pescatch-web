@@ -23,17 +23,6 @@ const organizationSchema = {
   name: 'PesCatch',
   url: BASE_URL,
   logo: `${BASE_URL}/images/logo.png`,
-  sameAs: [
-    'https://twitter.com/pescatches',
-    'https://www.facebook.com/pescatches',
-    'https://www.instagram.com/pescatches',
-  ],
-  contactPoint: {
-    '@type': 'ContactPoint',
-    telephone: '+34-000-000-000',
-    contactType: 'customer service',
-    availableLanguage: ['Spanish'],
-  },
 }
 
 const websiteSchema = {
@@ -75,7 +64,6 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'PesCatch - Chollos de Pesca',
     description: 'Chollos de material de pesca verificados por pescadores.',
-    creator: '@pescatches',
   },
   verification: {
     google: 'gU3kKy_QVUPCls6f6yd4cWu5gmLoin8OFW8Qzq5FohI',
