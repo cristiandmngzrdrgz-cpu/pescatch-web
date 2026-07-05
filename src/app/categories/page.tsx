@@ -26,10 +26,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CategoriesPage() {
-  const categoryResults = await Promise.all(CATEGORIES.map(cat => getDeals({ category: cat.slug }).then(d => [cat.slug, d] as const)))
+  // Una sola query para todos los chollos, luego agrupamos en memoria
+  // en vez de 6 llamadas a getDeals() en paralelo (N+1)
+  const allDeals = await getDeals()
   const categoryDeals = new Map<string, Awaited<ReturnType<typeof getDeals>>>()
-  for (const [slug, deals] of categoryResults) {
-    categoryDeals.set(slug, deals)
+  for (const cat of CATEGORIES) {
+    categoryDeals.set(cat.slug, allDeals.filter(d => d.category === cat.slug))
   }
 
   const breadcrumbs = generateBreadcrumbSchema([

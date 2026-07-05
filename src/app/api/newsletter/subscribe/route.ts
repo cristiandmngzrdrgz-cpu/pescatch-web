@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, message: 'Suscripción exitosa' }, { status: 201 })
   } catch (err: unknown) {
-    if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'SQLITE_CONSTRAINT_UNIQUE') {
+    if (err instanceof Error && err.message.includes('UNIQUE constraint failed')) {
       return NextResponse.json({ error: 'Este email ya está suscrito' }, { status: 409 })
     }
     const message = err instanceof Error ? err.message : 'Error desconocido'
