@@ -12,6 +12,12 @@ export function buildAmazonUrl(urlOrAsin: string): string {
 
   if (url.includes('tag=')) return url
 
+  const isProductUrl = /\/dp\/[A-Z0-9]{10}/i.test(url)
+  if (isProductUrl && !/[\?&]th=1(&|$)/i.test(url)) {
+    const sep = url.includes('?') ? '&' : '?'
+    url = `${url}${sep}th=1&psc=1`
+  }
+
   const separator = url.includes('?') ? '&' : '?'
   return `${url}${separator}tag=${TAG}`
 }
