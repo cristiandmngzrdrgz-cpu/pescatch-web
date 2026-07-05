@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { formatPrice } from '@/lib/utils'
 import { buildAmazonUrl } from '@/lib/amazon-affiliate'
-import { Store, Truck, Fish, ChevronUp, Clock, Star } from 'lucide-react'
+import { Store, Truck, Fish, ChevronUp, Clock, Star, ShoppingCart, Zap } from 'lucide-react'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { CATEGORIES, STORES } from '@/types'
 import type { ProductGroup } from '@/types'
@@ -20,6 +20,12 @@ const storeIcons: Record<string, string> = {
   aliexpress: 'https://ae01.alicdn.com/kf/Sad0e0c1e3a9f4b1c8c6b7a3d4e5f6g7h/logo.png',
 }
 
+const storeLabel: Record<string, string> = {
+  amazon: 'Amazon',
+  decathlon: 'Decathlon',
+  aliexpress: 'AliExpress',
+}
+
 export function ProductCard({ group }: ProductCardProps) {
   const { title, slug, review, technicalSpecs, pros, imageUrl, deals, bestPrice, bestStore, storeCount, discountPercent } = group
   const [imgError, setImgError] = useState(false)
@@ -29,47 +35,47 @@ export function ProductCard({ group }: ProductCardProps) {
   const reviewSnippet = review ? review.slice(0, 150) + (review.length > 150 ? '...' : '') : ''
 
   return (
-    <Link href={`/deals/${slug}`} className="block">
-      <article
-        className="group rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
-        style={{
-          background: '#0B1120',
-          border: '1px solid #1E3A5F',
-        }}
-      >
-        <div className="flex flex-col sm:flex-row">
-          <div className="relative w-full sm:w-48 h-48 sm:h-auto flex-shrink-0 flex items-center justify-center overflow-hidden"
-            style={{ background: 'linear-gradient(135deg, #1A2535, rgba(0,212,255,0.05))' }}>
-            {hasImage ? (
-              <Image
-                src={imageUrl}
-                alt={title}
-                fill
-                sizes="(max-width: 640px) 100vw, 192px"
-                onError={() => setImgError(true)}
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-            ) : (
-              <div className="flex flex-col items-center gap-2 opacity-40">
-                <Fish className="h-10 w-10" style={{ color: '#00D4FF' }} />
-                <span className="text-xs font-medium" style={{ color: '#4A6080' }}>Sin imagen</span>
-              </div>
-            )}
-            {discountPercent > 0 && (
-              <div className="absolute top-3 right-3">
-                <span className="inline-block font-extrabold text-xs px-2.5 py-1.5 rounded-full"
-                  style={{
-                    background: discountPercent >= 50 ? '#FF4757' : '#FFB800',
-                    color: '#0B1120',
-                    boxShadow: discountPercent >= 50 ? '0 0 12px rgba(255,71,87,0.3)' : '0 0 12px rgba(255,184,0,0.25)',
-                  }}>
-                  -{discountPercent}%
-                </span>
-              </div>
-            )}
-          </div>
+    <article
+      className="group rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
+      style={{
+        background: '#0B1120',
+        border: '1px solid #1E3A5F',
+      }}
+    >
+      <div className="flex flex-col sm:flex-row">
+        <Link href={`/deals/${slug}`} className="relative w-full sm:w-48 h-48 sm:h-auto flex-shrink-0 flex items-center justify-center overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, #1A2535, rgba(0,212,255,0.05))' }}>
+          {hasImage ? (
+            <Image
+              src={imageUrl}
+              alt={title}
+              fill
+              sizes="(max-width: 640px) 100vw, 192px"
+              onError={() => setImgError(true)}
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
+            <div className="flex flex-col items-center gap-2 opacity-40">
+              <Fish className="h-10 w-10" style={{ color: '#00D4FF' }} />
+              <span className="text-xs font-medium" style={{ color: '#4A6080' }}>Sin imagen</span>
+            </div>
+          )}
+          {discountPercent > 0 && (
+            <div className="absolute top-3 right-3">
+              <span className="inline-block font-extrabold text-xs px-2.5 py-1.5 rounded-full"
+                style={{
+                  background: discountPercent >= 50 ? '#FF4757' : '#FFB800',
+                  color: '#0B1120',
+                  boxShadow: discountPercent >= 50 ? '0 0 12px rgba(255,71,87,0.3)' : '0 0 12px rgba(255,184,0,0.25)',
+                }}>
+                -{discountPercent}%
+              </span>
+            </div>
+          )}
+        </Link>
 
-          <div className="flex-1 min-w-0 p-5">
+        <div className="flex-1 min-w-0 p-5">
+          <Link href={`/deals/${slug}`}>
             <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#00D4FF' }}>
               {CATEGORIES.find(c => c.id === group.category)?.name || group.category}
             </div>
@@ -106,7 +112,6 @@ export function ProductCard({ group }: ProductCardProps) {
               </div>
             )}
 
-            {/* Rating */}
             {(() => {
               const ratedDeal = deals.find(d => d.rating)
               return ratedDeal ? (
@@ -118,67 +123,63 @@ export function ProductCard({ group }: ProductCardProps) {
                 </div>
               ) : null
             })()}
+          </Link>
 
-            {/* Store price comparison */}
-            <div className="flex flex-wrap items-center gap-2 mt-4">
-              {deals.slice(0, 3).map((deal) => {
-                const storeMeta = STORES.find(s => s.id === deal.store.id || s.name === deal.store.name)
-                const isCheapest = deal.salePrice === bestPrice
-                const storeSlug = storeMeta?.slug || deal.store.slug || deal.store.id
-                return (
-                  <a key={deal.id}
-                    href={deal.store.id === 'amazon' ? buildAmazonUrl(deal.affiliateUrl) : deal.affiliateUrl}
-                    target="_blank"
-                    rel="nofollow sponsored"
-                    onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer"
-                    style={{
-                      background: isCheapest ? 'rgba(38,222,129,0.08)' : '#1A2535',
-                      border: `1px solid ${isCheapest ? 'rgba(38,222,129,0.3)' : '#1E3A5F'}`,
-                    }}>
-                    <div className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 overflow-hidden"
-                      style={{ background: storeMeta?.reputation === 'good' ? 'rgba(0,212,255,0.1)' : 'rgba(255,159,67,0.1)' }}>
-                      <Store className="h-3 w-3" style={{ color: isCheapest ? '#26DE81' : '#00D4FF' }} />
-                    </div>
-                    <span style={{ color: isCheapest ? '#26DE81' : '#8BA3C7' }} className="font-semibold">
-                      {storeMeta?.name || deal.store.name}
+          {/* Store CTA buttons */}
+          <div className="flex flex-wrap items-center gap-2 mt-4">
+            {deals.slice(0, 3).map((deal) => {
+              const storeMeta = STORES.find(s => s.id === deal.store.id || s.name === deal.store.name)
+              const isCheapest = deal.salePrice === bestPrice
+              const storeSlug = storeMeta?.slug || deal.store.slug || deal.store.id
+              const label = storeMeta?.name || storeLabel[deal.store.id] || deal.store.name
+              return (
+                <a key={deal.id}
+                  href={deal.store.id === 'amazon' ? buildAmazonUrl(deal.affiliateUrl) : deal.affiliateUrl}
+                  target="_blank"
+                  rel="nofollow sponsored"
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer hover:scale-105 active:scale-95"
+                  style={{
+                    background: isCheapest
+                      ? 'linear-gradient(135deg, #26DE81, #1DBB6E)'
+                      : '#1A2535',
+                    border: `1px solid ${isCheapest ? 'rgba(38,222,129,0.4)' : '#1E3A5F'}`,
+                    color: isCheapest ? '#0B1120' : '#E8F0FE',
+                    boxShadow: isCheapest ? '0 0 16px rgba(38,222,129,0.3), 0 0 30px rgba(38,222,129,0.1)' : 'none',
+                    animation: isCheapest ? 'pulse-cta 2s ease-in-out infinite' : 'none',
+                  }}>
+                  <ShoppingCart className="h-3.5 w-3.5" />
+                  <span className="max-sm:hidden">Comprar en </span>
+                  <span>{label}</span>
+                  <span className="font-extrabold" style={{ color: isCheapest ? '#0B1120' : '#FFB800' }}>
+                    {formatPrice(deal.salePrice)}
+                  </span>
+                  {isCheapest && storeCount > 1 && (
+                    <span className="text-[0.55rem] font-bold px-1.5 py-0.5 rounded"
+                      style={{ background: 'rgba(11,17,32,0.3)', color: '#0B1120' }}>
+                      MEJOR
                     </span>
-                    <span className="font-bold" style={{ color: isCheapest ? '#26DE81' : '#FFB800' }}>
-                      {formatPrice(deal.salePrice)}
-                    </span>
-                    {isCheapest && storeCount > 1 && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="text-[0.55rem] font-bold px-1 py-0.5 rounded"
-                            style={{ background: 'rgba(38,222,129,0.2)', color: '#26DE81' }}>
-                            MEJOR
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent side="top">Mejor precio disponible</TooltipContent>
-                      </Tooltip>
-                    )}
-                    {deal.shippingCost === 0 && storeCount === 1 && (
-                      <Truck className="h-3 w-3" style={{ color: '#4A6080' }} />
-                    )}
-                  </a>
-                )
-              })}
-              {deals.length > 3 && (
-                <span className="text-xs font-medium" style={{ color: '#4A6080' }}>
-                  +{deals.length - 3} más
-                </span>
-              )}
-            </div>
-
-            {storeCount > 1 && (
-              <div className="flex items-center gap-2 mt-2 text-xs" style={{ color: '#4A6080' }}>
-                <Store className="h-3 w-3" />
-                <span>Disponible en {storeCount} tiendas · Mejor precio: <strong style={{ color: '#26DE81' }}>{formatPrice(bestPrice)}</strong> en {bestStore}</span>
-              </div>
+                  )}
+                </a>
+              )
+            })}
+            {deals.length > 3 && (
+              <Link href={`/deals/${slug}`}
+                className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200 hover:bg-[#1A2535]"
+                style={{ border: '1px solid #1E3A5F', color: '#8BA3C7' }}>
+                +{deals.length - 3} más
+              </Link>
             )}
           </div>
+
+          {storeCount > 1 && (
+            <div className="flex items-center gap-2 mt-2 text-xs" style={{ color: '#4A6080' }}>
+              <Store className="h-3 w-3" />
+              <span>Disponible en {storeCount} tiendas · Mejor precio: <strong style={{ color: '#26DE81' }}>{formatPrice(bestPrice)}</strong> en {bestStore}</span>
+            </div>
+          )}
         </div>
-      </article>
-    </Link>
+      </div>
+    </article>
   )
 }

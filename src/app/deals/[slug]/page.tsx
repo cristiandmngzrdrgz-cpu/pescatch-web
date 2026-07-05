@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   )
 }
 import { Badge } from '@/components/ui/badge'
-import { BadgeCheck, Store, Truck, Package, BarChart3, Tag, Share2, ArrowRight, Star, Clock, Zap } from 'lucide-react'
+import { BadgeCheck, Store, Truck, Package, BarChart3, Tag, Share2, ArrowRight, Star, Clock, Zap, Shield, RefreshCw, ShoppingCart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { DealCard } from '@/components/deals/deal-card'
@@ -48,8 +48,17 @@ import { PriceHistoryChart } from '@/components/deals/price-history-chart'
 import { VoteButtons } from '@/components/deals/vote-buttons'
 import { FavoriteButton } from '@/components/deals/favorites'
 import { CommentsSection } from '@/components/deals/comments-section'
-import { CATEGORIES } from '@/types'
+import { CATEGORIES, STORES } from '@/types'
 import Link from 'next/link'
+
+function isExpiringSoon(expiresAt?: string): { soon: boolean; daysLeft: number } {
+  if (!expiresAt) return { soon: false, daysLeft: 0 }
+  const now = new Date()
+  const expires = new Date(expiresAt)
+  const diffMs = expires.getTime() - now.getTime()
+  const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+  return { soon: daysLeft > 0 && daysLeft <= 7, daysLeft }
+}
 
 export default async function DealDetailPage({
   params,
@@ -64,6 +73,9 @@ export default async function DealDetailPage({
   const related = await getRelatedDeals(deal)
   const storeDeals = deal.productId ? await getDealsByProduct(deal.productId) : []
   const category = CATEGORIES.find(c => c.id === deal.category)
+  const storeMeta = STORES.find(s => s.id === deal.store.id || s.name === deal.store.name)
+  const storeLabel = storeMeta?.name || deal.store.name
+  const { soon: expiringSoon, daysLeft } = isExpiringSoon(deal.expiresAt)
 
   const breadcrumbs = generateBreadcrumbSchema([
     { name: 'Inicio', url: '/' },
@@ -89,10 +101,12 @@ export default async function DealDetailPage({
     shippingCost: deal.shippingCost,
   })
 
+  const affiliateUrl = deal.store.id === 'amazon' ? buildAmazonUrl(deal.affiliateUrl) : deal.affiliateUrl
+
   return (
     <>
       <JsonLd data={[productSchema, breadcrumbs]} />
-      <div className="mx-auto max-w-7xl px-4 py-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 pb-24 lg:pb-8">
 
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm mb-8 overflow-x-auto whitespace-nowrap" style={{ color: '#4A6080' }}>
@@ -234,6 +248,20 @@ export default async function DealDetailPage({
             <h1 className="text-2xl font-extrabold leading-tight" style={{ color: '#E8F0FE' }}>{deal.title}</h1>
           </div>
 
+          {/* Urgency badge */}
+          {expiringSoon && (
+            <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold"
+              style={{
+                background: 'rgba(255,71,87,0.1)',
+                border: '1px solid rgba(255,71,87,0.3)',
+                color: '#FF4757',
+                animation: 'pulse-glow-cyan 2s ease-in-out infinite',
+              }}>
+              <Zap className="h-5 w-5" />
+              <span>Oferta por tiempo limitado — quedan {daysLeft} {daysLeft === 1 ? 'día' : 'días'}</span>
+            </div>
+          )}
+
           {/* Price Box */}
           <div className="rounded-2xl p-6 transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,212,255,0.1)]"
             style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
@@ -297,7 +325,7 @@ export default async function DealDetailPage({
           {/* CTA Buttons */}
           <div className="space-y-3">
             <a
-              href={deal.store.id === 'amazon' ? buildAmazonUrl(deal.affiliateUrl) : deal.affiliateUrl}
+              href={affiliateUrl}
               target="_blank"
               rel="nofollow sponsored"
               className="flex items-center justify-center gap-2 w-full h-14 font-bold text-base rounded-full transition-all duration-300 glow-cta no-underline group"
@@ -306,10 +334,29 @@ export default async function DealDetailPage({
                 color: '#0B1120',
                 boxShadow: '0 4px 24px rgba(0,212,255,0.4), 0 0 40px rgba(0,212,255,0.2)',
               }}>
-              <Zap className="h-5 w-5" />
-              Comprar en {deal.store.name} — {formatPrice(deal.salePrice)}
+              <ShoppingCart className="h-5 w-5" />
+              Comprar en {storeLabel} — {formatPrice(deal.salePrice)}
               <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </a>
+
+            {/* Trust badges */}
+            <div className="flex items-center justify-center gap-4 text-xs pt-1" style={{ color: '#4A6080' }}>
+              <div className="flex items-center gap-1.5">
+                <Shield className="h-3.5 w-3.5" style={{ color: '#26DE81' }} />
+                <span>Pago seguro</span>
+              </div>
+              {deal.shippingCost === 0 && (
+                <div className="flex items-center gap-1.5">
+                  <Truck className="h-3.5 w-3.5" style={{ color: '#00D4FF' }} />
+                  <span>Envío gratis</span>
+                </div>
+              )}
+              <div className="flex items-center gap-1.5">
+                <RefreshCw className="h-3.5 w-3.5" style={{ color: '#FF9F43' }} />
+                <span>Devolución fácil</span>
+              </div>
+            </div>
+
             <div className="flex gap-2">
               <ShareButton url={`${BASE_URL}/deals/${deal.slug}`} title={deal.title} />
               <FavoriteButton dealId={deal.id} />
@@ -400,6 +447,29 @@ export default async function DealDetailPage({
         </section>
       )}
     </div>
+
+      {/* Sticky mobile CTA */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
+        style={{
+          background: 'linear-gradient(to top, #0B1120 0%, rgba(11,17,32,0.95) 80%, transparent 100%)',
+          paddingTop: '1.5rem',
+        }}>
+        <div className="px-4 pb-4 pt-1">
+          <a
+            href={affiliateUrl}
+            target="_blank"
+            rel="nofollow sponsored"
+            className="flex items-center justify-center gap-2 w-full h-14 font-bold text-base rounded-full transition-all duration-300 active:scale-95"
+            style={{
+              background: 'linear-gradient(135deg, #00D4FF, #0099CC)',
+              color: '#0B1120',
+              boxShadow: '0 4px 24px rgba(0,212,255,0.4), 0 0 40px rgba(0,212,255,0.2)',
+            }}>
+            <ShoppingCart className="h-5 w-5" />
+            Comprar en {storeLabel} — {formatPrice(deal.salePrice)}
+          </a>
+        </div>
+      </div>
     </>
   )
 }

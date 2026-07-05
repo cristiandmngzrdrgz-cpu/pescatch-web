@@ -106,7 +106,7 @@ export function PriceComparison({ deals, currentDealId }: PriceComparisonProps) 
                     {isCheapest && (
                       <span className="text-[0.6rem] font-bold px-1.5 py-0.5 rounded-full ml-1"
                         style={{ background: 'rgba(38,222,129,0.15)', color: '#26DE81' }}>
-                        🏆 Mejor precio
+                        Mejor precio
                       </span>
                     )}
                   </div>
@@ -174,7 +174,7 @@ export function PriceComparison({ deals, currentDealId }: PriceComparisonProps) 
               )}
 
               {/* Arrow */}
-              <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-0.5 flex-shrink-0" style={{ color: '#00D4FF' }} />
+              <ArrowRight className="h-4 w-4 flex-shrink-0" style={{ color: '#4A6080' }} />
             </a>
           )
         })}

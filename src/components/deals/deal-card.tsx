@@ -4,9 +4,9 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { formatPrice } from '@/lib/utils'
 import { buildAmazonUrl } from '@/lib/amazon-affiliate'
-import { Clock, Store, Truck, ChevronUp, Fish, Star } from 'lucide-react'
+import { Clock, Store, Truck, ChevronUp, Fish, Star, ShoppingCart } from 'lucide-react'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
-import { CATEGORIES } from '@/types'
+import { CATEGORIES, STORES } from '@/types'
 import type { Deal } from '@/types'
 import { useState } from 'react'
 
@@ -16,21 +16,29 @@ interface DealCardProps {
   storeCount?: number
 }
 
+const storeLabel: Record<string, string> = {
+  amazon: 'Amazon',
+  decathlon: 'Decathlon',
+  aliexpress: 'AliExpress',
+}
+
 export function DealCard({ deal, bestPriceStore, storeCount }: DealCardProps) {
   const isBestPrice = bestPriceStore != null && deal.store.name === bestPriceStore
   const showBestPrice = storeCount != null && storeCount >= 2
   const [imgError, setImgError] = useState(false)
   const hasImage = Boolean(deal.imageUrl) && !imgError
+  const storeMeta = STORES.find(s => s.id === deal.store.id || s.name === deal.store.name)
+  const label = storeMeta?.name || storeLabel[deal.store.id] || deal.store.name
 
   return (
-    <Link href={`/deals/${deal.slug}`}>
-      <article
-        className="group rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-[rgba(0,212,255,0.5)] hover:shadow-[0_0_25px_rgba(0,212,255,0.2),0_8px_32px_rgba(0,0,0,0.4)]"
-        style={{
-          background: '#0B1120',
-          border: '1px solid #1E3A5F',
-        }}
-      >
+    <article
+      className="group rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-[rgba(0,212,255,0.5)] hover:shadow-[0_0_25px_rgba(0,212,255,0.2),0_8px_32px_rgba(0,0,0,0.4)]"
+      style={{
+        background: '#0B1120',
+        border: '1px solid #1E3A5F',
+      }}
+    >
+      <Link href={`/deals/${deal.slug}`}>
         <div className="relative h-48 flex items-center justify-center overflow-hidden"
           style={{ background: 'linear-gradient(135deg, #1A2535, rgba(0,212,255,0.05))' }}>
           {hasImage ? (
@@ -159,20 +167,38 @@ export function DealCard({ deal, bestPriceStore, storeCount }: DealCardProps) {
               {formatPrice(deal.originalPrice)}
             </span>
           </div>
-          <div className="mt-3 flex items-center justify-between text-xs" style={{ color: '#4A6080' }}>
-            <div className="flex items-center gap-1">
-              <Truck className="h-3 w-3" />
-              <span>{deal.shippingCost === 0 ? 'Envío gratis' : `Envío: ${formatPrice(deal.shippingCost)}`}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <ChevronUp className="h-3 w-3" style={{ color: '#26DE81' }} />
-              <span style={{ color: deal.stockStatus === 'in_stock' ? '#26DE81' : deal.stockStatus === 'limited' ? '#FF9F43' : '#FF4757' }}>
-                {deal.stockStatus === 'in_stock' ? 'En stock' : deal.stockStatus === 'limited' ? `Quedan ${deal.stockCount}` : 'Agotado'}
-              </span>
-            </div>
+        </div>
+      </Link>
+
+      {/* Direct buy CTA */}
+      <div className="px-5 pb-5 pt-0">
+        <a
+          href={deal.store.id === 'amazon' ? buildAmazonUrl(deal.affiliateUrl) : deal.affiliateUrl}
+          target="_blank"
+          rel="nofollow sponsored"
+          onClick={(e) => e.stopPropagation()}
+          className="flex items-center justify-center gap-2 w-full h-11 font-bold text-sm rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-95"
+          style={{
+            background: 'linear-gradient(135deg, #00D4FF, #0099CC)',
+            color: '#0B1120',
+            boxShadow: '0 2px 12px rgba(0,212,255,0.3)',
+          }}>
+          <ShoppingCart className="h-4 w-4" />
+          Comprar en {label} — {formatPrice(deal.salePrice)}
+        </a>
+        <div className="mt-2 flex items-center justify-between text-xs" style={{ color: '#4A6080' }}>
+          <div className="flex items-center gap-1">
+            <Truck className="h-3 w-3" />
+            <span>{deal.shippingCost === 0 ? 'Envío gratis' : `Envío: ${formatPrice(deal.shippingCost)}`}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <ChevronUp className="h-3 w-3" style={{ color: '#26DE81' }} />
+            <span style={{ color: deal.stockStatus === 'in_stock' ? '#26DE81' : deal.stockStatus === 'limited' ? '#FF9F43' : '#FF4757' }}>
+              {deal.stockStatus === 'in_stock' ? 'En stock' : deal.stockStatus === 'limited' ? `Quedan ${deal.stockCount}` : 'Agotado'}
+            </span>
           </div>
         </div>
-      </article>
-    </Link>
+      </div>
+    </article>
   )
 }
