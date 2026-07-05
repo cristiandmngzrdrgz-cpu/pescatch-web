@@ -86,6 +86,7 @@ export default async function DealDetailPage({
     reviewCount: deal.reviewCount,
     sku: deal.id,
     brand: deal.brand,
+    shippingCost: deal.shippingCost,
   })
 
   return (

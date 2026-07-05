@@ -34,6 +34,7 @@ export function generateProductSchema(deal: {
   reviewCount?: number
   sku: string
   brand?: string
+  shippingCost?: number
 }) {
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
@@ -46,7 +47,7 @@ export function generateProductSchema(deal: {
     offers: {
       '@type': 'Offer',
       price: deal.salePrice,
-      priceCurrency: deal.currency,
+      priceCurrency: 'EUR',
       // description en Offer requerido para Fichas de comerciantes
       description: deal.description || deal.title,
       availability: deal.stockStatus === 'in_stock'
@@ -59,6 +60,31 @@ export function generateProductSchema(deal: {
       seller: {
         '@type': 'Organization',
         name: deal.storeName,
+      },
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingRate: {
+          '@type': 'MonetaryAmount',
+          value: deal.shippingCost ?? 0,
+          currency: 'EUR',
+        },
+        shippingDestination: {
+          '@type': 'DefinedRegion',
+          addressCountry: 'ES',
+        },
+        deliveryTime: {
+          '@type': 'ShippingDeliveryTime',
+          handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 1, unitCode: 'DAY' },
+          transitTime: { '@type': 'QuantitativeValue', minValue: 1, maxValue: 5, unitCode: 'DAY' },
+        },
+      },
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'ES',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 30,
+        returnMethod: 'https://schema.org/ReturnByMail',
+        returnFees: 'https://schema.org/FreeReturn',
       },
     },
   }
