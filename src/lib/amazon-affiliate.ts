@@ -10,14 +10,23 @@ export function buildAmazonUrl(urlOrAsin: string): string {
     url = `https://www.amazon.es/dp/${urlOrAsin}`
   }
 
-  if (url.includes('tag=')) return url
+  // Parsear la URL para manipular params de forma segura
+  try {
+    const parsed = new URL(url)
+    const isProductUrl = /\/dp\/[A-Z0-9]{10}/i.test(parsed.pathname)
 
-  const isProductUrl = /\/dp\/[A-Z0-9]{10}/i.test(url)
-  if (isProductUrl && !/[\?&]th=1(&|$)/i.test(url)) {
-    const sep = url.includes('?') ? '&' : '?'
-    url = `${url}${sep}th=1&psc=1`
+    if (isProductUrl) {
+      if (!parsed.searchParams.has('th')) parsed.searchParams.set('th', '1')
+      if (!parsed.searchParams.has('psc')) parsed.searchParams.set('psc', '1')
+    }
+
+    // Siempre sobreescribir el tag con el nuestro (evita tags de terceros en URLs pegadas)
+    parsed.searchParams.set('tag', TAG)
+
+    return parsed.toString()
+  } catch {
+    // Fallback para URLs malformadas
+    const separator = url.includes('?') ? '&' : '?'
+    return `${url}${separator}tag=${TAG}`
   }
-
-  const separator = url.includes('?') ? '&' : '?'
-  return `${url}${separator}tag=${TAG}`
 }

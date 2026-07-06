@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { SlidersHorizontal, X } from 'lucide-react'
 
-export function FilterDrawer({ children }: { children: React.ReactNode }) {
+export function FilterDrawer({ children, activeCount = 0 }: { children: React.ReactNode; activeCount?: number }) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -18,12 +18,18 @@ export function FilterDrawer({ children }: { children: React.ReactNode }) {
           className="flex items-center gap-2 w-full px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
           style={{
             background: '#111827',
-            border: '1px solid #1E3A5F',
-            color: '#8BA3C7',
+            border: activeCount > 0 ? '1px solid rgba(0,212,255,0.4)' : '1px solid #1E3A5F',
+            color: activeCount > 0 ? '#00D4FF' : '#8BA3C7',
           }}
         >
           <SlidersHorizontal className="h-4 w-4" />
           Filtros
+          {activeCount > 0 && (
+            <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full"
+              style={{ background: 'rgba(0,212,255,0.15)', color: '#00D4FF' }}>
+              {activeCount}
+            </span>
+          )}
         </button>
       </div>
 

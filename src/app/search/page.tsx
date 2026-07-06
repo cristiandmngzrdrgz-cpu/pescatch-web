@@ -187,7 +187,7 @@ export default async function SearchPage({
       </div>
 
       {/* Filter bar */}
-      <FilterDrawer>
+      <FilterDrawer activeCount={[storeFilter, minDiscount, minPrice, maxPrice, categoryFilter].filter(Boolean).length}>
         <div className="rounded-2xl p-5 mb-6 space-y-4" style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
 
         {/* Store filter row */}
