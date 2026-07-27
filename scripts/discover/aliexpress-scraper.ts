@@ -1,11 +1,13 @@
-import { chromium, type Page } from 'playwright'
-import * as path from 'path'
-import * as fs from 'fs'
+import { type Page } from 'playwright'
 import { CATEGORIES } from './keywords'
-
-const BRAVE_PATH = 'C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe'
-const USER_DATA_DIR_CHROMIUM = path.resolve('temp', 'chromium-aliexpress-profile')
-const USER_DATA_DIR_BRAVE = path.resolve('temp', 'brave-aliexpress-profile')
+import {
+  POPULAR_BRANDS,
+  extractBrand,
+  categorizeProduct,
+  braveAvailable,
+  launchBraveContext,
+  setupStealthPage,
+} from '../../src/lib/scraping-utils'
 
 const NAV_TIMEOUT = 90000
 
@@ -21,31 +23,6 @@ export interface AliExpressProduct {
   store: 'aliexpress'
   discount: string
   imageUrl: string | null
-}
-
-const POPULAR_BRANDS = [
-  'shimano', 'daiwa', 'abu garcia', 'mitchell', 'penn',
-  'shakespeare', 'okuma', 'rapala', 'savage gear', 'caperlan',
-  'ryobi', 'yuki', 'lineaeffe', 'garbolino', 'ragot',
-]
-
-function extractBrand(title: string): string | null {
-  const lower = title.toLowerCase()
-  for (const b of POPULAR_BRANDS) {
-    if (lower.includes(b)) return b.charAt(0).toUpperCase() + b.slice(1)
-  }
-  return null
-}
-
-function categorizeProduct(title: string): string {
-  const lower = title.toLowerCase()
-  if (/carrete/.test(lower)) return 'Carretes'
-  if (/caña|ca.a|cana/.test(lower)) return 'Cañas'
-  if (/señuelo|senuelo|artificial|vinilo|cucharill|peces?\s+artificiales/.test(lower)) return 'Señuelos'
-  if (/combo|kit\s*(pesca|completo)/.test(lower)) return 'Kits'
-  if (/caja|anzuelo|sedal|plomo|cuchillo|alicate|li.n?a|bajo\s*de\s*li.n?a/.test(lower)) return 'Accesorios'
-  if (/traje|bota|gafa|sombrero|guante|gorra|polarizada/.test(lower)) return 'Ropa'
-  return 'Equipo'
 }
 
 function parsePrice(text: string): number | null {
@@ -155,28 +132,8 @@ async function extractProducts(page: Page): Promise<AliExpressProduct[]> {
 }
 
 async function launchContext(browserType: 'brave' | 'chromium') {
-  if (browserType === 'brave') {
-    if (!fs.existsSync(USER_DATA_DIR_BRAVE)) {
-      fs.mkdirSync(USER_DATA_DIR_BRAVE, { recursive: true })
-    }
-    return chromium.launchPersistentContext(USER_DATA_DIR_BRAVE, {
-      executablePath: BRAVE_PATH,
-      headless: false,
-      locale: 'es-ES',
-      timezoneId: 'Europe/Madrid',
-      viewport: { width: 1920, height: 1080 },
-    })
-  }
-
-  if (!fs.existsSync(USER_DATA_DIR_CHROMIUM)) {
-    fs.mkdirSync(USER_DATA_DIR_CHROMIUM, { recursive: true })
-  }
-  return chromium.launchPersistentContext(USER_DATA_DIR_CHROMIUM, {
-    headless: false,
-    locale: 'es-ES',
-    timezoneId: 'Europe/Madrid',
-    viewport: { width: 1920, height: 1080 },
-  })
+  const profileDir = browserType === 'brave' ? 'brave-aliexpress-profile' : 'chromium-aliexpress-profile'
+  return launchBraveContext(profileDir)
 }
 
 async function waitForProducts(page: Page): Promise<boolean> {
@@ -228,7 +185,7 @@ export async function scrapeAliExpressAll(options?: {
 }): Promise<AliExpressProduct[]> {
   const onProgress = options?.onProgress
 
-  const braveExists = fs.existsSync(BRAVE_PATH)
+  const braveExists = braveAvailable()
   if (braveExists) {
     console.log('  Usando Brave')
   } else {
@@ -238,9 +195,7 @@ export async function scrapeAliExpressAll(options?: {
   const context = await launchContext(braveExists ? 'brave' : 'chromium')
   const page = context.pages()[0] || await context.newPage()
 
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, 'webdriver', { get: () => false })
-  })
+  await setupStealthPage(page)
 
   const allProducts: AliExpressProduct[] = []
   const seenUrls = new Set<string>()

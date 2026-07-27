@@ -10,6 +10,7 @@ export interface SyncRow {
   featured?: boolean
   amazonPrice?: number
   amazonUrl?: string
+  amazonVariantAsin?: string
   amazonShipping?: number
   amazonStock?: string
   amazonOriginalPrice?: number
@@ -23,6 +24,10 @@ export interface SyncRow {
   aliexpressShipping?: number
   aliexpressStock?: string
   aliexpressOriginalPrice?: number
+  technicalSpecs?: string
+  review?: string
+  pros?: string
+  cons?: string
 }
 
 export interface SyncResult {

@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import { getDb } from '../../src/lib/db'
 import { scrapeAmazonDetails } from './amazon'
+import { generateEnrichment, enrichDealInDb, extractAsin } from '../../src/lib/enrich-deal'
 
 interface EnrichTarget {
   id: string
@@ -8,6 +9,7 @@ interface EnrichTarget {
   title: string
   storeId: string
   affiliateUrl: string
+  brand: string
   hasImage: boolean
   hasDescription: boolean
   hasSpecs: boolean
@@ -19,12 +21,12 @@ type DbRow = Record<string, unknown>
 async function getTargets(): Promise<EnrichTarget[]> {
   const db = getDb()
   const result = await db.execute(`
-    SELECT id, productId, title, storeId, affiliateUrl,
+    SELECT id, productId, title, storeId, affiliateUrl, brand,
       CASE WHEN imageUrl != '' AND imageUrl IS NOT NULL THEN 1 ELSE 0 END as hasImage,
       CASE WHEN description != '' AND description IS NOT NULL THEN 1 ELSE 0 END as hasDescription,
       CASE WHEN technicalSpecs != '{}' AND technicalSpecs IS NOT NULL THEN 1 ELSE 0 END as hasSpecs,
       CASE WHEN review != '' AND review IS NOT NULL THEN 1 ELSE 0 END as hasReview
-    FROM deals WHERE hidden = 0
+    FROM deals WHERE status = 'published'
     ORDER BY
       CASE WHEN imageUrl = '' OR imageUrl IS NULL THEN 0 ELSE 1 END,
       CASE WHEN description = '' OR description IS NULL THEN 0 ELSE 1 END
@@ -37,17 +39,13 @@ async function getTargets(): Promise<EnrichTarget[]> {
       title: row.title as string,
       storeId: row.storeId as string,
       affiliateUrl: row.affiliateUrl as string,
+      brand: (row.brand as string) || '',
       hasImage: Boolean(row.hasImage),
       hasDescription: Boolean(row.hasDescription),
       hasSpecs: Boolean(row.hasSpecs),
       hasReview: Boolean(row.hasReview),
     }
   })
-}
-
-function extractAsin(url: string): string | null {
-  const m = url.match(/(?:dp|product|gp\/product)\/(B0[A-Z0-9]{8,})/i)
-  return m?.[1] || null
 }
 
 async function enrichDeal(target: EnrichTarget): Promise<string[]> {
@@ -80,21 +78,6 @@ async function enrichDeal(target: EnrichTarget): Promise<string[]> {
       updated.push('description')
     }
 
-    if (details.features.length > 0) {
-      const specs: Record<string, string> = {}
-      for (const feat of details.features) {
-        const parts = feat.split(/[:：]/)
-        if (parts.length >= 2) {
-          specs[parts[0].trim()] = parts.slice(1).join(':').trim()
-        }
-      }
-      await db.execute({
-        sql: "UPDATE deals SET technicalSpecs = ?, updatedAt = datetime('now') WHERE id = ? AND (technicalSpecs IS NULL OR technicalSpecs = '{}')",
-        args: [JSON.stringify(specs), target.id],
-      })
-      updated.push('technicalSpecs')
-    }
-
     if (details.brand) {
       await db.execute({
         sql: "UPDATE deals SET brand = ?, updatedAt = datetime('now') WHERE id = ? AND (brand IS NULL OR brand = '')",
@@ -108,6 +91,17 @@ async function enrichDeal(target: EnrichTarget): Promise<string[]> {
         sql: "UPDATE products SET imageUrl = ?, images = ?, updatedAt = datetime('now') WHERE id = ? AND (imageUrl IS NULL OR imageUrl = '')",
         args: [details.imageUrl, JSON.stringify(details.images.filter(Boolean)), target.productId],
       })
+    }
+
+    if (details.features.length > 0) {
+      const enrichment = generateEnrichment(target.title, target.brand, details.description, details.features)
+      await enrichDealInDb(target.id, {
+        technicalSpecs: JSON.stringify(enrichment.technicalSpecs),
+        review: enrichment.review,
+        pros: JSON.stringify(enrichment.pros),
+        cons: JSON.stringify(enrichment.cons),
+      })
+      updated.push('technicalSpecs', 'review', 'pros', 'cons')
     }
 
     console.log(`✅ ${updated.length > 0 ? updated.join(', ') : 'sin novedad'}`)

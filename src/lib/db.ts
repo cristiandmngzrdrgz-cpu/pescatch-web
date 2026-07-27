@@ -66,7 +66,7 @@ export async function initSchema() {
       salePrice REAL NOT NULL,
       shippingCost REAL NOT NULL DEFAULT 0,
       discountPercent INTEGER NOT NULL DEFAULT 0,
-      currency TEXT NOT NULL DEFAULT '€',
+      currency TEXT NOT NULL DEFAULT 'EUR',
       imageUrl TEXT NOT NULL DEFAULT '',
       images TEXT NOT NULL DEFAULT '[]',
       storeId TEXT NOT NULL DEFAULT '',
@@ -101,6 +101,7 @@ export async function initSchema() {
       focusKeyword TEXT NOT NULL DEFAULT '',
       publishedAt TEXT NOT NULL DEFAULT (datetime('now')),
       createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+      priceAlert INTEGER NOT NULL DEFAULT 0,
       updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(productId, storeId)
     )`,
@@ -179,10 +180,49 @@ export async function initSchema() {
       message TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )`,
+    `CREATE TABLE IF NOT EXISTS scraping_health (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      store_id TEXT NOT NULL,
+      operation TEXT NOT NULL DEFAULT 'refresh',
+      timestamp TEXT NOT NULL DEFAULT (datetime('now')),
+      success_count INTEGER NOT NULL DEFAULT 0,
+      fail_count INTEGER NOT NULL DEFAULT 0,
+      avg_response_time_ms INTEGER NOT NULL DEFAULT 0,
+      errors TEXT NOT NULL DEFAULT '[]'
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_scraping_health_store ON scraping_health(store_id)',
+    'CREATE INDEX IF NOT EXISTS idx_scraping_health_timestamp ON scraping_health(timestamp)',
+    `CREATE TABLE IF NOT EXISTS pending_candidates (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      asin TEXT NOT NULL DEFAULT '',
+      title TEXT NOT NULL,
+      price REAL NOT NULL DEFAULT 0,
+      originalPrice REAL,
+      rating REAL NOT NULL DEFAULT 0,
+      reviews INTEGER NOT NULL DEFAULT 0,
+      url TEXT NOT NULL,
+      keyword TEXT NOT NULL DEFAULT '',
+      category TEXT NOT NULL DEFAULT '',
+      imageUrl TEXT,
+      brand TEXT,
+      ean TEXT,
+      score INTEGER NOT NULL DEFAULT 0,
+      source TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_pending_candidates_status ON pending_candidates(status)',
+    'CREATE INDEX IF NOT EXISTS idx_pending_candidates_score ON pending_candidates(score)',
   ])
 }
 
+const globalForMigrate = globalThis as unknown as { _pescatchMigrated?: boolean }
+
 export async function migrateSchema() {
+  if (globalForMigrate._pescatchMigrated) return
+  globalForMigrate._pescatchMigrated = true
+
   const db = getDb()
 
   const info = await db.execute("PRAGMA table_info(deals)")
@@ -212,6 +252,9 @@ export async function migrateSchema() {
   }
   if (columnNames.includes('hidden')) {
     await db.execute("ALTER TABLE deals DROP COLUMN hidden")
+  }
+  if (!columnNames.includes('priceAlert')) {
+    await db.execute("ALTER TABLE deals ADD COLUMN priceAlert INTEGER NOT NULL DEFAULT 0")
   }
   if (!columnNames.includes('expiresAt')) {
     await db.execute("ALTER TABLE deals ADD COLUMN expiresAt TEXT")

@@ -1,8 +1,10 @@
 import type { ScrapedPrice, PriceScrapeResult } from './types'
 import { RateLimiter } from './rate-limiter'
-import { scrapeAmazon, extractAsin } from './amazon'
+import { scrapeAmazon } from './amazon'
 import { scrapeDecathlon } from './decathlon'
 import { scrapeAliExpress } from './aliexpress'
+import { extractAsin } from '@/lib/amazon-affiliate'
+import { withRetry } from '@/lib/scraping-utils'
 
 const amazonLimiter = new RateLimiter(4000)
 const decathlonLimiter = new RateLimiter(3000)
@@ -18,27 +20,72 @@ export async function scrapeStore(
       const asin = extractAsin(url)
       if (!asin) return { success: false, storeId, error: `No ASIN found in URL: ${url}` }
 
-      await amazonLimiter.wait()
-      const result = await scrapeAmazon(asin, productTitle)
-      if (!result) return { success: false, storeId, error: 'Amazon scrape returned no result' }
+      const result = await withRetry(
+        async () => {
+          await amazonLimiter.wait()
+          const r = await scrapeAmazon(asin, productTitle)
+          if (!r) throw new Error('Amazon scrape returned no result')
+          return r
+        },
+        {
+          maxRetries: 3,
+          initialDelayMs: 2000,
+          onRetry: (attempt, delay, error) => {
+            console.log(`  🔄 Amazon retry ${attempt}/3 (${delay}ms): ${error.message}`)
+          },
+        }
+      )
 
-      return { success: true, storeId, price: result }
+      if (!result.success) {
+        return { success: false, storeId, error: result.error?.message ?? 'Unknown error' }
+      }
+      return { success: true, storeId, price: result.data }
     }
 
     case 'decathlon': {
-      await decathlonLimiter.wait()
-      const result = await scrapeDecathlon(url)
-      if (!result) return { success: false, storeId, error: 'Decathlon scrape returned no result' }
+      const result = await withRetry(
+        async () => {
+          await decathlonLimiter.wait()
+          const r = await scrapeDecathlon(url)
+          if (!r) throw new Error('Decathlon scrape returned no result')
+          return r
+        },
+        {
+          maxRetries: 3,
+          initialDelayMs: 2000,
+          onRetry: (attempt, delay, error) => {
+            console.log(`  🔄 Decathlon retry ${attempt}/3 (${delay}ms): ${error.message}`)
+          },
+        }
+      )
 
-      return { success: true, storeId, price: result }
+      if (!result.success) {
+        return { success: false, storeId, error: result.error?.message ?? 'Unknown error' }
+      }
+      return { success: true, storeId, price: result.data }
     }
 
     case 'aliexpress': {
-      await aliexpressLimiter.wait()
-      const result = await scrapeAliExpress(url)
-      if (!result) return { success: false, storeId, error: 'AliExpress scrape returned no result' }
+      const result = await withRetry(
+        async () => {
+          await aliexpressLimiter.wait()
+          const r = await scrapeAliExpress(url)
+          if (!r) throw new Error('AliExpress scrape returned no result')
+          return r
+        },
+        {
+          maxRetries: 3,
+          initialDelayMs: 3000,
+          onRetry: (attempt, delay, error) => {
+            console.log(`  🔄 AliExpress retry ${attempt}/3 (${delay}ms): ${error.message}`)
+          },
+        }
+      )
 
-      return { success: true, storeId, price: result }
+      if (!result.success) {
+        return { success: false, storeId, error: result.error?.message ?? 'Unknown error' }
+      }
+      return { success: true, storeId, price: result.data }
     }
 
     default:
@@ -59,18 +106,27 @@ export async function updateDealInDb(
 
   const newPrice = scrapedPrice.price
 
-  const diff = Math.abs(newPrice - currentPrice) / (currentPrice || 1)
-  if (diff > PRICE_SANITY_THRESHOLD) {
-    return 'sanity_filtered'
-  }
+  const existing = await db.execute({
+    sql: 'SELECT originalPrice FROM deals WHERE id = ?',
+    args: [dealId],
+  })
+  const currentOriginalPrice = existing.rows.length > 0
+    ? Number(existing.rows[0].originalPrice)
+    : 0
 
-  const originalPrice = Math.round(newPrice * 1.3 * 100) / 100
+  const diff = Math.abs(newPrice - currentPrice) / (currentPrice || 1)
+  const hasBigChange = diff > PRICE_SANITY_THRESHOLD
+
+  const originalPrice = currentOriginalPrice > 0
+    ? currentOriginalPrice
+    : Math.round(newPrice * 1.3 * 100) / 100
   const discountPercent = Math.round(((originalPrice - newPrice) / (originalPrice || 1)) * 100)
 
   await db.execute({
     sql: `UPDATE deals SET
       salePrice = ?, originalPrice = ?, discountPercent = ?,
-      shippingCost = ?, stockStatus = ?, updatedAt = ?
+      shippingCost = ?, stockStatus = ?, updatedAt = ?,
+      priceAlert = ?
     WHERE id = ?`,
     args: [
       newPrice,
@@ -79,6 +135,7 @@ export async function updateDealInDb(
       scrapedPrice.shipping ?? 0,
       scrapedPrice.stock,
       now,
+      hasBigChange ? 1 : 0,
       dealId,
     ],
   })
@@ -88,5 +145,5 @@ export async function updateDealInDb(
     args: [dealId, now.split('T')[0], newPrice],
   })
 
-  return 'updated'
+  return hasBigChange ? 'sanity_filtered' : 'updated'
 }

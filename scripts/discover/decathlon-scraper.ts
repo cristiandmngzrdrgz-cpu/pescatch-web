@@ -1,17 +1,19 @@
-import { chromium, type Page } from 'playwright'
 import * as path from 'path'
 import * as fs from 'fs'
+import { type Page } from 'playwright'
+import {
+  POPULAR_BRANDS,
+  extractBrand,
+  categorizeProduct,
+  parseSpanishPrice,
+  braveAvailable,
+  launchBraveContext,
+  setupStealthPage,
+} from '../../src/lib/scraping-utils'
 
-const BRAVE_PATH = 'C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe'
-const USER_DATA_DIR = path.resolve('temp', 'brave-decathlon-profile')
+export { braveAvailable }
+
 const DEALS_URL = 'https://www.decathlon.es/es/deals/f-sport_fishing_pesca-a-la-bolonesa_pesca-a-la-inglesa_pesca-a-la-tenya_pesca-al-coup-con-cana-enchufable_pesca-al-coup-con-cana-telescopica_pesca-al-quiver-feeder_pesca-al-surfcasting_pesca-al-toque_pesca-bajo-hielo_pesca-con-bombeta_pesca-con-flotador_pesca-con-gobio-manejado_pesca-con-jibionera_pesca-con-jig_pesca-con-mosca_pesca-con-pez-muerto-manejado_pesca-con-senuelos_pesca-de-arrastre_pesca-de-cangrejo-de-rio_pesca-de-la-lucioperca-con-senuelo_pesca-de-la-perca-con-senuelo_pesca-de-la-trucha-con-senuelo_pesca-de-sepia-y-calamar_pesca-de-sostener_pesca-de-truchas-en-embalse_pesca-del-black-bass-con-senuelo_pesca-del-lucio-con-senuelo_pesca-del-siluro_pesca-en-barco_pesca-en-kayak_pesca-exotica_pesca-fija_pesca-fija-1_pesca-submarina'
-
-const POPULAR_BRANDS = [
-  'shimano', 'daiwa', 'abu garcia', 'mitchell', 'penn',
-  'shakespeare', 'okuma', 'rapala', 'savage gear', 'caperlan',
-  'ryobi', 'yuki', 'lineaeffe', 'beuchat', 'garbolino',
-  'storm', 'williamson', 'suissex', 'ragot', 'yo-zuri',
-]
 
 export interface DecathlonProduct {
   title: string
@@ -37,44 +39,6 @@ interface RawCard {
   rating: number | null
   reviewsCount: number | null
   badges: string[]
-}
-
-// Detect canonical category + discover subcategory from title
-function categorizeProduct(title: string): string {
-  const lower = title.toLowerCase()
-
-  const categoryRules: Array<[string, RegExp[]]> = [
-    ['Carretes', [/carrete/, /spin/i, /\.?fg\b/, /\.?hg\b/, /\.?lt\b/, /\.?xh\b/]],
-    ['Cañas', [/caña/, /cana/, /telescópica/, /telescopica/, /blank/, /casting weight/]],
-    ['Señuelos', [/señuelo/, /senuelo/, /vinilo/, /peces? artificiales/, /kit.*[Ss]eñuelos?/, /cucharill/, /rapala/]],
-    ['Kits', [/combo/, /conjunto/, /kit .*(pesca|carp|cana|carrete)/]],
-    ['Accesorios', [/caja/, /anzuelo/, /sedal/, /plomo/, /cuchillo/, /alicate/, /línea/, /linea/, /bajo de línea/]],
-    ['Ropa', [/traje/, /bota/, /gafas/, /sombrero/, /guante/, /gorra/, /polarizada/]],
-    ['Submarina', [/submarina/, /submarino/, /escarpín/, /escarpin/, /espadon/, /fusil/, /mascara/]],
-  ]
-
-  for (const [cat, patterns] of categoryRules) {
-    if (patterns.some(p => p.test(lower))) return cat
-  }
-
-  // Heuristic: if title has no clear category but has brand → Accesorios
-  if (POPULAR_BRANDS.some(b => lower.startsWith(b))) return 'Accesorios'
-
-  return 'Equipo'
-}
-
-function extractBrand(title: string): string | null {
-  const lower = title.toLowerCase()
-  for (const b of POPULAR_BRANDS) {
-    if (lower.startsWith(b)) return b.charAt(0).toUpperCase() + b.slice(1)
-  }
-  return null
-}
-
-function parseSpanishPrice(text: string): number | null {
-  const cleaned = text.replace(/[^0-9.,]/g, '').replace(',', '.').trim()
-  const num = parseFloat(cleaned)
-  return isNaN(num) ? null : num
 }
 
 async function scrapePage(page: Page, pageNum: number): Promise<RawCard[]> {
@@ -256,27 +220,11 @@ export async function scrapeDecathlonDeals(options?: ScrapeOptions): Promise<Dec
   const headless = options?.headless ?? false
   const onProgress = options?.onProgress
 
-  if (!fs.existsSync(USER_DATA_DIR)) {
-    fs.mkdirSync(USER_DATA_DIR, { recursive: true })
-  }
-
-  const context = await chromium.launchPersistentContext(USER_DATA_DIR, {
-    executablePath: BRAVE_PATH,
-    headless,
-    locale: 'es-ES',
-    timezoneId: 'Europe/Madrid',
-    viewport: { width: 1920, height: 1080 },
-    args: [
-      '--disable-blink-features=AutomationControlled',
-      '--disable-features=IsolateOrigins,site-per-process',
-    ],
-  })
+  const context = await launchBraveContext('brave-decathlon-profile', { headless })
 
   const page = context.pages()[0] || await context.newPage()
 
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, 'webdriver', { get: () => false })
-  })
+  await setupStealthPage(page)
 
   try {
     await page.goto(DEALS_URL, { waitUntil: 'domcontentloaded', timeout: 60000 })
@@ -342,27 +290,11 @@ export interface DecathlonDetails {
 }
 
 export async function scrapeDecathlonDetails(url: string): Promise<DecathlonDetails> {
-  if (!fs.existsSync(USER_DATA_DIR)) {
-    fs.mkdirSync(USER_DATA_DIR, { recursive: true })
-  }
-
-  const context = await chromium.launchPersistentContext(USER_DATA_DIR, {
-    executablePath: BRAVE_PATH,
-    headless: false,
-    locale: 'es-ES',
-    timezoneId: 'Europe/Madrid',
-    viewport: { width: 1920, height: 1080 },
-    args: [
-      '--disable-blink-features=AutomationControlled',
-      '--disable-features=IsolateOrigins,site-per-process',
-    ],
-  })
+  const context = await launchBraveContext('brave-decathlon-profile')
 
   const page = context.pages()[0] || await context.newPage()
 
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, 'webdriver', { get: () => false })
-  })
+  await setupStealthPage(page)
 
   try {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 })
@@ -448,13 +380,4 @@ export async function downloadDecathlonImages(products: DecathlonProduct[], outp
   }
 
   return saved
-}
-
-// Browser availability check
-export function braveAvailable(): boolean {
-  try {
-    return fs.existsSync(BRAVE_PATH)
-  } catch {
-    return false
-  }
 }

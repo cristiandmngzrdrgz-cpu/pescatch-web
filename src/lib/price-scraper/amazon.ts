@@ -1,10 +1,6 @@
 import type { ScrapedPrice } from './types'
 import { getNextUserAgent } from './user-agents'
-
-export function extractAsin(url: string): string | null {
-  const match = url.match(/\/dp\/([A-Z0-9]{10})/)
-  return match?.[1] ?? null
-}
+import { parseSpanishPrice } from '@/lib/scraping-utils'
 
 export async function scrapeAmazon(
   asin: string,
@@ -32,7 +28,7 @@ export async function scrapeAmazon(
   const hasPriceRange = html.includes('a-price-range')
   const hasVariants = html.includes('twister') || html.includes('variationValues')
 
-  const price = parsePriceFromHtml(html) ?? parseJsonLd(html)
+  const price = parseJsonLd(html) ?? parsePriceFromHtml(html)
   if (!price) return null
 
   // If parent page with variants AND we have a product title to match:
@@ -113,14 +109,4 @@ function parsePriceFromHtml(html: string): ScrapedPrice | null {
   }
 
   return null
-}
-
-export function parseSpanishPrice(text: string): number {
-  const clean = text
-    .replace(/[^0-9.,]/g, '')
-    .replace(/\.(?=\d{3}(?:\.|$)|(?:\s|,|$))/g, '')
-    .replace(',', '.')
-
-  const num = parseFloat(clean)
-  return isNaN(num) ? 0 : Math.round(num * 100) / 100
 }

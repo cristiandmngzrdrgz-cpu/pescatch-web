@@ -11,7 +11,8 @@ import type { BlogPost } from '@/types'
 import type { Metadata } from 'next'
 import { buildMetadata, BASE_URL, generateCollectionPageSchema, JsonLd } from '@/lib/seo/schemas'
 
-export const dynamic = 'force-dynamic'
+// Revalidar cada 5 minutos — equilibrio entre frescura y rendimiento/SEO
+export const revalidate = 300
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata(

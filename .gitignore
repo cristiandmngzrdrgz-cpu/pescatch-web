@@ -58,6 +58,9 @@ CLAUDE.md
 .agent-confirmation.md
 bypass-confirmation.json
 
+# debug / session artifacts (screenshots, snapshots, logs de trabajo)
+/_debug/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

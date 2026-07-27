@@ -20,6 +20,7 @@ export default function NewDealPage() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   const [form, setForm] = useState({
     title: '',
@@ -131,10 +132,24 @@ export default function NewDealPage() {
     setSpecs(prev => prev.filter((_, i) => i !== idx))
   }
 
+  const validate = (): boolean => {
+    const errors: Record<string, string> = {}
+    if (!form.title.trim()) errors.title = 'El título es obligatorio'
+    if (!form.slug.trim()) errors.slug = 'El slug es obligatorio'
+    else if (!/^[a-z0-9-]+$/.test(form.slug)) errors.slug = 'Solo minúsculas, números y guiones'
+    if (!form.salePrice || parseFloat(form.salePrice) <= 0) errors.salePrice = 'Debe ser mayor que 0'
+    if (form.originalPrice && parseFloat(form.originalPrice) <= parseFloat(form.salePrice)) errors.originalPrice = 'Debe ser mayor que el precio de oferta'
+    if (!form.store) errors.store = 'Selecciona una tienda'
+    if (!form.category) errors.category = 'Selecciona una categoría'
+    setFieldErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSaving(true)
     setError('')
+    if (!validate()) return
+    setSaving(true)
 
     const store = STORES.find(s => s.id === form.store)
 
@@ -220,8 +235,9 @@ export default function NewDealPage() {
         <div>
           <h1 className="text-2xl font-extrabold" style={{ color: '#E8F0FE' }}>Nuevo chollo</h1>
           <p className="text-sm" style={{ color: '#8BA3C7' }}>Publica una nueva oferta de pesca verificada</p>
-        </div>
-      </div>
+            </div>
+            {fieldErrors.slug && <p className="text-xs mt-1" style={{ color: '#EF4444' }}>{fieldErrors.slug}</p>}
+          </div>
 
       <form ref={formRef} onSubmit={handleSubmit} className="max-w-2xl space-y-6">
         <div className="rounded-2xl p-6 space-y-5" style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
@@ -234,12 +250,13 @@ export default function NewDealPage() {
 
           <div>
             <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>Título del producto</label>
-            <Input value={form.title} onChange={e => updateField('title', e.target.value)} placeholder="Ej: Carrete Shimano Stradic FL 2500" required className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
+            <Input value={form.title} onChange={e => { setFieldErrors(prev => ({ ...prev, title: '' })); updateField('title', e.target.value) }} placeholder="Ej: Carrete Shimano Stradic FL 2500" required className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: fieldErrors.title ? '#EF4444' : '#1E3A5F', color: '#E8F0FE' }} />
+            {fieldErrors.title && <p className="text-xs mt-1" style={{ color: '#EF4444' }}>{fieldErrors.title}</p>}
           </div>
           <div>
             <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>Slug (URL)</label>
             <div className="flex gap-2">
-              <Input value={form.slug} onChange={e => { updateField('slug', e.target.value); setForm(prev => ({ ...prev, slugManuallyEdited: true })) }} placeholder="carrete-shimano-stradic-fl" required className="h-11 rounded-xl flex-1" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
+              <Input value={form.slug} onChange={e => { setFieldErrors(prev => ({ ...prev, slug: '' })); updateField('slug', e.target.value); setForm(prev => ({ ...prev, slugManuallyEdited: true })) }} placeholder="carrete-shimano-stradic-fl" required className="h-11 rounded-xl flex-1" style={{ background: '#0B1120', borderColor: fieldErrors.slug ? '#EF4444' : '#1E3A5F', color: '#E8F0FE' }} />
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button type="button" onClick={regenerateSlug} className="h-11 px-3 rounded-xl flex-shrink-0" style={{ background: '#1A2535', color: '#00D4FF', border: '1px solid #1E3A5F' }} aria-label="Regenerar slug">
@@ -261,11 +278,13 @@ export default function NewDealPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>Precio original (€)</label>
-              <Input type="number" step="0.01" min="0" value={form.originalPrice} onChange={e => updateField('originalPrice', e.target.value)} placeholder="249.99" required className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
+              <Input type="number" step="0.01" min="0" value={form.originalPrice} onChange={e => { setFieldErrors(prev => ({ ...prev, originalPrice: '' })); updateField('originalPrice', e.target.value) }} placeholder="249.99" required className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: fieldErrors.originalPrice ? '#EF4444' : '#1E3A5F', color: '#E8F0FE' }} />
+              {fieldErrors.originalPrice && <p className="text-xs mt-1" style={{ color: '#EF4444' }}>{fieldErrors.originalPrice}</p>}
             </div>
             <div>
               <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>Precio oferta (€)</label>
-              <Input type="number" step="0.01" min="0" value={form.salePrice} onChange={e => updateField('salePrice', e.target.value)} placeholder="179.99" required className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }} />
+              <Input type="number" step="0.01" min="0" value={form.salePrice} onChange={e => { setFieldErrors(prev => ({ ...prev, salePrice: '' })); updateField('salePrice', e.target.value) }} placeholder="179.99" required className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: fieldErrors.salePrice ? '#EF4444' : '#1E3A5F', color: '#E8F0FE' }} />
+              {fieldErrors.salePrice && <p className="text-xs mt-1" style={{ color: '#EF4444' }}>{fieldErrors.salePrice}</p>}
             </div>
             <div>
               <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>Gastos de envío (€)</label>
@@ -296,7 +315,7 @@ export default function NewDealPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>Categoría</label>
-              <Select value={form.category} onValueChange={v => updateField('category', v)}>
+              <Select value={form.category} onValueChange={v => { setFieldErrors(prev => ({ ...prev, category: '' })); updateField('category', v) }}>
                 <SelectTrigger className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }}>
                   <SelectValue placeholder="Seleccionar..." />
                 </SelectTrigger>
@@ -319,11 +338,12 @@ export default function NewDealPage() {
                   ))}
                 </SelectContent>
               </Select>
+              {fieldErrors.category && <p className="text-xs mt-1" style={{ color: '#EF4444' }}>{fieldErrors.category}</p>}
             </div>
             <div>
               <label className="block text-sm font-semibold mb-1.5" style={{ color: '#E8F0FE' }}>Tienda</label>
-              <Select value={form.store} onValueChange={v => updateField('store', v)}>
-                <SelectTrigger className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }}>
+              <Select value={form.store} onValueChange={v => { setFieldErrors(prev => ({ ...prev, store: '' })); updateField('store', v) }}>
+                <SelectTrigger className="h-11 rounded-xl" style={{ background: '#0B1120', borderColor: fieldErrors.store ? '#EF4444' : '#1E3A5F', color: '#E8F0FE' }}>
                   <SelectValue placeholder="Seleccionar..." />
                 </SelectTrigger>
                 <SelectContent style={{ background: '#111827', borderColor: '#1E3A5F', color: '#E8F0FE' }}>
@@ -332,6 +352,7 @@ export default function NewDealPage() {
                   ))}
                 </SelectContent>
               </Select>
+              {fieldErrors.store && <p className="text-xs mt-1" style={{ color: '#EF4444' }}>{fieldErrors.store}</p>}
             </div>
           </div>
         </div>

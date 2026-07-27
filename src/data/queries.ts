@@ -2,6 +2,70 @@ import type { Deal, DealFilters, PaginatedResult, Product, Store } from '@/types
 import { getDb } from '@/lib/db'
 import { seedDatabase } from '@/lib/seed'
 import type { InValue } from '@libsql/client'
+import { cache } from 'react'
+
+// ─── Shared filter builder ────────────────────────────────────────────────────
+// Centralises WHERE construction so getDeals and getDealsPaginated stay in sync.
+function buildWhereClause(
+  filters?: DealFilters,
+  includeHidden = false,
+): { where: string; params: InValue[] } {
+  let where = '1=1'
+  const params: InValue[] = []
+
+  if (!includeHidden) {
+    where += " AND status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now'))"
+  }
+
+  if (!filters) return { where, params }
+
+  if (filters.category) {
+    where += ' AND category = ?'
+    params.push(filters.category)
+  }
+  if (filters.subcategory) {
+    where += ' AND subcategory = ?'
+    params.push(filters.subcategory)
+  }
+  if (filters.brand) {
+    where += ' AND LOWER(brand) = LOWER(?)'
+    params.push(filters.brand)
+  }
+  if (filters.store) {
+    where += ' AND storeId = ?'
+    params.push(filters.store)
+  }
+  if (filters.search) {
+    const q = `%${filters.search.toLowerCase()}%`
+    where += ' AND (LOWER(title) LIKE ? OR LOWER(description) LIKE ? OR LOWER(tags) LIKE ? OR LOWER(storeName) LIKE ?)'
+    params.push(q, q, q, q)
+  }
+  if (filters.minDiscount) {
+    where += ' AND discountPercent >= ?'
+    params.push(filters.minDiscount)
+  }
+  if (filters.minPrice) {
+    where += ' AND salePrice >= ?'
+    params.push(filters.minPrice)
+  }
+  if (filters.maxPrice) {
+    where += ' AND salePrice <= ?'
+    params.push(filters.maxPrice)
+  }
+
+  return { where, params }
+}
+
+function buildOrderBy(sortBy?: DealFilters['sortBy']): string {
+  switch (sortBy) {
+    case 'discount':   return 'ORDER BY discountPercent DESC'
+    case 'price_asc':  return 'ORDER BY salePrice ASC'
+    case 'price_desc': return 'ORDER BY salePrice DESC'
+    case 'newest':     return 'ORDER BY publishedAt DESC'
+    case 'popular':    return 'ORDER BY votesUp DESC'
+    default:           return 'ORDER BY publishedAt DESC'
+  }
+}
 
 function safeJsonParse<T>(raw: string, fallback: T): T {
   try { return JSON.parse(raw) as T } catch { return fallback }
@@ -189,59 +253,9 @@ async function loadDeal(sql: string, params: InValue[]): Promise<Deal | undefine
 }
 
 export async function getDeals(filters?: DealFilters, includeHidden = false): Promise<Deal[]> {
-  let sql = 'SELECT * FROM deals WHERE 1=1'
-  const params: InValue[] = []
-
-  if (!includeHidden) sql += " AND status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now'))"
-
-  if (filters) {
-    if (filters.category) {
-      sql += ' AND category = ?'
-      params.push(filters.category)
-    }
-    if (filters.subcategory) {
-      sql += ' AND subcategory = ?'
-      params.push(filters.subcategory)
-    }
-    if (filters.brand) {
-      sql += ' AND LOWER(brand) = LOWER(?)'
-      params.push(filters.brand)
-    }
-    if (filters.store) {
-      sql += ' AND storeId = ?'
-      params.push(filters.store)
-    }
-    if (filters.search) {
-      const q = `%${filters.search.toLowerCase()}%`
-      sql += ' AND (LOWER(title) LIKE ? OR LOWER(description) LIKE ? OR LOWER(tags) LIKE ? OR LOWER(storeName) LIKE ?)'
-      params.push(q, q, q, q)
-    }
-    if (filters.minDiscount) {
-      sql += ' AND discountPercent >= ?'
-      params.push(filters.minDiscount)
-    }
-    if (filters.minPrice) {
-      sql += ' AND salePrice >= ?'
-      params.push(filters.minPrice)
-    }
-    if (filters.maxPrice) {
-      sql += ' AND salePrice <= ?'
-      params.push(filters.maxPrice)
-    }
-
-    switch (filters.sortBy) {
-      case 'discount': sql += ' ORDER BY discountPercent DESC'; break
-      case 'price_asc': sql += ' ORDER BY salePrice ASC'; break
-      case 'price_desc': sql += ' ORDER BY salePrice DESC'; break
-      case 'newest': sql += ' ORDER BY publishedAt DESC'; break
-      case 'popular': sql += ' ORDER BY votesUp DESC'; break
-      default: sql += ' ORDER BY publishedAt DESC'; break
-    }
-  } else {
-    sql += ' ORDER BY publishedAt DESC'
-  }
-
-  return loadDeals(sql, params)
+  const { where, params } = buildWhereClause(filters, includeHidden)
+  const order = buildOrderBy(filters?.sortBy)
+  return loadDeals(`SELECT * FROM deals WHERE ${where} ${order}`, params)
 }
 
 export async function getDealsPaginated(
@@ -253,46 +267,8 @@ export async function getDealsPaginated(
   const db = getDb()
   await seedDatabase()
 
-  let where = '1=1'
-  const params: InValue[] = []
-
-  if (!includeHidden) where += " AND status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now'))"
-
-  if (filters) {
-    if (filters.category) {
-      where += ' AND category = ?'
-      params.push(filters.category)
-    }
-    if (filters.subcategory) {
-      where += ' AND subcategory = ?'
-      params.push(filters.subcategory)
-    }
-    if (filters.brand) {
-      where += ' AND LOWER(brand) = LOWER(?)'
-      params.push(filters.brand)
-    }
-    if (filters.store) {
-      where += ' AND storeId = ?'
-      params.push(filters.store)
-    }
-    if (filters.search) {
-      const q = `%${filters.search.toLowerCase()}%`
-      where += ' AND (LOWER(title) LIKE ? OR LOWER(description) LIKE ? OR LOWER(tags) LIKE ? OR LOWER(storeName) LIKE ?)'
-      params.push(q, q, q, q)
-    }
-    if (filters.minDiscount) {
-      where += ' AND discountPercent >= ?'
-      params.push(filters.minDiscount)
-    }
-    if (filters.minPrice) {
-      where += ' AND salePrice >= ?'
-      params.push(filters.minPrice)
-    }
-    if (filters.maxPrice) {
-      where += ' AND salePrice <= ?'
-      params.push(filters.maxPrice)
-    }
-  }
+  const { where, params } = buildWhereClause(filters, includeHidden)
+  const order = buildOrderBy(filters?.sortBy)
 
   const countResult = await db.execute({
     sql: `SELECT COUNT(*) as total FROM deals WHERE ${where}`,
@@ -301,19 +277,8 @@ export async function getDealsPaginated(
   const total = Number(countResult.rows[0]?.total ?? 0)
   const totalPages = Math.ceil(total / limit)
 
-  let orderBy = 'ORDER BY publishedAt DESC'
-  if (filters?.sortBy) {
-    switch (filters.sortBy) {
-      case 'discount': orderBy = 'ORDER BY discountPercent DESC'; break
-      case 'price_asc': orderBy = 'ORDER BY salePrice ASC'; break
-      case 'price_desc': orderBy = 'ORDER BY salePrice DESC'; break
-      case 'newest': orderBy = 'ORDER BY publishedAt DESC'; break
-      case 'popular': orderBy = 'ORDER BY votesUp DESC'; break
-    }
-  }
-
   const offset = (page - 1) * limit
-  const sql = `SELECT * FROM deals WHERE ${where} ${orderBy} LIMIT ${limit} OFFSET ${offset}`
+  const sql = `SELECT * FROM deals WHERE ${where} ${order} LIMIT ${limit} OFFSET ${offset}`
   const deals = await loadDeals(sql, params)
 
   return { items: deals, total, page, totalPages }
@@ -731,3 +696,19 @@ export async function deleteComment(id: number): Promise<boolean> {
   })
   return result.rowsAffected > 0
 }
+
+export const getDealsCached = cache(async (filters?: DealFilters): Promise<Deal[]> => {
+  return getDeals(filters)
+})
+
+export const getFeaturedDealsCached = cache(async (): Promise<Deal[]> => {
+  return getFeaturedDeals()
+})
+
+export const getDealBySlugCached = cache(async (slug: string): Promise<Deal | undefined> => {
+  return getDealBySlug(slug)
+})
+
+export const getRelatedDealsCached = cache(async (deal: Deal, limit = 4): Promise<Deal[]> => {
+  return getRelatedDeals(deal, limit)
+})

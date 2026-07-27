@@ -62,6 +62,10 @@ function parseCsv(text: string): string[][] {
   return rows
 }
 
+function toCamelCase(str: string): string {
+  return str.replace(/[-_\s]+(.)/g, (_, c) => c.toUpperCase()).replace(/^[A-Z]/, c => c.toLowerCase())
+}
+
 function rawRowsToSyncRows(headers: string[], rawRows: string[][]): SyncRow[] {
   const result: SyncRow[] = []
 
@@ -69,15 +73,17 @@ function rawRowsToSyncRows(headers: string[], rawRows: string[][]): SyncRow[] {
     const syncRow: Record<string, string | number | boolean | undefined> = {}
 
     headers.forEach((header: string, index: number) => {
-      const value = row[index]?.trim() || ''
-      if (!value) return
+      const raw = row[index]?.trim() ?? ''
+      if (raw === '' || raw === undefined || raw === null) return
 
-      if (['amazonPrice', 'decathlonPrice', 'aliexpressPrice', 'amazonShipping', 'decathlonShipping', 'aliexpressShipping'].includes(header)) {
-        syncRow[header] = parseFloat(value.replace(',', '.')) || undefined
-      } else if (header === 'featured') {
-        syncRow[header] = value.toLowerCase() === 'si' || value.toLowerCase() === 'yes'
+      const key = toCamelCase(header)
+
+      if (['amazonPrice', 'decathlonPrice', 'aliexpressPrice', 'amazonShipping', 'decathlonShipping', 'aliexpressShipping'].includes(key)) {
+        syncRow[key] = parseFloat(raw.replace(',', '.')) || undefined
+      } else if (key === 'featured') {
+        syncRow[key] = ['si', 'sí', 'yes', 'true', '1'].includes(raw.toLowerCase())
       } else {
-        syncRow[header] = value
+        syncRow[key] = raw
       }
     })
 

@@ -5,6 +5,12 @@ import { readGoogleSheets } from './sync/reader-sheets'
 import { decathlonAdapter } from './sync/decathlon-adapter'
 import { amazonAdapter } from './sync/amazon-adapter'
 import { aliexpressAdapter } from './sync/aliexpress-adapter'
+import { buildAmazonUrl } from './amazon-affiliate'
+import { enrichDealInDb, generateEnrichment, extractAsin } from './enrich-deal'
+import { scrapeAmazonDetails } from '../../scripts/discover/amazon'
+import { validateSyncRow } from './sync/validation'
+import { enrichWithAI } from './enrich-ai'
+import { findFuzzyMatch } from './sync/fuzzy-matcher'
 import type { SyncRow, SyncResult, StoreAdapter } from './sync/types'
 
 export interface SyncRunResult extends SyncResult {
@@ -73,6 +79,16 @@ async function processRow(
       matched = await matchBySlug(slug)
     }
 
+    if (!matched && row.category) {
+      const fuzzyMatch = await findFuzzyMatch(row.name, row.brand || '', row.category)
+      if (fuzzyMatch.matchType === 'exact') {
+        matched = { id: fuzzyMatch.productId, exists: true }
+        console.log(`  🔗 Fuzzy match (${Math.round(fuzzyMatch.confidence * 100)}%): "${row.name}" → existing product`)
+      } else if (fuzzyMatch.matchType === 'fuzzy') {
+        console.log(`  ⚠️ Possible duplicate (${Math.round(fuzzyMatch.confidence * 100)}%): "${row.name}" - creating new product`)
+      }
+    }
+
     if (!matched) {
       const uniqueSlug = await generateUniqueSlug(row.name)
       const productId = ean ? `prod_${ean}` : `prod_${uniqueSlug}`
@@ -87,7 +103,15 @@ async function processRow(
       )
       matched = { id: productId, exists: false }
     } else {
-      const uniqueSlug = await generateUniqueSlug(row.name, matched.id)
+      const existing = await db.execute({
+        sql: 'SELECT slug, name FROM products WHERE id = ?',
+        args: [matched.id],
+      })
+      const existingSlug = existing.rows.length > 0 ? (existing.rows[0].slug as string) : ''
+      const existingName = existing.rows.length > 0 ? (existing.rows[0].name as string) : ''
+      const uniqueSlug = (existingName === row.name && existingSlug)
+        ? existingSlug
+        : await generateUniqueSlug(row.name, matched.id)
       await updateProduct(
         matched.id,
         row.name, uniqueSlug, row.brand || '',
@@ -119,7 +143,10 @@ async function processRow(
       const apiResult = await store.adapter.lookup(ean)
 
       const price = apiResult?.price ?? store.manualPrice
-      const url = apiResult?.url ?? store.manualUrl
+      let url = apiResult?.url ?? store.manualUrl
+      if (store.storeId === 'amazon' && row.amazonVariantAsin && url) {
+        url = buildAmazonUrl(url, row.amazonVariantAsin)
+      }
       const shipping = apiResult?.shipping ?? store.manualShipping ?? 0
       const stock = apiResult?.stock ?? store.manualStock ?? 'in_stock'
 
@@ -159,10 +186,70 @@ async function processRow(
         WHERE id = ?`,
         args: [pCategory, pSubcategory, pDescription, pImageUrl, pImages, ean, dealId],
       })
+
+      // Apply enrichment from sheet columns (technicalSpecs, review, pros, cons)
+      if (row.technicalSpecs || row.review || row.pros || row.cons) {
+        try {
+          await enrichDealInDb(dealId, {
+            technicalSpecs: row.technicalSpecs || '',
+            review: row.review || '',
+            pros: row.pros || '',
+            cons: row.cons || '',
+          })
+        } catch {}
+      }
     }
 
-    if (isNew) result.created++
-    else result.updated++
+    // Auto-enrich new Amazon deals that have no specs yet
+    if (isNew) {
+      result.created++
+      const amazonUrl = stores.find(s => s.storeId === 'amazon')?.manualUrl || ''
+      const asin = amazonUrl ? extractAsin(amazonUrl) : null
+      if (asin) {
+        try {
+          const details = await scrapeAmazonDetails(asin)
+          if (details.features.length > 0 || details.description) {
+            const existingDeal = await db.execute({
+              sql: 'SELECT id FROM deals WHERE productId = ? AND storeId = ?',
+              args: [matched.id, 'amazon'],
+            })
+            if (existingDeal.rows.length > 0) {
+              const dealId = existingDeal.rows[0].id as string
+
+              let enrichment
+              try {
+                enrichment = await enrichWithAI({
+                  title: pName,
+                  brand: details.brand || row.brand || '',
+                  description: details.description,
+                  features: details.features,
+                  category: row.category || '',
+                })
+              } catch {}
+
+              if (!enrichment) {
+                enrichment = generateEnrichment(
+                  pName, row.brand || '',
+                  details.description, details.features,
+                )
+              }
+
+              await enrichDealInDb(dealId, {
+                technicalSpecs: JSON.stringify(enrichment.technicalSpecs),
+                review: enrichment.review,
+                pros: JSON.stringify(enrichment.pros),
+                cons: JSON.stringify(enrichment.cons),
+                brand: details.brand || undefined,
+                imageUrl: details.imageUrl || undefined,
+                description: details.description || undefined,
+              })
+            }
+          }
+        } catch {}
+      }
+    } else {
+      result.updated++
+    }
   } catch (err) {
     result.errors.push(`Error processing "${row.name}" (EAN: ${ean}): ${(err as Error).message}`)
   }
@@ -197,6 +284,12 @@ export async function runSync(): Promise<SyncRunResult> {
   const rowsProcessed = rows.length
 
   for (const row of rows) {
+    const validation = validateSyncRow(row)
+    if (!validation.valid) {
+      result.errors.push(`Validation failed for "${row.name}": ${validation.errors.join(', ')}`)
+      result.skipped++
+      continue
+    }
     await processRow(row, result)
   }
 

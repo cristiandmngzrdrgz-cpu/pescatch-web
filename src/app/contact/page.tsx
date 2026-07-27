@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { trackContactForm } from '@/lib/analytics'
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: '', email: '', message: '' })
@@ -22,6 +23,7 @@ export default function ContactPage() {
       if (res.ok) {
         setStatus('success')
         setForm({ name: '', email: '', message: '' })
+        trackContactForm()
       } else {
         const data = await res.json()
         setError(data.error || 'Error al enviar')

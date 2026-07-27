@@ -5,7 +5,7 @@ import { Fish } from 'lucide-react'
 import type { Metadata } from 'next'
 import { generateBreadcrumbSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata(

@@ -11,7 +11,8 @@ import { Fish, ArrowUpDown, Store, Tag } from 'lucide-react'
 import type { Metadata } from 'next'
 import { generateBreadcrumbSchema, generateCollectionPageSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
 
-export const dynamic = 'force-dynamic'
+// Categorías con filtros: revalidar cada 2 minutos para mantener frescura
+export const revalidate = 120
 
 const PAGE_SIZE = 12
 

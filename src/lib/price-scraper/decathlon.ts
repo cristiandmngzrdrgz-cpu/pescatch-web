@@ -1,12 +1,10 @@
 import type { ScrapedPrice } from './types'
 import { getNextUserAgent } from './user-agents'
-import { parseSpanishPrice } from './amazon'
-import { braveAvailable } from './brave'
+import { parseSpanishPrice, braveAvailable, getBravePath } from '@/lib/scraping-utils'
 import { chromium } from 'playwright'
 import * as path from 'path'
 import * as fs from 'fs'
 
-const BRAVE_PATH = 'C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe'
 const USER_DATA_DIR = path.resolve('temp', 'brave-decathlon-refresh')
 
 export async function scrapeDecathlon(url: string): Promise<ScrapedPrice | null> {
@@ -46,7 +44,7 @@ async function tryBrave(url: string): Promise<ScrapedPrice | null> {
     }
 
     context = await chromium.launchPersistentContext(USER_DATA_DIR, {
-      executablePath: BRAVE_PATH,
+      executablePath: getBravePath(),
       headless: false,
       locale: 'es-ES',
       timezoneId: 'Europe/Madrid',
@@ -67,6 +65,16 @@ async function tryBrave(url: string): Promise<ScrapedPrice | null> {
     await page.waitForTimeout(4000)
 
     const price = await page.evaluate(() => {
+      const scripts = document.querySelectorAll('script[type="application/ld+json"]')
+      for (const s of scripts) {
+        try {
+          const d = JSON.parse(s.textContent || '')
+          if (d['@type'] === 'Product' && d.offers) {
+            const o = Array.isArray(d.offers) ? d.offers[0] : d.offers
+            if (o.price) return String(o.price)
+          }
+        } catch {}
+      }
       const sel = [
         'meta[property="product:price:amount"]',
         '[data-testid="product-price"]',
@@ -82,16 +90,6 @@ async function tryBrave(url: string): Promise<ScrapedPrice | null> {
           const m = raw.match(/(\d+[.,]\d{2})/)
           if (m) return m[1]
         }
-      }
-      const scripts = document.querySelectorAll('script[type="application/ld+json"]')
-      for (const s of scripts) {
-        try {
-          const d = JSON.parse(s.textContent || '')
-          if (d['@type'] === 'Product' && d.offers) {
-            const o = Array.isArray(d.offers) ? d.offers[0] : d.offers
-            if (o.price) return String(o.price)
-          }
-        } catch {}
       }
       return null
     })

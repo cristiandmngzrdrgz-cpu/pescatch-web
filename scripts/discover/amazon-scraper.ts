@@ -1,39 +1,18 @@
-import { chromium, type Page } from 'playwright'
+import { type Page } from 'playwright'
 import * as path from 'path'
-import * as fs from 'fs'
 import type { AmazonCandidate } from './amazon'
-
-const BRAVE_PATH = 'C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe'
-const USER_DATA_DIR = path.resolve('temp', 'brave-amazon-profile')
+import { isFishingProduct, braveAvailable, launchBraveContext, setupStealthPage } from '../../src/lib/scraping-utils'
 
 function sleep(ms: number) {
   return new Promise(r => setTimeout(r, ms))
 }
 
 async function launchContext() {
-  if (!fs.existsSync(USER_DATA_DIR)) {
-    fs.mkdirSync(USER_DATA_DIR, { recursive: true })
-  }
-
-  const context = await chromium.launchPersistentContext(USER_DATA_DIR, {
-    executablePath: BRAVE_PATH,
-    headless: false,
-    locale: 'es-ES',
-    timezoneId: 'Europe/Madrid',
-    viewport: { width: 1920, height: 1080 },
-    args: [
-      '--disable-blink-features=AutomationControlled',
-      '--disable-features=IsolateOrigins,site-per-process',
-    ],
-  })
-
-  return context
+  return launchBraveContext('brave-amazon-profile')
 }
 
 async function setupPage(page: Page) {
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, 'webdriver', { get: () => false })
-  })
+  await setupStealthPage(page)
 }
 
 async function waitForCaptcha(page: Page): Promise<boolean> {
@@ -134,44 +113,6 @@ async function extractProductsFromPage(page: Page, keyword: string, category: st
     brand: r.brand,
     ean: null as string | null,
   }))
-}
-
-const FISHING_WORDS = [
-  'pesca', 'fishing', 'carrete', 'caña', 'cana', 'anzuelo', 'señuelo', 'senuelo',
-  'sedal', 'spinning', 'surfcasting', 'carpfishing', 'baitcast', 'jigging', 'feeder',
-  'lubina', 'trucha', 'black bass', 'lucio', 'bajo línea', 'bajo de línea', 'fluorocarbono',
-  'trenza', 'vinilo', 'cucharilla', 'popper', 'stickbait', 'vadeador', 'wading',
-  'guantes pesca', 'polarizadas', 'aparejos', 'bolsa pesca', 'mochila pesca',
-  'shimano', 'daiwa', 'abu garcia', 'mitchell', 'penn', 'savage gear', 'berkley',
-  'okuma', 'grauvell', 'caperlan', 'ryobi', 'lineaeffe', 'yuki', 'ugly stik',
-  'sougayilang', 'truscend', 'bassdash', 'hellbender', 'rapala', 'shakespeare',
-  'caña pescar', 'carrete spinning', 'carrete pesca', 'giratorio', 'spinnrolle',
-  'cebo', 'plomo', 'plomos', 'boya', 'boyas', 'emergente', 'emerger',
-]
-
-const NON_FISHING_WORDS = [
-  'perro', 'perros', 'gato', 'gatos', 'mascota', 'cocina', 'jardín',
-  'herramienta', 'herramientas', 'bricolaje', 'comedero perro',
-  'comedero gato', 'dog ', 'cat ', 'alimentador', 'dispensador',
-  'costura', 'sewing', 'maquillaje',
-]
-
-function isFishingProduct(title: string, keyword: string): boolean {
-  const lower = title.toLowerCase()
-  const kwLower = keyword.toLowerCase()
-
-  // Brand name in keyword or title = auto-accept
-  const brands = ['shimano', 'daiwa', 'abu garcia', 'mitchell', 'penn', 'savage gear',
-    'berkley', 'okuma', 'caperlan', 'bassdash', 'sougayilang', 'truscend', 'hellbender']
-  if (brands.some(b => kwLower.includes(b) || lower.includes(b))) return true
-
-  // Must have at least one fishing word
-  if (!FISHING_WORDS.some(w => lower.includes(w))) return false
-
-  // Must NOT have non-fishing indicators
-  if (NON_FISHING_WORDS.some(w => lower.includes(w))) return false
-
-  return true
 }
 
 const AMAZON_FISHING_NODE = '2928514031'
@@ -362,13 +303,5 @@ export async function scrapeNewReleasesStealth(category: string): Promise<Amazon
     }))
   } finally {
     await context.close()
-  }
-}
-
-export function braveAvailable(): boolean {
-  try {
-    return fs.existsSync(BRAVE_PATH)
-  } catch {
-    return false
   }
 }

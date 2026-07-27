@@ -71,7 +71,14 @@ export async function appendRow(values: (string | number | boolean)[]) {
 }
 
 export async function ensureHeaders(headers: string[]) {
-  const { headers: existing } = await readAllRows()
+  let existing: string[]
+  try {
+    const result = await readAllRows()
+    existing = result.headers
+  } catch (err) {
+    console.error('ensureHeaders: error reading existing headers:', (err as Error).message)
+    return
+  }
   const missing = headers.filter(h => !existing.includes(h))
   if (missing.length === 0) return
 

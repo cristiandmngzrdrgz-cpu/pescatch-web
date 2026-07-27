@@ -1,12 +1,15 @@
-import { getPosts } from '@/data/blog-queries'
+import { getPosts, getPostsCount } from '@/data/blog-queries'
 import type { BlogPost } from '@/types'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Calendar, ArrowRight, BookOpen, Clock, Fish } from 'lucide-react'
+import { Calendar, ArrowRight, BookOpen, ChevronLeft, ChevronRight, Clock, Fish } from 'lucide-react'
 import type { Metadata } from 'next'
 import { generateBreadcrumbSchema, generateCollectionPageSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
 
-export const dynamic = 'force-dynamic'
+// Blog: revalidar cada 10 minutos (contenido menos volátil que los deals)
+export const revalidate = 600
+
+const POSTS_PER_PAGE = 12
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata(
@@ -41,13 +44,27 @@ function extractProductCount(content: string): number {
   try { return JSON.parse(match[1]).length } catch { return 0 }
 }
 
-export default async function BlogPage() {
+export default async function BlogPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>
+}) {
+  const params = await searchParams
+  const currentPage = Math.max(1, parseInt(params.page || '1', 10) || 1)
+  const offset = (currentPage - 1) * POSTS_PER_PAGE
+
   let posts: BlogPost[] = []
+  let totalPosts = 0
   try {
-    posts = await getPosts(20, 0)
+    ;[posts, totalPosts] = await Promise.all([
+      getPosts(POSTS_PER_PAGE, offset),
+      getPostsCount(),
+    ])
   } catch (e) {
     console.error('Blog page error:', e)
   }
+
+  const totalPages = Math.max(1, Math.ceil(totalPosts / POSTS_PER_PAGE))
 
   const breadcrumbs = generateBreadcrumbSchema([
     { name: 'Inicio', url: '/' },
@@ -147,6 +164,54 @@ export default async function BlogPage() {
               </Link>
             )
           })}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="mt-12 flex items-center justify-center gap-2">
+          {currentPage > 1 && (
+            <Link
+              href={`/blog?page=${currentPage - 1}`}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 hover:shadow-[0_0_12px_rgba(0,212,255,0.15)]"
+              style={{ background: '#111827', border: '1px solid #1E3A5F', color: '#00D4FF' }}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Anterior
+            </Link>
+          )}
+          <div className="flex items-center gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
+              .map((p, idx, arr) => (
+                <span key={p} className="flex items-center">
+                  {idx > 0 && arr[idx - 1] !== p - 1 && (
+                    <span className="px-1" style={{ color: '#4A6080' }}>...</span>
+                  )}
+                  {p === currentPage ? (
+                    <span className="w-9 h-9 flex items-center justify-center rounded-lg text-sm font-bold"
+                      style={{ background: 'rgba(0,212,255,0.15)', color: '#00D4FF', border: '1px solid rgba(0,212,255,0.3)' }}>
+                      {p}
+                    </span>
+                  ) : (
+                    <Link href={`/blog?page=${p}`}
+                      className="w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200 hover:bg-[#1E3A5F]"
+                      style={{ color: '#8BA3C7' }}>
+                      {p}
+                    </Link>
+                  )}
+                </span>
+              ))}
+          </div>
+          {currentPage < totalPages && (
+            <Link
+              href={`/blog?page=${currentPage + 1}`}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 hover:shadow-[0_0_12px_rgba(0,212,255,0.15)]"
+              style={{ background: '#111827', border: '1px solid #1E3A5F', color: '#00D4FF' }}
+            >
+              Siguiente
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          )}
         </div>
       )}
     </div>

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, Suspense } from 'react'
-import { Menu, X, Fish, ChevronDown, Tag, Search } from 'lucide-react'
+import { Menu, X, Fish, ChevronDown, Tag, Search, Heart } from 'lucide-react'
 import { CATEGORIES } from '@/types'
 import { SearchInput } from '@/components/search/search-input'
 import { Input } from '@/components/ui/input'
@@ -109,8 +109,17 @@ export function Navbar() {
           onClick={() => setSearchOpen(!searchOpen)}
           aria-label="Buscar"
         >
-          <Menu className="h-5 w-5" />
+          <Search className="h-5 w-5" />
         </button>
+
+        <Link
+          href="/favoritos"
+          className="hidden md:flex w-10 h-10 items-center justify-center rounded-lg transition-all duration-200 hover:bg-[rgba(239,68,68,0.1)]"
+          style={{ border: '1px solid rgba(30,58,95,0.5)', background: 'rgba(255,255,255,0.04)', color: '#8BA3C7' }}
+          aria-label="Favoritos"
+        >
+          <Heart className="h-5 w-5" />
+        </Link>
 
       </div>
 
@@ -133,6 +142,7 @@ export function Navbar() {
                   subs: cat.subcategories.map(s => ({ href: `/categories/${cat.slug}/${s.slug}`, label: s.name })),
                 })),
                 { href: '/blog', label: 'Blog' },
+                { href: '/favoritos', label: 'Favoritos' },
                 { href: '/search', label: 'Buscar' },
               ].map((item, i) => (
                 <div key={i}>

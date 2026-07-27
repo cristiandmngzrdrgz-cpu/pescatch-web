@@ -23,6 +23,7 @@ export default function AdminBlogPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [page, setPage] = useState(1)
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null)
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkAction, setBulkAction] = useState<string | null>(null)
 
@@ -33,14 +34,22 @@ export default function AdminBlogPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => {
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value)
     setSelectedIds(new Set())
     setPage(1)
-  }, [searchTerm, statusFilter])
+  }
 
-  useEffect(() => {
+  const handleStatusFilterChange = (value: string | null) => {
+    setStatusFilter(value ?? 'all')
     setSelectedIds(new Set())
-  }, [page])
+    setPage(1)
+  }
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage)
+    setSelectedIds(new Set())
+  }
 
   const filteredPosts = posts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -84,6 +93,10 @@ export default function AdminBlogPage() {
   }
 
   const handleBulkAction = async (action: string) => {
+    if (action === 'delete') {
+      setConfirmBulkDelete(true)
+      return
+    }
     setBulkLoading(true)
     setBulkAction(action)
     try {
@@ -131,6 +144,37 @@ export default function AdminBlogPage() {
         description={`¿Estás seguro de eliminar "${deleteTarget?.title}"? Esta acción no se puede deshacer.`}
       />
 
+      <ConfirmDelete
+        open={confirmBulkDelete}
+        onOpenChange={() => setConfirmBulkDelete(false)}
+        onConfirm={async () => {
+          setConfirmBulkDelete(false)
+          setBulkLoading(true)
+          setBulkAction('delete')
+          try {
+            const res = await fetch('/api/posts/bulk', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ids: Array.from(selectedIds), action: 'delete' }),
+            })
+            if (res.ok) {
+              setPosts(prev => prev.filter(p => !selectedIds.has(p.id)))
+              toast.success(`${selectedIds.size} artículos eliminados`)
+              setSelectedIds(new Set())
+            } else {
+              toast.error('Error al eliminar en lote')
+            }
+          } catch {
+            toast.error('Error de conexión')
+          } finally {
+            setBulkLoading(false)
+            setBulkAction(null)
+          }
+        }}
+        title="Eliminar artículos seleccionados"
+        description={`¿Estás seguro de eliminar ${selectedIds.size} artículos? Esta acción no se puede deshacer.`}
+      />
+
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-extrabold" style={{ color: '#E8F0FE' }}>Todos los posts</h1>
@@ -148,16 +192,16 @@ export default function AdminBlogPage() {
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex-1 min-w-[200px] relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: '#4A6080' }} />
-            <Input
-              placeholder="Buscar por título, slug o contenido..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 h-10 rounded-xl"
-              style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }}
-            />
+              <Input
+                placeholder="Buscar por título, slug o contenido..."
+                value={searchTerm}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="pl-9 h-10 rounded-xl"
+                style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }}
+              />
           </div>
 
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? 'all')}>
+          <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
             <SelectTrigger className="w-[180px] h-10 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }}>
               <SelectValue placeholder="Estado" />
             </SelectTrigger>
@@ -199,7 +243,7 @@ export default function AdminBlogPage() {
                   Borrador
                 </Button>
                 <Button size="sm" onClick={() => handleBulkAction('delete')} disabled={bulkLoading} className="h-8 px-3 rounded-lg text-xs font-semibold" style={{ background: 'rgba(239,68,68,0.15)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.3)' }}>
-                  <X className="h-3 w-3 mr-1" />Eliminar
+                  {bulkAction === 'delete' ? '...' : <><X className="h-3 w-3 mr-1" />Eliminar</>}
                 </Button>
               </div>
             </div>
@@ -323,7 +367,7 @@ export default function AdminBlogPage() {
               </tbody>
             </table>
           </div>
-          <Pagination currentPage={page} totalItems={totalFiltered} pageSize={PAGE_SIZE} onPageChange={setPage} />
+          <Pagination currentPage={page} totalItems={totalFiltered} pageSize={PAGE_SIZE} onPageChange={handlePageChange} />
         </div>
       )}
     </div>

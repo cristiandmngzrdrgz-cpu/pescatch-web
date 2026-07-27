@@ -1,4 +1,5 @@
 import { getPosts } from '@/data/blog-queries'
+import { getDeals } from '@/data/queries'
 
 const BASE_URL = 'https://pescatch.es'
 
@@ -12,11 +13,13 @@ function escapeXml(text: string): string {
 }
 
 export async function GET() {
-  const posts = await getPosts(50)
+  const [posts, deals] = await Promise.all([
+    getPosts(50),
+    getDeals({ sortBy: 'newest' }).then(d => d.slice(0, 30)),
+  ])
 
-  const items = posts
-    .map(
-      (post) => `  <item>
+  const postItems = posts.map(
+    (post) => `  <item>
     <title>${escapeXml(post.title)}</title>
     <link>${BASE_URL}/blog/${post.slug}</link>
     <guid isPermaLink="true">${BASE_URL}/blog/${post.slug}</guid>
@@ -24,7 +27,25 @@ export async function GET() {
     <pubDate>${new Date(post.publishedAt).toUTCString()}</pubDate>
     ${post.category ? `<category>${escapeXml(post.category)}</category>` : ''}
   </item>`
-    )
+  )
+
+  const dealItems = deals.map(
+    (deal) => `  <item>
+    <title>${escapeXml(deal.title)} — ${deal.salePrice.toFixed(2)}€ (${deal.discountPercent}% dto.)</title>
+    <link>${BASE_URL}/deals/${deal.slug}</link>
+    <guid isPermaLink="true">${BASE_URL}/deals/${deal.slug}</guid>
+    <description>${escapeXml(deal.description || `${deal.store.name} — ${deal.salePrice.toFixed(2)}€ (antes ${deal.originalPrice.toFixed(2)}€)`)}</description>
+    <pubDate>${new Date(deal.publishedAt).toUTCString()}</pubDate>
+    <category>chollos</category>
+  </item>`
+  )
+
+  const items = [...postItems, ...dealItems]
+    .sort((a, b) => {
+      const dateA = a.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || ''
+      const dateB = b.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || ''
+      return new Date(dateB).getTime() - new Date(dateA).getTime()
+    })
     .join('\n')
 
   const rss = `<?xml version="1.0" encoding="UTF-8"?>

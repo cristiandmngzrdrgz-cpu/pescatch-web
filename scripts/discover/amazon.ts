@@ -1,4 +1,4 @@
-import { parseSpanishPrice } from '../../src/lib/price-scraper/amazon'
+import { parseSpanishPrice, isFishingProduct } from '../../src/lib/scraping-utils'
 import { RateLimiter } from '../../src/lib/price-scraper/rate-limiter'
 
 const searchLimiter = new RateLimiter(3000)
@@ -128,61 +128,6 @@ function extractProducts(
   }
 
   return products
-}
-
-const FISHING_WORDS = [
-  'pesca', 'fishing', 'carrete', 'caña', 'anzuelo', 'señuelo',
-  'sedal', 'hilo pesca', 'spinning', 'spinnrute', 'angelrolle',
-  'surfcasting', 'carpfishing', 'baitcast', 'jigging', 'feeder',
-  'lubina', 'trucha', 'black bass', 'lucio', 'surf casting',
-  'bajo línea', 'bajo de línea', 'fluorocarbono', 'trenza',
-  'vinilo', 'cucharilla', 'popper', 'stickbait', 'señuelos',
-  'vadeador', 'wading', 'guantes pesca',
-  'polarizadas', 'aparejos', 'bolsa pesca', 'mochila pesca',
-  'señuelos pesca', 'anzuelos pesca', 'kit pesca',
-  'shimano', 'daiwa', 'abu garcia', 'mitchell', 'penn',
-  'savage gear', 'berkley', 'okuma', 'grauvell',
-  'caperlan', 'ryobi', 'lineaeffe', 'yuki', 'ugly stik',
-  'sougayilang', 'truscend', 'bassdash', 'hellbender',
-  'mora', 'shakespeare', 'rapala', 'kunnan', 'vercelli',
-  'caña pescar', 'cañas pescar', 'caña spinning', 'caña surf',
-  'carrete spinning', 'carrete surf', 'carrete pesca',
-  'giratorio', 'spinnrolle', 'angelrute',
-]
-
-const NON_FISHING_WORDS = [
-  'perro', 'perros', 'gato', 'gatos', 'mascota', 'pet ',
-  'cocina', 'kitchen', 'jardín', 'garden', 'herramienta',
-  'tool', 'herramientas', 'tools', 'bricolaje', 'diy',
-  'comedero perro', 'comedero gato', 'dog bowl', 'cat bowl',
-  'dog food', 'cat food', 'alimentador gato', 'alimentador perro',
-  'dispensador comida', 'food dispenser',
-  'caja herramientas', 'tool box', 'toolbox',
-  'cuchillo cocina', 'kitchen knife', 'chef knife',
-  'costura', 'sewing', 'maquillaje', 'makeup',
-]
-
-function isFishingProduct(title: string, keyword: string): boolean {
-  const lowerTitle = title.toLowerCase()
-  const kwLower = keyword.toLowerCase()
-
-  const specificKeywords = [
-    'shimano', 'daiwa', 'abu garcia', 'mitchell', 'penn',
-    'savage gear', 'berkley', 'okuma', 'caperlan',
-    'bassdash', 'sougayilang', 'truscend', 'hellbender',
-  ]
-  if (specificKeywords.some(b => kwLower.includes(b) || lowerTitle.includes(b))) {
-    return true
-  }
-
-  // Must have at least one fishing word
-  const hasFishingWord = FISHING_WORDS.some(w => lowerTitle.includes(w.toLowerCase()))
-  if (!hasFishingWord) return false
-
-  // Must NOT have non-fishing indicators
-  if (NON_FISHING_WORDS.some(w => lowerTitle.includes(w))) return false
-
-  return true
 }
 
 function extractBestsellerProducts(

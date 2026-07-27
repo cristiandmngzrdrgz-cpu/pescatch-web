@@ -7,7 +7,7 @@ import { Fish } from 'lucide-react'
 import type { Metadata } from 'next'
 import { buildMetadata, BASE_URL, generateBreadcrumbSchema, generateCollectionPageSchema, JsonLd } from '@/lib/seo/schemas'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 120
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string; sub: string }> }): Promise<Metadata> {
   const { slug, sub } = await params

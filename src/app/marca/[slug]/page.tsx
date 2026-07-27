@@ -10,7 +10,7 @@ import type { Metadata } from 'next'
 import type { DealFilters } from '@/types'
 import { generateBreadcrumbSchema, generateCollectionPageSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 120
 
 const PAGE_SIZE = 12
 

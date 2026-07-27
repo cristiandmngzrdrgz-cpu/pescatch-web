@@ -26,20 +26,19 @@ export interface ProductSelectEntry {
 
 export default function ProductSelector({ open, onClose, onConfirm }: ProductSelectorProps) {
   const [deals, setDeals] = useState<Deal[]>([])
-  const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (!open) return
-    setLoading(true)
     fetch('/api/deals?includeHidden=true')
       .then(r => r.json())
       .then((data: Deal[]) => {
         setDeals(data.filter(d => d.status === 'published'))
       })
-      .finally(() => setLoading(false))
   }, [open])
+
+  const loading = open && deals.length === 0
 
   const filtered = deals.filter(d => {
     if (!search) return true

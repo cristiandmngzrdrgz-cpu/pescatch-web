@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { trackNewsletterSubscribe } from '@/lib/analytics'
 
 export function NewsletterForm() {
   const [email, setEmail] = useState('')
@@ -28,6 +29,7 @@ export function NewsletterForm() {
         if (res.ok) {
           setStatus('success')
           setMessage('')
+          trackNewsletterSubscribe()
         } else {
           setStatus('error')
           setMessage(data.error || 'Error al suscribir')

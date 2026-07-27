@@ -67,6 +67,16 @@ export async function getPostBySlug(slug: string, includeHidden = false): Promis
   return loadPost(sql, [slug])
 }
 
+export async function getPostsCount(includeHidden = false): Promise<number> {
+  const db = getDb()
+  await seedDatabase()
+  const sql = includeHidden
+    ? 'SELECT COUNT(*) as count FROM posts'
+    : "SELECT COUNT(*) as count FROM posts WHERE status = 'published'"
+  const result = await db.execute(sql)
+  return Number(result.rows[0].count) || 0
+}
+
 export async function getPostById(id: string): Promise<BlogPost | undefined> {
   return loadPost('SELECT * FROM posts WHERE id = ?', [id])
 }

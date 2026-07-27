@@ -30,6 +30,7 @@ export default function AdminDealsPage() {
   const [page, setPage] = useState(1)
 
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null)
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false)
   const [bulkAction, setBulkAction] = useState<string | null>(null)
   const [bulkLoading, setBulkLoading] = useState(false)
 
@@ -40,14 +41,34 @@ export default function AdminDealsPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => {
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value)
     setSelectedIds(new Set())
     setPage(1)
-  }, [searchTerm, categoryFilter, storeFilter, statusFilter])
+  }
 
-  useEffect(() => {
+  const handleCategoryFilterChange = (value: string | null) => {
+    setCategoryFilter(value ?? 'all')
     setSelectedIds(new Set())
-  }, [page])
+    setPage(1)
+  }
+
+  const handleStoreFilterChange = (value: string | null) => {
+    setStoreFilter(value ?? 'all')
+    setSelectedIds(new Set())
+    setPage(1)
+  }
+
+  const handleStatusFilterChange = (value: string | null) => {
+    setStatusFilter(value ?? 'all')
+    setSelectedIds(new Set())
+    setPage(1)
+  }
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage)
+    setSelectedIds(new Set())
+  }
 
   const handleDelete = useCallback(async () => {
     if (!deleteTarget) return
@@ -77,6 +98,10 @@ export default function AdminDealsPage() {
   }
 
   const handleBulkAction = async (action: string) => {
+    if (action === 'delete') {
+      setConfirmBulkDelete(true)
+      return
+    }
     setBulkLoading(true)
     setBulkAction(action)
     try {
@@ -144,6 +169,37 @@ export default function AdminDealsPage() {
         description={`¿Estás seguro de eliminar "${deleteTarget?.title}"? Esta acción no se puede deshacer.`}
       />
 
+      <ConfirmDelete
+        open={confirmBulkDelete}
+        onOpenChange={() => setConfirmBulkDelete(false)}
+        onConfirm={async () => {
+          setConfirmBulkDelete(false)
+          setBulkLoading(true)
+          setBulkAction('delete')
+          try {
+            const res = await fetch('/api/deals/bulk', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ids: Array.from(selectedIds), action: 'delete' }),
+            })
+            if (res.ok) {
+              setDeals(prev => prev.filter(d => !selectedIds.has(d.id)))
+              toast.success(`${selectedIds.size} chollos eliminados`)
+              setSelectedIds(new Set())
+            } else {
+              toast.error('Error al eliminar en lote')
+            }
+          } catch {
+            toast.error('Error de conexión')
+          } finally {
+            setBulkLoading(false)
+            setBulkAction(null)
+          }
+        }}
+        title="Eliminar chollos seleccionados"
+        description={`¿Estás seguro de eliminar ${selectedIds.size} chollos? Esta acción no se puede deshacer.`}
+      />
+
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-extrabold" style={{ color: '#E8F0FE' }}>Todos los chollos</h1>
@@ -161,16 +217,16 @@ export default function AdminDealsPage() {
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex-1 min-w-[200px] relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: '#4A6080' }} />
-            <Input
-              placeholder="Buscar por título, EAN o descripción..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 h-10 rounded-xl"
-              style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }}
-            />
+              <Input
+                placeholder="Buscar por título, EAN o descripción..."
+                value={searchTerm}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="pl-9 h-10 rounded-xl"
+                style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }}
+              />
           </div>
           
-          <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v ?? 'all')}>
+          <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
             <SelectTrigger className="w-[180px] h-10 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }}>
               <SelectValue placeholder="Categoría" />
             </SelectTrigger>
@@ -182,7 +238,7 @@ export default function AdminDealsPage() {
             </SelectContent>
           </Select>
 
-          <Select value={storeFilter} onValueChange={(v) => setStoreFilter(v ?? 'all')}>
+          <Select value={storeFilter} onValueChange={handleStoreFilterChange}>
             <SelectTrigger className="w-[180px] h-10 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }}>
               <SelectValue placeholder="Tienda" />
             </SelectTrigger>
@@ -194,7 +250,7 @@ export default function AdminDealsPage() {
             </SelectContent>
           </Select>
 
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? 'all')}>
+          <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
             <SelectTrigger className="w-[180px] h-10 rounded-xl" style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }}>
               <SelectValue placeholder="Estado" />
             </SelectTrigger>
@@ -395,7 +451,7 @@ export default function AdminDealsPage() {
               </tbody>
             </table>
           </div>
-          <Pagination currentPage={page} totalItems={totalFiltered} pageSize={PAGE_SIZE} onPageChange={setPage} />
+          <Pagination currentPage={page} totalItems={totalFiltered} pageSize={PAGE_SIZE} onPageChange={handlePageChange} />
         </div>
       )}
     </div>

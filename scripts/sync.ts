@@ -32,6 +32,21 @@ async function main() {
     errors: result.errors,
   })
 
+  // Auto-refresh prices after sync
+  if (result.created > 0 || result.updated > 0) {
+    console.log('\nRefreshing prices...')
+    try {
+      const { refreshAllPrices } = await import('../src/lib/price-scraper/refresh-all')
+      const refreshed = await refreshAllPrices()
+      console.log(`  ${refreshed.updated} updated, ${refreshed.skipped} skipped, ${refreshed.failed} failed`)
+      if (refreshed.alerts > 0) {
+        console.log(`  ⚠ ${refreshed.alerts} deals flagged with priceAlert`)
+      }
+    } catch (err) {
+      console.error(`  ✗ Price refresh error: ${(err as Error).message}`)
+    }
+  }
+
   console.log('')
 }
 

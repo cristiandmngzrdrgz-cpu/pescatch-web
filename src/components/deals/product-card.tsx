@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { formatPrice } from '@/lib/utils'
 import { buildAmazonUrl } from '@/lib/amazon-affiliate'
+import { trackDealClick } from '@/lib/analytics'
 import { Store, Truck, Fish, ChevronUp, Clock, Star, ShoppingCart, Zap } from 'lucide-react'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { CATEGORIES, STORES } from '@/types'
@@ -136,7 +137,10 @@ export function ProductCard({ group }: ProductCardProps) {
                   href={deal.store.id === 'amazon' ? buildAmazonUrl(deal.affiliateUrl) : deal.affiliateUrl}
                   target="_blank"
                   rel="nofollow sponsored"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    trackDealClick(deal.id, deal.store.name, group.category)
+                  }}
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer hover:scale-105 active:scale-95"
                   style={{
                     background: isCheapest

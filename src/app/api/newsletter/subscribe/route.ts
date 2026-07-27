@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get('x-forwarded-for') || 'unknown'
+  const allowed = await checkRateLimit(ip, 'newsletter')
+  if (!allowed) {
+    return NextResponse.json({ error: 'Demasiados intentos. Espera un momento.' }, { status: 429 })
+  }
+
   try {
     const { email } = await request.json()
     if (!email || typeof email !== 'string') {

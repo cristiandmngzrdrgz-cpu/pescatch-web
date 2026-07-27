@@ -7,8 +7,8 @@ import { marked } from 'marked'
 import { buildAmazonUrl } from '@/lib/amazon-affiliate'
 import { generateBlogPostingSchema, generateBreadcrumbSchema, generateFAQSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
 
-export const dynamic = 'force-dynamic'
-export const fetchCache = 'force-no-store'
+// Artículos de blog: revalidar cada 10 minutos
+export const revalidate = 600
 
 interface ProductStore {
   name: string

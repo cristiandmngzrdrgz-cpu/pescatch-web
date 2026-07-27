@@ -7,6 +7,7 @@ export function TimeAgo({ publishedAt }: { publishedAt: string }) {
 
   useEffect(() => {
     const hoursAgo = Math.floor((Date.now() - new Date(publishedAt).getTime()) / 3600000)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (hoursAgo < 1) setText('Hace minutos')
     else if (hoursAgo < 24) setText(`Hace ${hoursAgo} horas`)
     else setText(`Hace ${Math.floor(hoursAgo / 24)} días`)

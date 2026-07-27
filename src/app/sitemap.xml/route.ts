@@ -17,6 +17,7 @@ export async function GET() {
     { loc: '/', priority: '1.0', changefreq: 'daily', lastmod: '' },
     { loc: '/categories', priority: '0.9', changefreq: 'weekly', lastmod: '' },
     { loc: '/search', priority: '0.8', changefreq: 'daily', lastmod: '' },
+    { loc: '/favoritos', priority: '0.5', changefreq: 'daily', lastmod: '' },
     { loc: '/blog', priority: '0.9', changefreq: 'weekly', lastmod: '' },
     { loc: '/marcas', priority: '0.9', changefreq: 'weekly', lastmod: '' },
     ...CATEGORIES.map(cat => ({

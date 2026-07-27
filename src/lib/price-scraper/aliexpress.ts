@@ -1,7 +1,7 @@
 import type { ScrapedPrice } from './types'
 import type { Page } from 'playwright'
-import { bravePage, braveAvailable } from './brave'
-import { parseSpanishPrice } from './amazon'
+import { braveAvailable, parseSpanishPrice } from '@/lib/scraping-utils'
+import { bravePage } from './brave'
 
 export async function scrapeAliExpress(
   url: string,

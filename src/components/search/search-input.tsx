@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect, useTransition, useCallback } from 'react'
 import { Search, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { trackSearch } from '@/lib/analytics'
 
 export function SearchInput({ className = '' }: { className?: string }) {
   const router = useRouter()
@@ -36,6 +37,9 @@ export function SearchInput({ className = '' }: { className?: string }) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     updateUrl(value)
+    if (value.trim()) {
+      trackSearch(value.trim(), 0)
+    }
   }
 
   return (

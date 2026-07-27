@@ -2,6 +2,7 @@ import 'dotenv/config'
 import { readAllRows, appendRow, ensureHeaders } from '../../src/lib/sync/google-sheets-client'
 import { scrapeAmazonDetails } from './amazon'
 import { scrapeDecathlonDetails, braveAvailable } from './decathlon-scraper'
+import { generateEnrichment } from '../../src/lib/enrich-deal'
 import * as fs from 'fs'
 
 interface Candidate {
@@ -51,7 +52,7 @@ async function main() {
         if (details.imageUrl && !c.imageUrl) c.imageUrl = details.imageUrl
         if (details.description && !c.description) c.description = details.description
         if (details.features.length > 0 && c.features.length === 0) c.features = details.features
-        console.log(details.imageUrl ? '✅' : 'sin imagen')
+        console.log(`${details.imageUrl ? '✅' : '⚠ sin imagen'}${details.features.length > 0 ? ` (${details.features.length} specs)` : ''}`)
       } catch { console.log('error') }
     } else if (c.store === 'decathlon' && braveAvailable()) {
       process.stdout.write(`  🏪 Decathlon: ${c.title.slice(0, 50)}... `)
@@ -68,11 +69,15 @@ async function main() {
     }
   }
 
-  await ensureHeaders(['amazonOriginalPrice', 'decathlonOriginalPrice', 'aliexpressOriginalPrice'])
+  await ensureHeaders(['amazonOriginalPrice', 'decathlonOriginalPrice', 'aliexpressOriginalPrice', 'technicalSpecs', 'review', 'pros', 'cons'])
   const { headers } = await readAllRows()
 
   let added = 0
   for (const c of selected) {
+    const enrichment = c.features.length > 0 || c.description
+      ? generateEnrichment(c.title, c.brand || '', c.description || '', c.features)
+      : null
+
     const row = headers.map(h => {
       switch (h) {
         case 'ean': return c.asin || ''
@@ -93,6 +98,10 @@ async function main() {
         case 'aliexpressUrl': return c.store === 'aliexpress' ? c.url : ''
         case 'aliexpressStock': return c.store === 'aliexpress' ? 'in_stock' : ''
         case 'aliexpressOriginalPrice': return c.store === 'aliexpress' && c.originalPrice ? c.originalPrice : ''
+        case 'technicalSpecs': return enrichment ? JSON.stringify(enrichment.technicalSpecs) : ''
+        case 'review': return enrichment ? enrichment.review : ''
+        case 'pros': return enrichment ? JSON.stringify(enrichment.pros) : ''
+        case 'cons': return enrichment ? JSON.stringify(enrichment.cons) : ''
         default: return ''
       }
     })
