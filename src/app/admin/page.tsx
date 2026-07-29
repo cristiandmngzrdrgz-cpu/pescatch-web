@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { TrendingDown, Tag, Star, Plus, Pencil, MessageSquare, FileText, Clock, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { CATEGORIES } from '@/types'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminDashboard() {
   const db = getDb()
   const deals = await getDeals()

@@ -331,7 +331,7 @@ export async function getSyncLogs(limit = 5): Promise<SyncLogEntry[]> {
     updated: row.updated as number,
     skipped: row.skipped as number,
     hidden_orphans: row.hidden_orphans as number || 0,
-    errors: JSON.parse(row.errors as string) as string[],
+    errors: safeParseErrors(row.errors as string),
   }))
 }
 
@@ -349,8 +349,13 @@ export async function getLastSync(): Promise<SyncLogEntry | null> {
     updated: row.updated as number,
     skipped: row.skipped as number,
     hidden_orphans: row.hidden_orphans as number || 0,
-    errors: JSON.parse(row.errors as string) as string[],
+    errors: safeParseErrors(row.errors as string),
   }
+}
+
+function safeParseErrors(value: string): string[] {
+  if (!value) return []
+  try { return JSON.parse(value) as string[] } catch { return [] }
 }
 
 export async function getDbStats(): Promise<DbStats> {
