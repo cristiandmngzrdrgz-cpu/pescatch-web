@@ -7,7 +7,7 @@ import { amazonAdapter } from './sync/amazon-adapter'
 import { aliexpressAdapter } from './sync/aliexpress-adapter'
 import { buildAmazonUrl } from './amazon-affiliate'
 import { enrichDealInDb, generateEnrichment, extractAsin } from './enrich-deal'
-import { scrapeAmazonDetails } from '../../scripts/discover/amazon'
+
 import { validateSyncRow } from './sync/validation'
 import { enrichWithAI } from './enrich-ai'
 import { findFuzzyMatch } from './sync/fuzzy-matcher'
@@ -207,6 +207,7 @@ async function processRow(
       const asin = amazonUrl ? extractAsin(amazonUrl) : null
       if (asin) {
         try {
+          const { scrapeAmazonDetails } = await import('../../scripts/discover/amazon')
           const details = await scrapeAmazonDetails(asin)
           if (details.features.length > 0 || details.description) {
             const existingDeal = await db.execute({
