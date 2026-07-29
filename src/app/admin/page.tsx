@@ -8,6 +8,15 @@ import { CATEGORIES } from '@/types'
 export const dynamic = 'force-dynamic'
 
 export default async function AdminDashboard() {
+  try {
+    return await AdminDashboardContent()
+  } catch (e) {
+    console.error('AdminDashboard error:', e)
+    throw e
+  }
+}
+
+async function AdminDashboardContent() {
   const db = getDb()
   const deals = await getDeals()
   const featured = deals.filter(d => d.featured)
