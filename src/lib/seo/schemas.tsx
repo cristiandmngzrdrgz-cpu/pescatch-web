@@ -35,12 +35,14 @@ export function generateProductSchema(deal: {
   sku: string
   brand?: string
   shippingCost?: number
+  ean?: string
+  slug?: string
 }) {
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Product',
+    '@id': `${BASE_URL}/deals/${deal.slug || deal.sku}#product`,
     name: deal.title,
-    // description es obligatorio para Merchant Listings
     description: deal.description || deal.title,
     image: deal.imageUrl,
     sku: deal.sku,
@@ -48,7 +50,6 @@ export function generateProductSchema(deal: {
       '@type': 'Offer',
       price: deal.salePrice,
       priceCurrency: 'EUR',
-      // description en Offer requerido para Fichas de comerciantes
       description: deal.description || deal.title,
       availability: deal.stockStatus === 'in_stock'
         ? 'https://schema.org/InStock'
@@ -91,6 +92,11 @@ export function generateProductSchema(deal: {
 
   if (deal.brand) {
     schema.brand = { '@type': 'Brand', name: deal.brand }
+  }
+
+  if (deal.ean) {
+    schema.gtin13 = deal.ean
+    schema.mpn = deal.ean
   }
 
   if (deal.rating && deal.reviewCount) {

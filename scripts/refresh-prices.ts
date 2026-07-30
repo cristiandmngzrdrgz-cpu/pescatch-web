@@ -1,9 +1,11 @@
 import 'dotenv/config'
 import { refreshAllPrices } from '../src/lib/price-scraper/refresh-all'
+import { migrateSchema } from '../src/lib/db'
 
 async function main() {
   console.log('Refreshing prices...\n')
 
+  await migrateSchema()
   const result = await refreshAllPrices()
 
   console.log(`✅ Done! ${result.updated} updated, ${result.skipped} skipped, ${result.failed} failed`)

@@ -45,6 +45,7 @@ pescatch.db-wal
 /public/uploads/
 
 # temp files
+temp/
 .playwright-mcp/
 .od-designs/
 .od-output-homepage.html

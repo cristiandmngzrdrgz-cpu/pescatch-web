@@ -1,6 +1,6 @@
 ---
 tags: [vault/brain, vault/onboarding]
-fecha: 2026-06-30
+fecha: 2026-07-30
 ---
 
 # Estado actual del proyecto
@@ -9,32 +9,31 @@ fecha: 2026-06-30
 
 ---
 
-## Lo último que se hizo (30 Jun 2026)
+## Lo último que se hizo (27-30 Jul 2026)
 
-Code review completo + refactor masivo. **41 issues corregidos** en 6 rondas. Sesión completa en [[Sesiones/2026-06-30-code-review]].
-
-### Nueva investigación (30 Jun 2026)
-- **Competidores**: Análisis completo en [[_Investigacion/competidores]]. ChollosPesca.com es el rival directo #1 (9 años, 380+ posts, solo AliExpress). Promopesca.es tiene 400K clientes. Formulapesca.com rankea para nuestras keywords objetivo con contenido mediocre.
-- **Palabras clave**: Investigación completada en [[_Investigacion/palabras-clave]]. Prioridad: "chollos pesca amazon" (sin competidor), "comparativa carretes spinning", long-tails de "calidad precio".
-- **Diferenciación**: Somos los únicos multi-tienda (Amazon+Decathlon+AliExpress) con formato editorial premium (tablas + scores + FAQ). Nadie más compara precios entre tiendas.
+Fix admin dashboard 500, limpieza lint, import dinámico de Playwright, actualización de URLs y precios.
 
 Resumen rápido de cambios:
-- Auth admin con `ADMIN_SECRET` + cookie
-- DB: `UNIQUE(productId, storeId)`, batch queries, `globalThis` singleton
-- Comentarios conectados a DB real + rate limiting
-- Votos persistentes en DB
-- 11 archivos migrados de `<img>` → `<Image>` de Next.js
-- Rediseño visual: tarjetas de blog full-bleed con imagen de fondo
-- Error boundaries (`error.tsx`, `not-found.tsx`)
-- N+1 queries eliminadas (homepage, categories, price history)
-- Sitemap con `<lastmod>` + URLs de blog
-- OG images en deals y blog posts
-- Newsletter funcional (client form, sin backend)
-- SEO: investigación de competidores y keywords completada
+- **Fix admin dashboard 500**: error boundary, force-dynamic, safe JSON parse en `getLastSync()`, try-catch wrapper
+- **Fix dynamic import**: `scrapeAmazonDetails` ahora es import dinámico para evitar Playwright en el bundle del server de admin
+- **Fix lint (React 19)**: purity de funciones, setState en efectos, tipos `any` reemplazados + cleanup de `_debug/` (archivos de snapshot, YAML, logs de scraper)
+- **Nuevo**: `scripts/send-newsletter.ts` — envío de newsletter semanal
+- **Nuevo**: `scripts/setup-scheduler.ps1` — programar tareas diarias en Windows
+- **Nuevo**: `scripts/clean-expired-deals.ts` — marcar deals expirados automáticamente
+- **Nuevo**: `src/app/favoritos/page.tsx` — página de favoritos del usuario
+- **Nuevo**: `src/components/deals/deal-cta-button.tsx` — botón CTA con enlace directo a tienda
+- **Nuevo**: `src/app/deals.xml/route.ts` — RSS/XML de chollos
+- **Fixes**: Decathlon Seacoast URL (delisted → Seacoast 100 350), buildAmazonUrl (`th=1&psc=1`), ASIN Daiwa 4.20m, quitados datos falsos de organizationSchema
+
+### Sesiones anteriores
+- **29-30 Jul**: Fix admin dashboard 500, Playwright import, lint cleanup → [[_Sesiones/2026-07-29-admin-fixes]]
+- **6 Jul**: UX/SEO overhaul, OG dinámico, paginación, 404, AVIF, blog->deals, code splitting seed URLs reales, precios actualizados → [[_Sesiones/2026-07-06-ux-seo-overhaul]]
+- **4-5 Jul**: Brand pages, stars rating, AliExpress scraper, price refresh, newsletter backend, contacto funcional, marcas index, parser marked, categorías filters
+- **30 Jun**: Code review completo + refactor masivo (41 issues corregidos)
 
 ---
 
-## Warnings de lint (6 — todos inevitables)
+## Warnings de lint (actuales)
 
 ```
 scripts/sync.ts → STORE_ADAPTERS, db (sin usar — preexistentes)
@@ -42,41 +41,45 @@ lib/sync/*-adapter.ts (×3) → _ean sin usar (stubs intencionales)
 blog/[slug]/page.tsx → 1 <img> en dangerouslySetInnerHTML (no hay alternativa)
 ```
 
-No introducir nuevos warnings. No reintentar "arreglar" estos 6.
+**6 warnings, todos inevitables.** No introducir nuevos. No reintentar "arreglar" estos 6.
 
 ---
 
 ## Patrones establecidos (NO cambiar)
 
-1. **Imágenes**: usar `<Image>` de `next/image` con `fill` + `sizes` + contenedor `relative`. No volver a `<img>`.
+1. **Imágenes**: `<Image>` de `next/image` con `fill` + `sizes` + contenedor `relative`. No `<img>`.
 2. **Hover**: solo CSS (`hover:`, `group-hover:`). Nunca `onMouseEnter`/`onMouseLeave`.
 3. **Navegación**: `router.push()`. Nunca `window.location.href`.
 4. **Queries**: batch con `Promise.all` + `WHERE IN (...)`. Nunca `for...of await`.
 5. **Auth admin**: `isAdminAuthenticated()` + `adminApiCheck()`. No reinventar.
 6. **JSON parse**: `safeJsonParse()` con try-catch. No `JSON.parse()` sin protección.
-7. **Estilos**: consistencia con `#0B1120` fondo, `#111827` superficie, `#1E3A5F` borde, `#00D4FF` acentos, `#E8F0FE` texto, `#8BA3C7` texto secundario.
+7. **params es Promise** en Next.js 16 server components → siempre `await params` antes de desestructurar.
+8. **Estilos**: `#0B1120` fondo, `#111827` superficie, `#1E3A5F` borde, `#00D4FF` acentos, `#E8F0FE` texto, `#8BA3C7` texto secundario.
 
 ---
 
 ## Bugs/limitaciones conocidas
 
-- **Pendiente**: Migrar parser markdown a `marked` (ya instalado). El actual es frágil con edge cases (links, code blocks).
-- **Pendiente**: `sync.ts` tiene `STORE_ADAPTERS` sin usar + `db` sin usar.
-- **Pendiente**: Seed data tiene EANs vacíos e imágenes de picsum.photos.
-- **Pendiente**: `A1:R100` hardcodeado en Google Sheets client — trunca a 18 columnas y 100 filas.
-- **Pendiente**: No hay tests automatizados.
-- **Pendiente**: Los adapters de tienda (amazon, decathlon, aliexpress) son stubs — no tienen API keys reales.
+- **sync.ts**: `STORE_ADAPTERS` y `db` sin usar (pre-existentes, no tocar)
+- **Seed data**: EANs vacíos e imágenes de picsum.photos
+- **A1:R100**: hardcodeado en Google Sheets client — trunca a 18 columnas y 100 filas
+- **Tests**: no hay tests automatizados (pendiente)
+- **Store adapters**: amazon/decathlon/aliexpress son stubs sin API keys reales
+- **Newsletter**: sin envío automatizado aún (solo `scripts/send-newsletter.ts` manual)
+- **Contacto**: sin rate limiting ni notificación al admin
+- **Marcas index**: sin imágenes de marca (solo texto)
+- **DNS sin www**: redirección pendiente → SEO split
 
 ---
 
 ## Próxima sesión — prioridades sugeridas
 
-1. **Migrar parser markdown a `marked`** (ya instalado) en `blog/[slug]/page.tsx`. Mantener el estilo visual actual (headings con barra gradiente, párrafos con colores). Ver `src/app/blog/[slug]/page.tsx:96-121` para el parser actual.
-2. **Tests**: Al menos tests de integración para `queries.ts` y las API routes.
-3. **Google Sheets range dinámico**: Cambiar `A1:R100` por rango calculado.
-4. **Contenido**: Artículo "Shimano vs Daiwa" (ver `_Blog/ideas.md`).
-5. **Redes sociales**: Crear presencia en TikTok/Instagram (ChollosPesca está fuerte ahí).
-6. **Vercel Cron**: Configurar sync diario automático.
+1. **Schema Product+Offer en fichas** — JSON-LD con precio, disponibilidad, review para rich snippets. `src/app/deals/[slug]/page.tsx`
+2. **Páginas de categoría con filtros** — Mejorar `/categories/[slug]`: H1 SEO, descripción, filtros precio/descuento/tienda
+3. **Alertas de precio por email** — Tabla `price_alerts`, endpoint, modal en ficha, script cron
+4. **Comparador multi-tienda** — Tabla Amazon/Decathlon/AliExpress en ficha de chollo
+5. **Vercel Cron / GH Action** — Sync diario automático
+6. **Tests automatizados** — Al menos integración para queries.ts y API routes
 
 ---
 
@@ -86,22 +89,28 @@ No introducir nuevos warnings. No reintentar "arreglar" estos 6.
 |---------|--------|
 | `src/app/page.tsx` | Homepage (hero, blog, featured, categories, latest) |
 | `src/app/blog/[slug]/page.tsx` | Detalle de artículo (parser markdown, product cards, TOC) |
+| `src/app/deals/[slug]/page.tsx` | Detalle de chollo (galería, specs, precio histórico, etc.) |
 | `src/data/queries.ts` | Todas las queries SQL (deals, products, comments, votes) |
 | `src/lib/db.ts` | Schema SQLite + singleton cliente DB |
-| `src/lib/sync/matcher.ts` | Pipeline sync: match, upsert, price history |
+| `src/lib/run-sync.ts` | Pipeline sync: Google Sheet → DB |
 | `src/components/deals/deal-card.tsx` | Tarjeta de chollo (usada en toda la web) |
-| `src/components/deals/comments-section.tsx` | Sección de comentarios (conectada a API) |
+| `src/app/admin/page.tsx` | Dashboard admin |
 | `src/app/sitemap.xml/route.ts` | Sitemap dinámico |
-| `src/app/error.tsx` | Error boundary global |
-| `src/app/api/deals/[id]/vote/route.ts` | Endpoint de votos |
+| `src/app/deals.xml/route.ts` | RSS feed de chollos |
+| `scripts/discover/auto.ts` | Discover pipeline automático |
+| `AGENTS.md` | Convenciones del proyecto (fuente de verdad técnica) |
 
 ---
 
 ## Comandos
 
 ```bash
-npm run dev         # Dev server
-npm run build       # Build + typecheck
-npm run lint        # ESLint (0 errores, 6 warnings)
-npm run sync        # Google Sheet → DB
+npm run dev              # Dev server (Turbopack, :3000)
+npm run build            # Build + typecheck
+npm run lint             # ESLint (0 errores, 6 warnings)
+npm run sync             # Google Sheet → DB
+npm run discover:auto    # Búsqueda automática → pending_candidates
+npm run refresh-prices   # Actualizar precios desde tiendas
+npm run send-newsletter  # Enviar newsletter semanal
+npm run clean-expired    # Marcar deals expirados
 ```

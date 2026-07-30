@@ -45,13 +45,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   )
 }
 import { Badge } from '@/components/ui/badge'
-import { BadgeCheck, Store, Truck, Package, BarChart3, Tag, ArrowRight, Star, Clock, Zap, Shield, RefreshCw, ShoppingCart } from 'lucide-react'
+import { BadgeCheck, Store, Truck, Package, BarChart3, Tag, ArrowRight, Star, Clock, Zap, Shield, RefreshCw } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { DealCard } from '@/components/deals/deal-card'
 import { PriceComparison } from '@/components/deals/price-comparison'
 import { VoteButtons } from '@/components/deals/vote-buttons'
 import { FavoriteButton } from '@/components/deals/favorites'
 import { DealCtaButton } from '@/components/deals/deal-cta-button'
+import { MobileCtaButton } from '@/components/deals/mobile-cta-button'
 import { CATEGORIES, STORES } from '@/types'
 import Link from 'next/link'
 
@@ -104,6 +105,8 @@ export default async function DealDetailPage({
     sku: deal.id,
     brand: deal.brand,
     shippingCost: deal.shippingCost,
+    ean: deal.ean || undefined,
+    slug,
   })
 
   const affiliateUrl = deal.store.id === 'amazon' ? buildAmazonUrl(deal.affiliateUrl) : deal.affiliateUrl
@@ -334,6 +337,8 @@ export default async function DealDetailPage({
               price={formatPrice(deal.salePrice)}
               dealId={deal.id}
               category={deal.category}
+              discountPercent={deal.discountPercent}
+              shippingFree={deal.shippingCost === 0}
             />
 
             {/* Trust badges */}
@@ -492,26 +497,15 @@ export default async function DealDetailPage({
     </div>
 
       {/* Sticky mobile CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden"
-        style={{
-          background: 'linear-gradient(to top, #0B1120 0%, rgba(11,17,32,0.95) 80%, transparent 100%)',
-          paddingTop: '1.5rem',
-        }}>
-        <div className="px-4 pb-4 pt-1">
-          <a
-            href={affiliateUrl}
-            target="_blank"
-            rel="nofollow sponsored"
-            className="flex items-center justify-center gap-2 w-full h-14 font-bold text-base rounded-full transition-all duration-300 active:scale-95"
-            style={{
-              background: 'linear-gradient(135deg, #00D4FF, #0099CC)',
-              color: '#0B1120',
-              boxShadow: '0 4px 24px rgba(0,212,255,0.4), 0 0 40px rgba(0,212,255,0.2)',
-            }}>
-            <ShoppingCart className="h-5 w-5" />
-            Comprar en {storeLabel} — {formatPrice(deal.salePrice)}
-          </a>
-        </div>
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+        <MobileCtaButton
+          href={affiliateUrl}
+          storeName={storeLabel}
+          price={formatPrice(deal.salePrice)}
+          dealId={deal.id}
+          category={deal.category}
+          discountPercent={deal.discountPercent}
+        />
       </div>
     </>
   )

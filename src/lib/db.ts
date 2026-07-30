@@ -266,6 +266,9 @@ export async function migrateSchema() {
     await db.execute("ALTER TABLE deals ADD COLUMN canonicalUrl TEXT DEFAULT ''")
     await db.execute("ALTER TABLE deals ADD COLUMN focusKeyword TEXT DEFAULT ''")
   }
+  if (!columnNames.includes('variantAsin')) {
+    await db.execute("ALTER TABLE deals ADD COLUMN variantAsin TEXT DEFAULT ''")
+  }
 
   const postInfo = await db.execute("PRAGMA table_info(posts)")
   const postColumnNames = postInfo.rows.map(r => r.name as string)

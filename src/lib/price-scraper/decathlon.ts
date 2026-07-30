@@ -21,16 +21,39 @@ async function tryFetch(url: string): Promise<ScrapedPrice | null> {
     const res = await fetch(url, {
       headers: {
         'User-Agent': getNextUserAgent(),
-        Accept: 'text/html',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
       },
       redirect: 'follow',
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(15000),
     })
 
     if (!res.ok) return null
 
     const html = await res.text()
-    return parseDecathlonHtml(html, url)
+    const parsed = parseDecathlonHtml(html, url)
+    if (parsed) return parsed
+
+    // Fallback: extract price using regex on raw HTML (Decathlon often has price in meta/JSON-LD)
+    const priceMatch = html.match(/"price"\s*:\s*"?(\d+[.,]\d{2})"?/)
+    if (priceMatch) {
+      const price = parseSpanishPrice(priceMatch[1])
+      if (price > 0 && price < 5000) {
+        return { price, stock: 'in_stock', url, shipping: price >= 30 ? 0 : 3.99 }
+      }
+    }
+
+    const metaPrice = html.match(/<meta[^>]+property="product:price:amount"[^>]+content="(\d+[.,]\d{2})"/)
+    if (metaPrice) {
+      const price = parseSpanishPrice(metaPrice[1])
+      if (price > 0 && price < 5000) {
+        return { price, stock: 'in_stock', url, shipping: price >= 30 ? 0 : 3.99 }
+      }
+    }
+
+    return null
   } catch {
     return null
   }
