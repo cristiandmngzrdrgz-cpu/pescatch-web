@@ -1,6 +1,7 @@
 import { createClient } from '@libsql/client'
 import type { Client } from '@libsql/client'
 import path from 'path'
+import { normalizeCategory, normalizeSubcategory } from './normalize-category'
 
 const TURSO_URL = process.env.TURSO_DATABASE_URL
 const TURSO_TOKEN = process.env.TURSO_AUTH_TOKEN
@@ -312,6 +313,61 @@ export async function migrateSchema() {
   if (!commentColumns.includes('status')) {
     await db.execute("ALTER TABLE comments ADD COLUMN status TEXT DEFAULT 'published'")
     await db.execute("UPDATE comments SET status = 'published' WHERE status IS NULL")
+  }
+
+  await normalizeCategoryColumns()
+}
+
+async function normalizeCategoryColumns() {
+  const db = getDb()
+
+  for (const table of ['deals', 'products']) {
+    const info = await db.execute(`PRAGMA table_info(${table})`)
+    const columns = info.rows.map(r => r.name as string)
+    if (!columns.includes('category')) continue
+
+    const distinct = await db.execute(`SELECT DISTINCT category FROM ${table} WHERE category != ''`)
+    const seen = new Map<string, string>()
+
+    for (const row of distinct.rows) {
+      const raw = row.category as string
+      if (seen.has(raw)) continue
+      const canonical = normalizeCategory(raw)
+      if (canonical && canonical !== raw) {
+        seen.set(raw, canonical)
+      }
+    }
+
+    for (const [raw, canonical] of seen) {
+      await db.execute({
+        sql: `UPDATE ${table} SET category = ? WHERE category = ?`,
+        args: [canonical, raw],
+      })
+    }
+
+    if (columns.includes('subcategory')) {
+      const subDistinct = await db.execute(`SELECT DISTINCT category, subcategory FROM ${table} WHERE subcategory != ''`)
+      const subSeen = new Map<string, string>()
+
+      for (const row of subDistinct.rows) {
+        const cat = row.category as string
+        const rawSub = row.subcategory as string
+        const key = `${cat}\u0000${rawSub}`
+        if (subSeen.has(key)) continue
+        const canonicalSub = normalizeSubcategory(cat, rawSub)
+        if (canonicalSub && canonicalSub !== rawSub) {
+          subSeen.set(key, canonicalSub)
+        }
+      }
+
+      for (const [key, canonicalSub] of subSeen) {
+        const [cat, rawSub] = key.split('\u0000')
+        await db.execute({
+          sql: `UPDATE ${table} SET subcategory = ? WHERE category = ? AND subcategory = ?`,
+          args: [canonicalSub, cat, rawSub],
+        })
+      }
+    }
   }
 }
 

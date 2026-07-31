@@ -1,4 +1,5 @@
 import { getDb } from '../db'
+import { normalizeCategory } from '../normalize-category'
 
 export interface FuzzyMatchResult {
   productId: string
@@ -50,6 +51,10 @@ function calculateSimilarity(name1: string, name2: string, brand1: string, brand
   return Math.min(1, score)
 }
 
+export function dealMatchSimilarity(name1: string, brand1: string, name2: string, brand2: string): number {
+  return calculateSimilarity(name1, name2, brand1, brand2)
+}
+
 export async function findFuzzyMatch(
   name: string,
   brand: string,
@@ -57,22 +62,27 @@ export async function findFuzzyMatch(
 ): Promise<FuzzyMatchResult> {
   const db = getDb()
 
-  const result = await db.execute({
-    sql: `SELECT id, name, brand, category FROM products WHERE category = ?`,
-    args: [category],
-  })
+  const result = await db.execute(
+    'SELECT id, name, brand, category FROM products'
+  )
 
   if (result.rows.length === 0) {
     return { productId: '', confidence: 0, matchType: 'none' }
   }
 
+  const normalizedCategory = normalizeCategory(category)
   let bestMatch: { id: string; confidence: number } | null = null
 
   for (const row of result.rows) {
     const existingName = row.name as string
     const existingBrand = row.brand as string
+    const existingCategory = normalizeCategory(row.category as string)
 
-    const similarity = calculateSimilarity(name, existingName, brand, existingBrand)
+    let similarity = calculateSimilarity(name, existingName, brand, existingBrand)
+
+    if (normalizedCategory && existingCategory === normalizedCategory) {
+      similarity = Math.min(1, similarity + 0.1)
+    }
 
     if (!bestMatch || similarity > bestMatch.confidence) {
       bestMatch = { id: row.id as string, confidence: similarity }

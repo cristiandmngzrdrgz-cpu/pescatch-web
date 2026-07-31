@@ -1,4 +1,5 @@
 import { POPULAR_BRANDS, FISHING_BRANDS } from './constants'
+import { normalizeCategory } from '@/lib/normalize-category'
 
 export function extractBrand(title: string): string | null {
   const lower = title.toLowerCase()
@@ -22,10 +23,10 @@ export function categorizeProduct(title: string): string {
   ]
 
   for (const [cat, patterns] of categoryRules) {
-    if (patterns.some(p => p.test(lower))) return cat
+    if (patterns.some(p => p.test(lower))) return normalizeCategory(cat)
   }
 
-  if (POPULAR_BRANDS.some(b => lower.startsWith(b))) return 'Accesorios'
+  if (POPULAR_BRANDS.some(b => lower.startsWith(b))) return normalizeCategory('Accesorios')
 
-  return 'Equipo'
+  return 'accesorios'
 }

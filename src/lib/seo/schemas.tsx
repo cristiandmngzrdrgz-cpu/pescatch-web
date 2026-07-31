@@ -7,8 +7,8 @@ export interface BreadcrumbItem {
   url: string
 }
 
-export function generateBreadcrumbSchema(items: BreadcrumbItem[]) {
-  return {
+export function generateBreadcrumbSchema(items: BreadcrumbItem[], id?: string) {
+  const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: items.map((item, index) => ({
@@ -18,6 +18,8 @@ export function generateBreadcrumbSchema(items: BreadcrumbItem[]) {
       item: item.url.startsWith('http') ? item.url : `${BASE_URL}${item.url}`,
     })),
   }
+  if (id) schema['@id'] = id
+  return schema
 }
 
 export function generateProductSchema(deal: {

@@ -1,6 +1,7 @@
 import type { Deal, DealFilters, PaginatedResult, Product, Store } from '@/types'
 import { getDb } from '@/lib/db'
 import { seedDatabase } from '@/lib/seed'
+import { normalizeCategory, normalizeSubcategory } from '@/lib/normalize-category'
 import type { InValue } from '@libsql/client'
 import { cache } from 'react'
 
@@ -20,12 +21,12 @@ function buildWhereClause(
   if (!filters) return { where, params }
 
   if (filters.category) {
-    where += ' AND category = ?'
-    params.push(filters.category)
+    where += ' AND LOWER(category) = LOWER(?)'
+    params.push(normalizeCategory(filters.category))
   }
   if (filters.subcategory) {
-    where += ' AND subcategory = ?'
-    params.push(filters.subcategory)
+    where += ' AND LOWER(subcategory) = LOWER(?)'
+    params.push(normalizeSubcategory(filters.category || '', filters.subcategory))
   }
   if (filters.brand) {
     where += ' AND LOWER(brand) = LOWER(?)'
@@ -324,8 +325,8 @@ export async function getDealCountsByStore(category?: string): Promise<Record<st
   const params: InValue[] = []
 
   if (category) {
-    sql += ' AND category = ?'
-    params.push(category)
+    sql += ' AND LOWER(category) = LOWER(?)'
+    params.push(normalizeCategory(category))
   }
 
   sql += ' GROUP BY storeId'
@@ -373,8 +374,8 @@ export async function getSubcategories(category: string): Promise<string[]> {
   await seedDatabase()
 
   const result = await db.execute({
-    sql: "SELECT DISTINCT subcategory FROM deals WHERE category = ? AND subcategory != '' ORDER BY subcategory",
-    args: [category],
+    sql: "SELECT DISTINCT subcategory FROM deals WHERE LOWER(category) = LOWER(?) AND subcategory != '' ORDER BY subcategory",
+    args: [normalizeCategory(category)],
   })
   return result.rows.map(r => r.subcategory as string)
 }
@@ -383,10 +384,10 @@ export async function getRelatedDeals(deal: Deal, limit = 4, includeHidden = fal
   const hiddenClause = includeHidden ? '' : " AND status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now'))"
   return loadDeals(
     `SELECT * FROM deals
-     WHERE id != ?${hiddenClause} AND (category = ? OR tags LIKE ?)
+     WHERE id != ?${hiddenClause} AND (LOWER(category) = LOWER(?) OR tags LIKE ?)
      ORDER BY discountPercent DESC
      LIMIT ?`,
-    [deal.id, deal.category, `%${deal.tags[0] || ''}%`, limit],
+    [deal.id, normalizeCategory(deal.category), `%${deal.tags[0] || ''}%`, limit],
   )
 }
 

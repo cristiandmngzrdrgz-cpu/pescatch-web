@@ -9,7 +9,13 @@ fecha: 2026-07-30
 
 ---
 
-## Lo último que se hizo (27-30 Jul 2026)
+## Lo último que se hizo (31 Jul 2026)
+
+Normalización de categorías + matching multi-tienda:
+- **Nuevo** `src/lib/normalize-category.ts` — `normalizeCategory()` (minúsculas + sin acentos + Levenshtein vs nombres canónicos, fallback `accesorios`) y `normalizeSubcategory()`.
+- **Fix bug**: la DB tenía categorías mixtas (`Cañas`, `Ca�as`, `canas`...) y `/categories/canas` perdía ~la mitad de deals. Ahora migración en `migrateSchema()` normaliza deals+products, y `buildWhereClause` usa `LOWER()`+param normalizado. Verificado: `canas` 5→12, `carretes` 4+10→14.
+- **`categorizer.ts`** devuelve slugs canónicos; **`run-sync.ts`** normaliza antes de validar/escribir; **`findFuzzyMatch`** ya no depende de categoría exacta (busca en todos los products + bonus si categoría coincide).
+- **Nuevo** `scripts/match-deals-to-products.ts` + `npm run match-products` — linkea deals del mismo producto en distintas tiendas por similitud (umbral 0.85). Con la DB actual no cambió nada (los 5 grupos ya compartían productId); sirve para futuros syncs.
 
 Fix admin dashboard 500, limpieza lint, import dinámico de Playwright, actualización de URLs y precios.
 

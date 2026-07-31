@@ -18,6 +18,7 @@
     "discover:auto": "npx tsx scripts/discover/auto.ts",
     "newsletter": "npx tsx scripts/send-newsletter.ts",
     "clean-expired": "npx tsx scripts/clean-expired-deals.ts",
+    "match-products": "npx tsx scripts/match-deals-to-products.ts",
     "dev:start": "next dev",
     "dev:up": "start-server-and-test dev:start http://localhost:3000"
   },

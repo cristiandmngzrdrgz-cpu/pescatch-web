@@ -11,6 +11,7 @@ import { enrichDealInDb, generateEnrichment, extractAsin } from './enrich-deal'
 import { validateSyncRow } from './sync/validation'
 import { enrichWithAI } from './enrich-ai'
 import { findFuzzyMatch } from './sync/fuzzy-matcher'
+import { normalizeCategory, normalizeSubcategory } from './normalize-category'
 import type { SyncRow, SyncResult, StoreAdapter } from './sync/types'
 
 export interface SyncRunResult extends SyncResult {
@@ -65,6 +66,8 @@ async function processRow(
   const db = getDb()
   const now = new Date().toISOString()
   const ean = row.ean?.trim() || ''
+  const category = normalizeCategory(row.category)
+  const subcategory = normalizeSubcategory(category, row.subcategory)
 
   try {
     let matched: { id: string; exists: boolean } | null = null
@@ -79,8 +82,8 @@ async function processRow(
       matched = await matchBySlug(slug)
     }
 
-    if (!matched && row.category) {
-      const fuzzyMatch = await findFuzzyMatch(row.name, row.brand || '', row.category)
+    if (!matched && category) {
+      const fuzzyMatch = await findFuzzyMatch(row.name, row.brand || '', category)
       if (fuzzyMatch.matchType === 'exact') {
         matched = { id: fuzzyMatch.productId, exists: true }
         console.log(`  🔗 Fuzzy match (${Math.round(fuzzyMatch.confidence * 100)}%): "${row.name}" → existing product`)
@@ -96,7 +99,7 @@ async function processRow(
       await insertProduct(
         productId,
         row.name, uniqueSlug, ean, row.brand || '',
-        row.category || '', row.subcategory || '',
+        category, subcategory,
         row.imageUrl || '',
         row.description || '',
         now,
@@ -115,7 +118,7 @@ async function processRow(
       await updateProduct(
         matched.id,
         row.name, uniqueSlug, row.brand || '',
-        row.category || '', row.subcategory || '',
+        category, subcategory,
         row.imageUrl || '',
         row.description || '',
         now,
@@ -224,7 +227,7 @@ async function processRow(
                   brand: details.brand || row.brand || '',
                   description: details.description,
                   features: details.features,
-                  category: row.category || '',
+                  category: category || '',
                 })
               } catch {}
 
@@ -285,6 +288,10 @@ export async function runSync(): Promise<SyncRunResult> {
   const rowsProcessed = rows.length
 
   for (const row of rows) {
+    const category = normalizeCategory(row.category)
+    row.category = category
+    row.subcategory = normalizeSubcategory(category, row.subcategory)
+
     const validation = validateSyncRow(row)
     if (!validation.valid) {
       result.errors.push(`Validation failed for "${row.name}": ${validation.errors.join(', ')}`)
