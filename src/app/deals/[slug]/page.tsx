@@ -8,7 +8,7 @@ import dynamicImport from 'next/dynamic'
 import { buildAmazonUrl } from '@/lib/amazon-affiliate'
 import { ImageCarousel } from '@/components/deals/image-carousel'
 import { ShareButton } from '@/components/deals/share-button'
-import { generateProductSchema, generateBreadcrumbSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
+import { generateProductSchema, generateItemPageSchema, generateBreadcrumbSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
 
 const PriceHistoryChart = dynamicImport(() => import('@/components/deals/price-history-chart').then(m => ({ default: m.PriceHistoryChart })))
 const CommentsSection = dynamicImport(() => import('@/components/deals/comments-section').then(m => ({ default: m.CommentsSection })))
@@ -94,6 +94,7 @@ export default async function DealDetailPage({
     title: deal.title,
     description: deal.description,
     imageUrl: deal.imageUrl,
+    images: deal.images?.filter(Boolean),
     salePrice: deal.salePrice,
     originalPrice: deal.originalPrice,
     currency: deal.currency,
@@ -107,13 +108,28 @@ export default async function DealDetailPage({
     shippingCost: deal.shippingCost,
     ean: deal.ean || undefined,
     slug,
+    expiresAt: deal.expiresAt || undefined,
+    review: deal.review || undefined,
+    pros: deal.pros?.length ? deal.pros : undefined,
+    publishedAt: deal.publishedAt,
   })
 
   const affiliateUrl = deal.store.id === 'amazon' ? buildAmazonUrl(deal.affiliateUrl) : deal.affiliateUrl
 
+  const itemPageSchema = generateItemPageSchema({
+    title: deal.title,
+    description: deal.description || deal.title,
+    slug,
+    imageUrl: deal.imageUrl || undefined,
+    publishedAt: deal.publishedAt,
+    updatedAt: deal.updatedAt,
+    brand: deal.brand || undefined,
+    category: category?.name,
+  })
+
   return (
     <>
-      <JsonLd data={[productSchema, breadcrumbs]} />
+      <JsonLd data={[itemPageSchema, productSchema, breadcrumbs]} />
       <div className="mx-auto max-w-7xl px-4 py-8 pb-24 lg:pb-8">
 
       {/* Breadcrumb */}

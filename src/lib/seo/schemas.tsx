@@ -24,6 +24,7 @@ export function generateProductSchema(deal: {
   title: string
   description: string
   imageUrl: string
+  images?: string[]
   salePrice: number
   originalPrice: number
   currency: string
@@ -37,27 +38,45 @@ export function generateProductSchema(deal: {
   shippingCost?: number
   ean?: string
   slug?: string
+  expiresAt?: string
+  review?: string
+  pros?: string[]
+  publishedAt?: string
 }) {
+  const pageUrl = `${BASE_URL}/deals/${deal.slug || deal.sku}`
+
+  // priceValidUntil: usa expiresAt real si existe, si no 90 dias (mas creible que 30)
+  const priceValidUntil = deal.expiresAt
+    ? deal.expiresAt.split('T')[0]
+    : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+  // Imagenes: array con todas las disponibles (Google prefiere multiples)
+  const allImages = [deal.imageUrl, ...(deal.images ?? [])].filter(Boolean)
+
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    '@id': `${BASE_URL}/deals/${deal.slug || deal.sku}#product`,
+    '@id': `${pageUrl}#product`,
     name: deal.title,
     description: deal.description || deal.title,
-    image: deal.imageUrl,
+    // Array de imagenes: Google muestra la primera en resultados
+    image: allImages.length > 1 ? allImages : (allImages[0] || ''),
     sku: deal.sku,
+    // itemCondition requerido por Google Shopping para rich snippets
+    itemCondition: 'https://schema.org/NewCondition',
     offers: {
       '@type': 'Offer',
       price: deal.salePrice,
       priceCurrency: 'EUR',
-      description: deal.description || deal.title,
+      // url canonica apunta a la ficha, no al afiliado
+      url: pageUrl,
+      priceValidUntil,
       availability: deal.stockStatus === 'in_stock'
         ? 'https://schema.org/InStock'
         : deal.stockStatus === 'limited'
           ? 'https://schema.org/LimitedAvailability'
           : 'https://schema.org/OutOfStock',
-      url: deal.affiliateUrl,
-      priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      itemCondition: 'https://schema.org/NewCondition',
       seller: {
         '@type': 'Organization',
         name: deal.storeName,
@@ -109,7 +128,71 @@ export function generateProductSchema(deal: {
     }
   }
 
+  // Review editorial: aumenta confianza y puede generar snippet de review en Google
+  if (deal.review) {
+    const pros = deal.pros ?? []
+    schema.review = {
+      '@type': 'Review',
+      author: {
+        '@type': 'Organization',
+        name: 'PesCatch',
+        url: BASE_URL,
+      },
+      datePublished: deal.publishedAt
+        ? deal.publishedAt.split('T')[0]
+        : new Date().toISOString().split('T')[0],
+      reviewBody: pros.length > 0
+        ? `${deal.review} Destacamos: ${pros.slice(0, 2).join(', ')}.`
+        : deal.review,
+      reviewRating: {
+        '@type': 'Rating',
+        ratingValue: deal.rating ?? 4,
+        bestRating: 5,
+        worstRating: 1,
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'PesCatch',
+        url: BASE_URL,
+      },
+    }
+  }
+
   return schema
+}
+
+// ItemPage conecta el Product con la WebPage — mejora la comprension de Google
+export function generateItemPageSchema(params: {
+  title: string
+  description: string
+  slug: string
+  imageUrl?: string
+  publishedAt?: string
+  updatedAt?: string
+  brand?: string
+  category?: string
+}) {
+  const pageUrl = `${BASE_URL}/deals/${params.slug}`
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemPage',
+    '@id': `${pageUrl}#webpage`,
+    url: pageUrl,
+    name: params.title,
+    description: params.description,
+    isPartOf: { '@id': `${BASE_URL}/#website` },
+    primaryImageOfPage: params.imageUrl
+      ? { '@type': 'ImageObject', url: params.imageUrl }
+      : undefined,
+    datePublished: params.publishedAt,
+    dateModified: params.updatedAt,
+    breadcrumb: { '@id': `${pageUrl}#breadcrumb` },
+    inLanguage: 'es-ES',
+    potentialAction: {
+      '@type': 'ReadAction',
+      target: [pageUrl],
+    },
+  }
 }
 
 export function generateReviewSchema(reviews: Array<{
