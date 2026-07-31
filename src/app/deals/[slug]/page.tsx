@@ -83,12 +83,14 @@ export default async function DealDetailPage({
   const storeLabel = storeMeta?.name || deal.store.name
   const { soon: expiringSoon, daysLeft } = isExpiringSoon(deal.expiresAt)
 
-  const breadcrumbs = generateBreadcrumbSchema([
-    { name: 'Inicio', url: '/' },
-    { name: 'Chollos', url: '/search' },
-    ...(category ? [{ name: category.name, url: `/categories/${category.slug}` }] : []),
-    { name: deal.title, url: `${BASE_URL}/deals/${slug}` },
-  ])
+  const breadcrumbs = generateBreadcrumbSchema(
+    [
+      { name: 'Inicio', url: '/' },
+      ...(category ? [{ name: category.name, url: `/categories/${category.slug}` }] : []),
+      { name: deal.title, url: `${BASE_URL}/deals/${slug}` },
+    ],
+    `${BASE_URL}/deals/${slug}#breadcrumb`,
+  )
 
   const productSchema = generateProductSchema({
     title: deal.title,

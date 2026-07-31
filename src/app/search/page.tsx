@@ -159,7 +159,6 @@ export default async function SearchPage({
   const breadcrumbs = generateBreadcrumbSchema([
     { name: 'Inicio', url: '/' },
     { name: 'Buscar', url: '/search' },
-    ...(query ? [{ name: query, url: `${BASE_URL}/search?q=${encodeURIComponent(query)}` }] : []),
   ])
 
   const searchSchema = generateSearchResultsPageSchema(query, deals.length)
