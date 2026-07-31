@@ -29,18 +29,22 @@ export async function POST(request: NextRequest) {
     if (!ok) return NextResponse.json({ error: 'Candidate not found' }, { status: 404 })
 
     try {
-      const { headers, rows } = await readAllRows()
+      const { headers } = await readAllRows()
       const candidate = (await getPendingCandidates(100)).find(c => c.id === id)
-      if (candidate && candidate.asin) {
+      if (candidate) {
+        const store = detectStore(candidate.url)
         const rowData: Record<string, string | number | boolean> = {
-          ean: candidate.ean || '',
+          ean: candidate.ean || candidate.asin || '',
           name: candidate.title,
           brand: candidate.brand || '',
           category: candidate.category,
-          amazonPrice: candidate.price,
-          amazonUrl: candidate.url,
-          amazonShipping: 0,
-          amazonStock: 'in_stock',
+          imageUrl: candidate.imageUrl || '',
+          [`${store}Price`]: candidate.price,
+          [`${store}Url`]: candidate.url,
+          [`${store}Stock`]: 'in_stock',
+        }
+        if (candidate.originalPrice) {
+          rowData[`${store}OriginalPrice`] = candidate.originalPrice
         }
         const row = headers.map(h => rowData[h] ?? '')
         await appendRow(row)
@@ -59,4 +63,11 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
+}
+
+function detectStore(url: string): string {
+  const lower = url.toLowerCase()
+  if (lower.includes('decathlon')) return 'decathlon'
+  if (lower.includes('aliexpress')) return 'aliexpress'
+  return 'amazon'
 }

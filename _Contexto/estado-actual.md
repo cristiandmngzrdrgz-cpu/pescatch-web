@@ -11,6 +11,17 @@ fecha: 2026-07-30
 
 ## Lo último que se hizo (31 Jul 2026)
 
+**Descubrimiento de chollos + fixes de pipeline:**
+- **`npm run discover:auto`**: 50 candidatos → limpiados a 13 buenos (rechazados 27 corruptos/duplicados, quedaron 10 de nicho como rejected).
+- **13 chollos añadidos al Google Sheet y publicados en la web** (Decathlon 12 + Amazon 1): Shimano Nasci 2500 HG (94,99→109,99), Pantalón Vadeo 900 (89,99→119,99), Trenza Pex8 (13,99→19,99), Kit Lucio Box (18,99→34,99), Guante 500, LAKESIDE-5, Minnow Trucha, Botón Freno Casting, Bobina Bauxit, Placa Espuma, Tenya 30g/60g, kit 358 plomos Amazon. Total deals publicados: 34→46 (Decathlon 32, Amazon 13, AliExpress 1).
+- **Fix bug**: `/api/admin/candidates` solo añadía al Sheet candidatos con `asin` (Amazon). Ahora detecta la tienda por URL (`decathlon`/`aliexpress`/`amazon`) y mapea columnas `*Price`/`*Url`/`*Stock`/`*OriginalPrice` correctamente.
+- **Fix bug**: `reader-sheets.ts` no convertía `*OriginalPrice` a número (con coma decimal) → validación fallaba para Decathlon; y no filtraba filas vacías del Sheet (56 filas "undefined"). Ahora sí.
+- **Fix bug**: `ensureHeaders` en `google-sheets-client.ts` crasheaba al añadir columnas más allá de Z (col 26). Ahora expande el grid de la hoja con `batchUpdate` antes de escribir (`pros`/`cons` añadidas al Sheet).
+- **Sheet**: columna `ean` del kit de plomos Amazon contenía el ASIN (B0G1G79PZM, no EAN) — limpiado.
+- **Sync**: 1 creado + 10 creados/actualizados. Quedan 2 errores preexistentes ajenos: EAN de 12 dígitos en `Carrete Shimano Stradic FL 2500` y `Carrete Penn Spinfisher VI 5500` (filas F5/F8 del Sheet, no tocadas).
+
+### Sesión anterior (30-31 Jul)
+
 Normalización de categorías + matching multi-tienda:
 - **Nuevo** `src/lib/normalize-category.ts` — `normalizeCategory()` (minúsculas + sin acentos + Levenshtein vs nombres canónicos, fallback `accesorios`) y `normalizeSubcategory()`.
 - **Fix bug**: la DB tenía categorías mixtas (`Cañas`, `Ca�as`, `canas`...) y `/categories/canas` perdía ~la mitad de deals. Ahora migración en `migrateSchema()` normaliza deals+products, y `buildWhereClause` usa `LOWER()`+param normalizado. Verificado: `canas` 5→12, `carretes` 4+10→14.
@@ -70,6 +81,7 @@ blog/[slug]/page.tsx → 1 <img> en dangerouslySetInnerHTML (no hay alternativa)
 - **Seed data**: EANs vacíos e imágenes de picsum.photos
 - **A1:R100**: hardcodeado en Google Sheets client — trunca a 18 columnas y 100 filas
 - **Tests**: no hay tests automatizados (pendiente)
+- **Sheet con EANs de 12 dígitos**: `Carrete Shimano Stradic FL 2500` y `Carrete Penn Spinfisher VI 5500` (filas F5/F8) fallan validación en cada sync — corregir EAN en el Sheet
 - **Store adapters**: amazon/decathlon/aliexpress son stubs sin API keys reales
 - **Newsletter**: sin envío automatizado aún (solo `scripts/send-newsletter.ts` manual)
 - **Contacto**: sin rate limiting ni notificación al admin

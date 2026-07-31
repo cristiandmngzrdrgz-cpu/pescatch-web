@@ -84,6 +84,10 @@ export async function ensureHeaders(headers: string[]) {
 
   const values = await getClient()
   const startCol = existing.length
+  const endCol = startCol + missing.length - 1
+  if (endCol > 25) {
+    await ensureGridColumns(endCol + 1)
+  }
   for (let i = 0; i < missing.length; i++) {
     const colRange = `${SHEET_NAME}!${colToLetters(startCol + i)}1`
     await values.update({
@@ -93,6 +97,27 @@ export async function ensureHeaders(headers: string[]) {
       requestBody: { values: [[missing[i]]] },
     })
   }
+}
+
+async function ensureGridColumns(minColumns: number) {
+  const auth = new google.auth.GoogleAuth({
+    keyFile: path.resolve('.env.google-sheets.json'),
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  })
+  const sheets = google.sheets({ version: 'v4', auth })
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: SHEET_ID,
+    requestBody: {
+      requests: [
+        {
+          updateSheetProperties: {
+            properties: { sheetId: 0, gridProperties: { columnCount: minColumns } },
+            fields: 'gridProperties.columnCount',
+          },
+        },
+      ],
+    },
+  })
 }
 
 function colToLetters(col: number): string {

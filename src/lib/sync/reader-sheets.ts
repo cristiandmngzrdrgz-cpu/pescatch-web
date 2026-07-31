@@ -78,7 +78,7 @@ function rawRowsToSyncRows(headers: string[], rawRows: string[][]): SyncRow[] {
 
       const key = toCamelCase(header)
 
-      if (['amazonPrice', 'decathlonPrice', 'aliexpressPrice', 'amazonShipping', 'decathlonShipping', 'aliexpressShipping'].includes(key)) {
+      if (['amazonPrice', 'decathlonPrice', 'aliexpressPrice', 'amazonShipping', 'decathlonShipping', 'aliexpressShipping', 'amazonOriginalPrice', 'decathlonOriginalPrice', 'aliexpressOriginalPrice'].includes(key)) {
         syncRow[key] = parseFloat(raw.replace(',', '.')) || undefined
       } else if (key === 'featured') {
         syncRow[key] = ['si', 'sí', 'yes', 'true', '1'].includes(raw.toLowerCase())
@@ -90,7 +90,10 @@ function rawRowsToSyncRows(headers: string[], rawRows: string[][]): SyncRow[] {
     result.push(syncRow as unknown as SyncRow)
   }
 
-  return result
+  return result.filter(row => {
+    const r = row as unknown as Record<string, unknown>
+    return typeof r.name === 'string' && r.name.trim() !== ''
+  })
 }
 
 export async function readGoogleSheets(): Promise<SyncRow[]> {
