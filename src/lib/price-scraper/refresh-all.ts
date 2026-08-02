@@ -3,6 +3,7 @@ import { scrapeStore, updateDealInDb } from './index'
 import { buildAmazonUrl, extractAsin } from '@/lib/amazon-affiliate'
 import { logScrapingHealth } from '@/lib/scraping-health'
 import { sendAdminNotification, isEmailConfigured, buildAdminNotificationHtml } from '@/lib/email'
+import { deleteDeal } from '@/data/queries'
 
 interface DealRow {
   id: string
@@ -17,6 +18,8 @@ interface RefreshResult {
   updated: number
   skipped: number
   failed: number
+  removed: number
+  removedIds: string[]
   alerts: number
 }
 
@@ -35,6 +38,8 @@ export async function refreshAllPrices(): Promise<RefreshResult> {
   let updated = 0
   let skipped = 0
   let failed = 0
+  let removed = 0
+  const removedIds: string[] = []
   let alerts = 0
 
   const storeStats = new Map<string, { success: number; fail: number; errors: string[] }>()
@@ -65,6 +70,15 @@ export async function refreshAllPrices(): Promise<RefreshResult> {
     }
 
     const p = scrapeResult.price
+    if (p.notAvailable) {
+      removed++
+      removedIds.push(deal.id)
+      stats.fail++
+      await deleteDeal(deal.id)
+      console.log(`  🗑️ Eliminado (producto no disponible): ${deal.title}`)
+      continue
+    }
+
     if (p.price <= 0) {
       skipped++
       stats.fail++
@@ -122,5 +136,5 @@ export async function refreshAllPrices(): Promise<RefreshResult> {
     })
   }
 
-  return { updated, skipped, failed, alerts }
+  return { updated, skipped, failed, removed, removedIds, alerts }
 }

@@ -38,7 +38,7 @@ async function main() {
     try {
       const { refreshAllPrices } = await import('../src/lib/price-scraper/refresh-all')
       const refreshed = await refreshAllPrices()
-      console.log(`  ${refreshed.updated} updated, ${refreshed.skipped} skipped, ${refreshed.failed} failed`)
+      console.log(`  ${refreshed.updated} updated, ${refreshed.skipped} skipped, ${refreshed.failed} failed, ${refreshed.removed} removed`)
       if (refreshed.alerts > 0) {
         console.log(`  ⚠ ${refreshed.alerts} deals flagged with priceAlert`)
       }

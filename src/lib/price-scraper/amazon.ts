@@ -1,6 +1,7 @@
 import type { ScrapedPrice } from './types'
 import { getNextUserAgent } from './user-agents'
 import { parseSpanishPrice } from '@/lib/scraping-utils'
+import { unavailablePrice, isAmazonNotFoundPage } from './not-available'
 
 export async function scrapeAmazon(
   asin: string,
@@ -17,12 +18,19 @@ export async function scrapeAmazon(
     redirect: 'follow',
   })
 
-  if (!res.ok) return null
+  if (!res.ok) {
+    if (res.status === 404) return unavailablePrice(url)
+    return null
+  }
 
   const html = await res.text()
 
   // Extract page title for validation
   const pageTitle = html.match(/<title[^>]*>([^<]+)</i)?.[1] || ''
+
+  if (isAmazonNotFoundPage(html, pageTitle, res.status)) {
+    return unavailablePrice(url)
+  }
 
   // Check if this is a parent product page with price range
   const hasPriceRange = html.includes('a-price-range')

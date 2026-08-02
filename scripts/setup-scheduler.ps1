@@ -15,8 +15,8 @@ $Tasks = @(
   }
   @{
     Name = "PesCatch-RefreshPrices"
-    Description = "Actualiza precios de todos los chollos"
-    Script = "npx tsx scripts/refresh-prices.ts"
+    Description = "Actualiza precios de todos los chollos (local + Turso)"
+    Script = "npx tsx scripts/refresh-prices-prod.ts --apply"
     Hour = 8
     Minute = 0
   }

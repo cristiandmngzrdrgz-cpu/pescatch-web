@@ -2,6 +2,7 @@ import type { ScrapedPrice } from './types'
 import type { Page } from 'playwright'
 import { braveAvailable, parseSpanishPrice } from '@/lib/scraping-utils'
 import { bravePage } from './brave'
+import { unavailablePrice, isAliExpressNotFoundPage } from './not-available'
 
 export async function scrapeAliExpress(
   url: string,
@@ -14,6 +15,12 @@ export async function scrapeAliExpress(
     const page = existingPage || await bravePage(false)
 
     await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 })
+
+    const bodyText = await page.evaluate(() => document.body?.innerText ?? '').catch(() => '')
+    if (isAliExpressNotFoundPage(bodyText)) {
+      if (owned) await page.close()
+      return unavailablePrice(url)
+    }
 
     const price = await page.evaluate(() => {
       const selectors = [

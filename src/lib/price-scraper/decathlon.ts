@@ -4,6 +4,7 @@ import { parseSpanishPrice, braveAvailable, getBravePath } from '@/lib/scraping-
 import { chromium } from 'playwright'
 import * as path from 'path'
 import * as fs from 'fs'
+import { unavailablePrice, isDecathlonNotFoundPage } from './not-available'
 
 const USER_DATA_DIR = path.resolve('temp', 'brave-decathlon-refresh')
 
@@ -30,9 +31,18 @@ async function tryFetch(url: string): Promise<ScrapedPrice | null> {
       signal: AbortSignal.timeout(15000),
     })
 
-    if (!res.ok) return null
+    if (!res.ok) {
+      if (res.status === 404) return unavailablePrice(url)
+      return null
+    }
 
     const html = await res.text()
+
+    const finalUrl = res.url || url
+    if (isDecathlonNotFoundPage(html, url, finalUrl)) {
+      return unavailablePrice(url)
+    }
+
     const parsed = parseDecathlonHtml(html, url)
     if (parsed) return parsed
 
@@ -86,6 +96,12 @@ async function tryBrave(url: string): Promise<ScrapedPrice | null> {
 
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 })
     await page.waitForTimeout(4000)
+
+    const finalUrl = page.url() || url
+    const bodyText = await page.evaluate(() => document.body?.innerText ?? '').catch(() => '')
+    if (isDecathlonNotFoundPage(bodyText, url, finalUrl)) {
+      return unavailablePrice(url)
+    }
 
     const price = await page.evaluate(() => {
       const scripts = document.querySelectorAll('script[type="application/ld+json"]')

@@ -4,6 +4,8 @@ export interface ScrapedPrice {
   stock: 'in_stock' | 'limited' | 'out_of_stock'
   name?: string
   url: string
+  /** true cuando la tienda devuelve una página de producto no disponible / redirige a categoría */
+  notAvailable?: boolean
 }
 
 export interface PriceScrapeResult {
