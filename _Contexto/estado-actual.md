@@ -9,7 +9,29 @@ fecha: 2026-07-30
 
 ---
 
-## Lo último que se hizo (31 Jul 2026)
+## Lo último que se hizo (2 Ago 2026)
+
+**Revisión completa del proyecto + actualización de ROADMAP/TODO:**
+- **Verificado todo el código** (rutas, admin, SEO, scripts, schema DB, infra) con agente de exploración. Resultado en `ROADMAP.md` (reestructurado con lo real).
+- **Bug arreglado**: `createPost` en `src/data/blog-queries.ts` tenía 18 placeholders `?` para 19 columnas → el test `queries.test.ts:115` fallaba y crear/editar posts desde admin crasheaba. Añadido el `?` que faltaba. `npm test` → 14/14 ✅.
+- **Correcciones en docs**: `votes`/`favorites` no son tablas (contadores en `deals` + localStorage); comparador multi-tienda y tests ya existían (el ROADMAP los marcaba NO INICIADO); newsletter tiene backend pero falta `RESEND_API_KEY` + cron; producción = Turso.
+- **29 scripts one-off movidos a `scripts/_archive/`** (batch*/check*/update*/content/sombrero/test-stealth/fetch-images/clean-orphans/prioritize/add-decathlon/scrape-decathlon-full/etc.).
+- **Categorías con filtros SEO** (sesión anterior, pendiente de commit): `src/lib/seo/category-content.ts` + `src/app/categories/[slug]/page.tsx` + `[sub]/page.tsx` (filtro precio, chips activos, FAQ JSON-LD, interlinking blog, force-dynamic).
+
+### Sesión anterior (1 Ago 2026)
+
+**Recuperación del deploy de chollos (producción = Turso):**
+- **Diagnóstico**: el "deploy fallido" era un problema de datos, no de build. Producción (Vercel) lee **Turso** (`TURSO_DATABASE_URL`), pero el sync solo se había ejecutado contra la DB local. En Turso había 130 deals con solo 21 publicados; los 12 chollos del 31-jul y otros nunca llegaron.
+- **Nuevos scripts**:
+  - `scripts/sync-prod.ts` (`npm run sync:prod`) — `runSync()` contra Turso (Sheet → Turso).
+  - `scripts/publish-to-prod.ts` (`npm run publish:prod`, dry-run por defecto, `--apply` aplica) — marca drafts de Turso como published matcheando por productId+storeId → slug → título normalizado+Jaccard.
+  - Ambos cargan `.env.vercel` con merge que **no machaca valores no vacíos** de `.env` (`.env.vercel` tiene `GOOGLE_SHEET_CSV_URL=""` vacío).
+- **Fix bug en `src/lib/db.ts`**: `TURSO_URL`/`TURSO_TOKEN` se capturaban a nivel de módulo → los scripts que cargan env después del import creaban el cliente **local** aunque `process.env.TURSO_DATABASE_URL` estuviera seteado. Ahora `createDbClient()` lee env en tiempo de llamada.
+- **Resultado**: Turso pasó de 21 → **47 deals publicados** (33 decathlon + 13 amazon + 1 aliexpress) = los 46 de local + 1 extra preexistente. `www.pescatch.es/api/deals` devuelve 47.
+- **Errores de sync conocidos (no bloqueantes)**: 2 EAN de 12 dígitos (Stradic FL 2500, Penn Spinfisher VI 5500) + 3 UNIQUE slug (Phishger, Rapala D Magnum Whu, BEUCHAT Sirocco — ya existen en Turso).
+- **Verificado**: build + lint OK. Scripts `_debug-*.ts` temporales borrados.
+
+### Sesión anterior (31 Jul 2026)
 
 **Descubrimiento de chollos + fixes de pipeline:**
 - **`npm run discover:auto`**: 50 candidatos → limpiados a 13 buenos (rechazados 27 corruptos/duplicados, quedaron 10 de nicho como rejected).
@@ -77,13 +99,16 @@ blog/[slug]/page.tsx → 1 <img> en dangerouslySetInnerHTML (no hay alternativa)
 
 ## Bugs/limitaciones conocidas
 
+- **Producción = Turso** (`TURSO_DATABASE_URL` en `.env.vercel`), no la DB local. `npm run sync` (sin sufijo) escribe en local; `npm run sync:prod` en Turso.
+- **`upsertDeal` no toca `status` en UPDATE** (`src/lib/sync/matcher.ts`) → un re-sync no re-publica drafts. Para publicar usar `npm run publish:prod -- --apply`.
+
 - **sync.ts**: `STORE_ADAPTERS` y `db` sin usar (pre-existentes, no tocar)
 - **Seed data**: EANs vacíos e imágenes de picsum.photos
 - **A1:R100**: hardcodeado en Google Sheets client — trunca a 18 columnas y 100 filas
-- **Tests**: no hay tests automatizados (pendiente)
+- **Tests**: hay vitest (`npm test`, 14 tests). Cobertura mínima — ampliar con API routes.
 - **Sheet con EANs de 12 dígitos**: `Carrete Shimano Stradic FL 2500` y `Carrete Penn Spinfisher VI 5500` (filas F5/F8) fallan validación en cada sync — corregir EAN en el Sheet
 - **Store adapters**: amazon/decathlon/aliexpress son stubs sin API keys reales
-- **Newsletter**: sin envío automatizado aún (solo `scripts/send-newsletter.ts` manual)
+- **Newsletter**: sin envío automatizado (solo `scripts/send-newsletter.ts` manual) y sin `RESEND_API_KEY` configurada → no operativo
 - **Contacto**: sin rate limiting ni notificación al admin
 - **Marcas index**: sin imágenes de marca (solo texto)
 - **DNS sin www**: redirección pendiente → SEO split
@@ -92,12 +117,11 @@ blog/[slug]/page.tsx → 1 <img> en dangerouslySetInnerHTML (no hay alternativa)
 
 ## Próxima sesión — prioridades sugeridas
 
-1. **Schema Product+Offer en fichas** — JSON-LD con precio, disponibilidad, review para rich snippets. `src/app/deals/[slug]/page.tsx`
-2. **Páginas de categoría con filtros** — Mejorar `/categories/[slug]`: H1 SEO, descripción, filtros precio/descuento/tienda
-3. **Alertas de precio por email** — Tabla `price_alerts`, endpoint, modal en ficha, script cron
-4. **Comparador multi-tienda** — Tabla Amazon/Decathlon/AliExpress en ficha de chollo
-5. **Vercel Cron / GH Action** — Sync diario automático
-6. **Tests automatizados** — Al menos integración para queries.ts y API routes
+1. **Alertas de precio por email (usuario)** — Tabla `price_alerts`, endpoint, modal en ficha, script cron. Base parcial ya existe (`priceAlert` flag + email admin).
+2. **Newsletter semanal automatizado** — Añadir `RESEND_API_KEY` a env + cron (Vercel Cron o Task Scheduler).
+3. **Commitear trabajo pendiente** — Categorías SEO + scripts de enrich/push + archivo de `_archive/`.
+4. **Tests ampliados** — API routes + queries.
+5. **Vercel Cron / GH Action** — Sync diario automático sin depender del PC local.
 
 ---
 
@@ -126,9 +150,13 @@ blog/[slug]/page.tsx → 1 <img> en dangerouslySetInnerHTML (no hay alternativa)
 npm run dev              # Dev server (Turbopack, :3000)
 npm run build            # Build + typecheck
 npm run lint             # ESLint (0 errores, 6 warnings)
-npm run sync             # Google Sheet → DB
+npm test                 # vitest (14 tests)
+npm run sync             # Google Sheet → DB local
+npm run sync:prod        # Google Sheet → Turso (producción)
+npm run publish:prod     # Dry-run: drafts → published en Turso (--apply ejecuta)
 npm run discover:auto    # Búsqueda automática → pending_candidates
 npm run refresh-prices   # Actualizar precios desde tiendas
-npm run send-newsletter  # Enviar newsletter semanal
+npm run newsletter       # Enviar newsletter semanal (manual, requiere RESEND_API_KEY)
 npm run clean-expired    # Marcar deals expirados
+npm run match-products   # Linkear deals multi-tienda por similitud
 ```

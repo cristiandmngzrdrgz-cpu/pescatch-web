@@ -71,3 +71,7 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# enrichment pipeline (generated artifacts)
+/scripts/enrich-cache/
+/enrich-report.md
