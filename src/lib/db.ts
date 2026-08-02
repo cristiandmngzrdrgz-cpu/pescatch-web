@@ -3,14 +3,13 @@ import type { Client } from '@libsql/client'
 import path from 'path'
 import { normalizeCategory, normalizeSubcategory } from './normalize-category'
 
-const TURSO_URL = process.env.TURSO_DATABASE_URL
-const TURSO_TOKEN = process.env.TURSO_AUTH_TOKEN
-
 function createDbClient(): Client {
-  if (TURSO_URL) {
+  const tursoUrl = process.env.TURSO_DATABASE_URL
+  const tursoToken = process.env.TURSO_AUTH_TOKEN
+  if (tursoUrl) {
     return createClient({
-      url: TURSO_URL,
-      authToken: TURSO_TOKEN,
+      url: tursoUrl,
+      authToken: tursoToken,
     })
   }
 

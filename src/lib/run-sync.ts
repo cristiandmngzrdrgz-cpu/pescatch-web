@@ -185,9 +185,12 @@ async function processRow(
       await db.execute({
         sql: `UPDATE deals SET
           category = ?, subcategory = ?,
-          description = ?, imageUrl = ?, images = ?, ean = ?
+          description = CASE WHEN ? = '' THEN description ELSE ? END,
+          imageUrl = CASE WHEN ? = '' THEN imageUrl ELSE ? END,
+          images = CASE WHEN ? = '' OR ? = '[]' THEN images ELSE ? END,
+          ean = CASE WHEN ? = '' THEN ean ELSE ? END
         WHERE id = ?`,
-        args: [pCategory, pSubcategory, pDescription, pImageUrl, pImages, ean, dealId],
+        args: [pCategory, pSubcategory, pDescription, pDescription, pImageUrl, pImageUrl, pImages, pImages, pImages, ean, ean, dealId],
       })
 
       // Apply enrichment from sheet columns (technicalSpecs, review, pros, cons)

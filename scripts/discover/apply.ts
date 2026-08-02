@@ -80,7 +80,7 @@ async function main() {
 
     const row = headers.map(h => {
       switch (h) {
-        case 'ean': return c.asin || ''
+        case 'ean': return /^\d{13}$/.test(c.asin) ? c.asin : ''
         case 'name': return c.title
         case 'brand': return c.brand || ''
         case 'category': return c.category || ''

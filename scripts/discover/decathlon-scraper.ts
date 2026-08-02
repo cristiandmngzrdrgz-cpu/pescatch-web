@@ -289,15 +289,21 @@ export interface DecathlonDetails {
   brand: string | null
 }
 
-export async function scrapeDecathlonDetails(url: string): Promise<DecathlonDetails> {
-  const context = await launchBraveContext('brave-decathlon-profile')
+export async function scrapeDecathlonDetails(url: string, existingPage?: Page): Promise<DecathlonDetails> {
+  const owned = !existingPage
+  const context = owned ? await launchBraveContext('brave-decathlon-profile') : undefined
+  const page = existingPage || context!.pages()[0] || await context!.newPage()
 
-  const page = context.pages()[0] || await context.newPage()
-
-  await setupStealthPage(page)
+  if (owned) await setupStealthPage(page)
 
   try {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 })
+
+    for (let i = 0; i < 15; i++) {
+      const hasImages = await page.evaluate(() => document.querySelectorAll('img[src*="media"]').length > 0)
+      if (hasImages) break
+      await new Promise(r => setTimeout(r, 1000))
+    }
 
     const data = await page.evaluate(() => {
       const result: { ean: string | null; description: string | null; specs: Record<string, string>; images: string[]; brand: string | null } = {
@@ -315,6 +321,30 @@ export async function scrapeDecathlonDetails(url: string): Promise<DecathlonDeta
             result.description = d.description || null
           }
         } catch {}
+      }
+
+      // Brand/description fallback from embedded JSON blobs
+      if (!result.brand || !result.description) {
+        const blobs = Array.from(document.querySelectorAll('script:not([src])'))
+        for (const s of blobs) {
+          const t = s.textContent || ''
+          if (t.length > 500000) continue
+          if (!result.brand) {
+            const m = t.match(/"brand"\s*:\s*(?:\{"name"\s*:\s*")?([^"}\\]{2,40})/i)
+            if (m && !/^\{/.test(m[1])) result.brand = m[1]
+          }
+          if (!result.description) {
+            const m = t.match(/"description"\s*:\s*"([^"]{40,600})"/)
+            if (m) result.description = m[1].replace(/\\n/g, ' ').trim()
+          }
+          if (result.brand && result.description) break
+        }
+      }
+
+      // Description fallback from meta tags
+      if (!result.description) {
+        const og = document.querySelector('meta[property="og:description"]')
+        result.description = og?.getAttribute('content') || null
       }
 
       // Images from gallery
@@ -347,7 +377,7 @@ export async function scrapeDecathlonDetails(url: string): Promise<DecathlonDeta
   } catch {
     return { ean: null, description: null, specs: {}, images: [], brand: null }
   } finally {
-    await context.close()
+    if (owned && context) await context.close()
   }
 }
 

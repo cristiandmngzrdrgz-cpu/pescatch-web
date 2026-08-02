@@ -115,6 +115,127 @@ async function extractProductsFromPage(page: Page, keyword: string, category: st
   }))
 }
 
+export interface AmazonDetailsStealth {
+  ean: string | null
+  brand: string | null
+  imageUrl: string | null
+  images: string[]
+  description: string
+  features: string[]
+  rating: number
+  reviewCount: number
+}
+
+const EMPTY_DETAILS: AmazonDetailsStealth = {
+  ean: null, brand: null, imageUrl: null, images: [], description: '', features: [], rating: 0, reviewCount: 0,
+}
+
+function normalizeAmazonImage(src: string): string {
+  const base = src.replace(/\._AC_.*$/, '')
+  return base + '._AC_SL1500_.jpg'
+}
+
+export async function scrapeAmazonDetailsStealth(
+  asin: string,
+  existingPage?: Page,
+): Promise<AmazonDetailsStealth> {
+  const owned = !existingPage
+  const context = owned ? await launchContext() : undefined
+  const page = existingPage || context?.pages()[0] || (owned ? await context!.newPage() : existingPage!)
+
+  if (owned) await setupPage(page)
+
+  try {
+    await page.goto(`https://www.amazon.es/dp/${asin}`, { waitUntil: 'domcontentloaded', timeout: 30000 })
+    await sleep(2000)
+
+    for (let i = 0; i < 120; i++) {
+      const state = await page.evaluate(() => {
+        const text = document.body?.textContent?.slice(0, 800).toLowerCase() || ''
+        if (text.includes('captcha') || text.includes('verificación') || text.includes('verify') || text.includes('robot')) return 'captcha'
+        if (document.getElementById('landingImage') || document.getElementById('productTitle')) return 'ok'
+        if (text.includes('no encontramos') || text.includes('désolé') || text.includes("no longer available")) return 'notfound'
+        return 'waiting'
+      })
+      if (state === 'captcha') {
+        console.log(`   ⚠️ Captcha en ${asin}. Resuélvelo (${120 - i}s restantes)...`)
+        await sleep(1000)
+        continue
+      }
+      if (state === 'ok') break
+      if (state === 'notfound') return EMPTY_DETAILS
+      await sleep(1000)
+    }
+
+    await sleep(1500)
+
+    const data = await page.evaluate((): AmazonDetailsStealth => {
+      const result: AmazonDetailsStealth = { ean: null, brand: null, imageUrl: null, images: [], description: '', features: [], rating: 0, reviewCount: 0 }
+
+      const landing = document.getElementById('landingImage') as HTMLImageElement | null
+      const rawMain = landing?.getAttribute('src') || landing?.getAttribute('data-old-hires') || null
+      if (rawMain && rawMain.includes('.jpg')) {
+        const norm = rawMain.includes('._AC_') ? rawMain.replace(/\._AC_.*$/, '') + '._AC_SL1500_.jpg' : rawMain
+        result.imageUrl = norm
+        result.images.push(norm)
+      }
+      document.querySelectorAll('#altImages img').forEach(img => {
+        const src = img.getAttribute('src')
+        if (!src || !src.includes('.jpg') || src.includes('data:') || src.includes('spacer') || src.includes('.gif')) return
+        const norm = src.replace(/\._AC_.*$/, '') + '._AC_SL1500_.jpg'
+        if (!result.images.includes(norm)) result.images.push(norm)
+      })
+
+      document.querySelectorAll('#feature-bullets .a-list-item').forEach(el => {
+        const t = (el.textContent || '').trim()
+        if (t && t.length > 3) result.features.push(t)
+      })
+
+      const prodDesc = document.getElementById('productDescription')
+      if (prodDesc) result.description = (prodDesc.textContent || '').trim()
+      if (!result.description && result.features.length > 0) {
+        result.description = result.features.slice(0, 3).join(' ')
+      }
+
+      const byline = document.getElementById('bylineInfo')
+      if (byline) {
+        const t = (byline.textContent || '').trim().replace(/\s*›.*$/, '').trim()
+        const cleaned = t.replace(/^Marca:\s*/i, '').replace(/^Visita la tienda de\s*/i, '').trim()
+        if (cleaned && cleaned.length <= 40) result.brand = cleaned
+      }
+
+      const acr = document.querySelector('#acrPopover .a-icon-alt')
+      if (acr) {
+        const m = (acr.textContent || '').match(/[\d.,]+/)
+        if (m) result.rating = parseFloat(m[0].replace(',', '.')) || 0
+      }
+      const acrText = document.getElementById('acrCustomerReviewText')
+      if (acrText) {
+        const m = (acrText.textContent || '').match(/[\d.,]+/)
+        if (m) result.reviewCount = parseInt(m[0].replace(/\./g, ''), 10) || 0
+      }
+
+      document.querySelectorAll('#productDetails_detailBullets_sections1 tr, #detailBullets_feature_div tr').forEach(tr => {
+        const cells = tr.querySelectorAll('th, td')
+        if (cells.length < 2) return
+        const key = (cells[0].textContent || '').toLowerCase()
+        const val = (cells[1].textContent || '').trim()
+        if (!result.ean && (key.includes('gtin') || key.includes('ean') || key.includes('código de barras') || key.includes('código')) && val) {
+          result.ean = val
+        }
+      })
+
+      return result
+    })
+
+    return data
+  } catch {
+    return EMPTY_DETAILS
+  } finally {
+    if (owned && context) await context.close()
+  }
+}
+
 const AMAZON_FISHING_NODE = '2928514031'
 
 export async function searchAmazonStealth(keyword: string, category: string): Promise<AmazonCandidate[]> {

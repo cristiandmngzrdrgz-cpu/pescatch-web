@@ -76,12 +76,17 @@ export async function updateProduct(
   now: string,
 ): Promise<void> {
   const db = getDb()
-  const fields = ["name = ?", "slug = ?", "brand = ?", "category = ?", "subcategory = ?", "description = ?", "updatedAt = ?"]
-  const args: InValue[] = [name, slug, brand, category, subcategory, description, now]
+  const fields = ["name = ?", "slug = ?", "brand = ?", "category = ?", "subcategory = ?", "updatedAt = ?"]
+  const args: InValue[] = [name, slug, brand, category, subcategory, now]
 
   if (imageUrl) {
     fields.push("imageUrl = ?")
     args.push(imageUrl)
+  }
+
+  if (description) {
+    fields.push("description = ?")
+    args.push(description)
   }
 
   args.push(id)

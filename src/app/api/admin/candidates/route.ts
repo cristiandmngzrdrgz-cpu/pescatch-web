@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       if (candidate) {
         const store = detectStore(candidate.url)
         const rowData: Record<string, string | number | boolean> = {
-          ean: candidate.ean || candidate.asin || '',
+          ean: store === 'amazon' ? (candidate.ean ?? '').replace(/[^\d]/g, '') : (candidate.ean || ''),
           name: candidate.title,
           brand: candidate.brand || '',
           category: candidate.category,
@@ -42,6 +42,9 @@ export async function POST(request: NextRequest) {
           [`${store}Price`]: candidate.price,
           [`${store}Url`]: candidate.url,
           [`${store}Stock`]: 'in_stock',
+        }
+        if (store === 'amazon' && candidate.asin) {
+          rowData.amazonVariantAsin = candidate.asin
         }
         if (candidate.originalPrice) {
           rowData[`${store}OriginalPrice`] = candidate.originalPrice
