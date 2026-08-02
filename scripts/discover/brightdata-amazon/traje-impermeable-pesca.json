@@ -1,0 +1,54 @@
+{
+  "products": [
+    {
+      "asin": "B0F8MWQNHF",
+      "title": "Traje lluvia hombre PU impermeable resistente con peto y capucha | Tirantes ajustables,capucha desmontable, para pesca, co...",
+      "price": 75.05,
+      "originalPrice": 79,
+      "rating": 4.6,
+      "reviews": 129,
+      "url": "https://www.amazon.es/dp/B0F8MWQNHF",
+      "source": "traje-impermeable-pesca"
+    },
+    {
+      "asin": "B0GGB8C5J5",
+      "title": "Navis - Traje de Lluvia para Hombre, Resistente al Agua, con Pantalones, 3 Piezas | Conjunto de chaqueta y peto, costuras ...",
+      "price": 80.1,
+      "originalPrice": 89,
+      "rating": 4.4,
+      "reviews": 398,
+      "url": "https://www.amazon.es/dp/B0GGB8C5J5",
+      "source": "traje-impermeable-pesca"
+    },
+    {
+      "asin": "B07QWCQW6D",
+      "title": "DAM Xtherm Winter Suit Thermo Suits Unisex adulto (Pack de 1)",
+      "price": 119.95,
+      "originalPrice": 139.99,
+      "rating": 4.5,
+      "reviews": 147,
+      "url": "https://www.amazon.es/dp/B07QWCQW6D",
+      "source": "traje-impermeable-pesca"
+    },
+    {
+      "asin": "B0GGBCPYGS",
+      "title": "Navis Marine Traje de Lluvia Hombre Impermeable PU - Chaqueta y Peto Ajustable con Capucha Extraíble para Pesca, Construcc...",
+      "price": 71.1,
+      "originalPrice": 79,
+      "rating": 4.5,
+      "reviews": 713,
+      "url": "https://www.amazon.es/dp/B0GGBCPYGS",
+      "source": "traje-impermeable-pesca"
+    },
+    {
+      "asin": "B0GGB9CWNS",
+      "title": "Navis Marine Traje de Lluvia Hombre Impermeable PU - Chaqueta y Peto Ajustable con Capucha Extraíble para Pesca, Construcc...",
+      "price": 71.1,
+      "originalPrice": 79,
+      "rating": 4.5,
+      "reviews": 713,
+      "url": "https://www.amazon.es/dp/B0GGB9CWNS",
+      "source": "traje-impermeable-pesca"
+    }
+  ]
+}

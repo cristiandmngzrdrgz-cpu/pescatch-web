@@ -1,0 +1,54 @@
+{
+    "products":  [
+                     {
+                         "asin":  "B0F89YD6TB",
+                         "title":  "5 Piezas Señuelos de Pesca Spinning, Señuelos Artificiales para Pesca | Cebos Lucio Black Bass lubina, Cebo para Peces Depredadores, Agua Dulce y Salada",
+                         "price":  13.99,
+                         "originalPrice":  22.99,
+                         "rating":  4.2,
+                         "reviews":  84,
+                         "url":  "https://www.amazon.es/dp/B0F89YD6TB",
+                         "source":  "senuelos-lucio"
+                     },
+                     {
+                         "asin":  "B0CJR762ZX",
+                         "title":  "Realure Juego de 3 señuelos multiarticulados para lucio de 15 cm, 23 cm, 30 cm, con marcas de alambre, lucios, señuelos artificiales 3D, cebo de hundimiento lento, para agua dulce, agua salada, trucha",
+                         "price":  13.99,
+                         "originalPrice":  16.99,
+                         "rating":  4,
+                         "reviews":  58,
+                         "url":  "https://www.amazon.es/dp/B0CJR762ZX",
+                         "source":  "senuelos-lucio"
+                     },
+                     {
+                         "asin":  "B0DLGPX5RF",
+                         "title":  "Señuelos de Pesca 13,5cm 19g Cebo Duro Articulado Wobbler Realista | Cebo de Plástico para Truchas con Movimiento Natural, Vinilos de Pesca y Señuelos Articulados para Agua Salada Lucio y Perca",
+                         "price":  5.49,
+                         "originalPrice":  6.25,
+                         "rating":  4.3,
+                         "reviews":  21,
+                         "url":  "https://www.amazon.es/dp/B0DLGPX5RF",
+                         "source":  "senuelos-lucio"
+                     },
+                     {
+                         "asin":  "B0FCMFSZ6F",
+                         "title":  "5 Piezas Señuelos Spinning, 11cm Señuelos Artificiales De Pesca, Pre-Rigged Jig Head Swimbaits, Cebo para Capturar Peces Depredadores, Pesca para Lucio, Trucha, Perca, etc",
+                         "price":  9.99,
+                         "originalPrice":  10.99,
+                         "rating":  3.8,
+                         "reviews":  20,
+                         "url":  "https://www.amazon.es/dp/B0FCMFSZ6F",
+                         "source":  "senuelos-lucio"
+                     },
+                     {
+                         "asin":  "B0F89YB5M5",
+                         "title":  "5 Piezas Señuelos de Pesca Spinning, Señuelos Artificiales para Pesca | Cebos Lucio Black Bass lubina, Cebo para Peces Depredadores, Agua Dulce y Salada",
+                         "price":  19.99,
+                         "originalPrice":  22.99,
+                         "rating":  4.2,
+                         "reviews":  84,
+                         "url":  "https://www.amazon.es/dp/B0F89YB5M5",
+                         "source":  "senuelos-lucio"
+                     }
+                 ]
+}
