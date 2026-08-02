@@ -114,7 +114,7 @@ export async function createPost(data: Record<string, unknown>): Promise<BlogPos
       id, title, slug, excerpt, content, featuredImage, author, category, tags, relatedAsins, hidden, status,
       metaTitle, metaDescription, canonicalUrl, focusKeyword,
       publishedAt, createdAt, updatedAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id, str(data.title), str(data.slug), str(data.excerpt), str(data.content),
       str(data.featuredImage), str(data.author, 'PesCatch'), str(data.category),

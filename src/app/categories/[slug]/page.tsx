@@ -1,18 +1,28 @@
 import { getDealsPaginated, getDealCountsByStore } from '@/data/queries'
+import { getPostsByCategory } from '@/data/blog-queries'
 import { ProductCard } from '@/components/deals/product-card'
 import { SearchPagination } from '@/components/search/search-pagination'
+import { PriceRangeSlider } from '@/components/search/price-range-slider'
+import { FilterDrawer } from '@/components/search/filter-drawer'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { groupDealsByProduct } from '@/lib/group-deals'
+import { getCategorySeo, BLOG_CATEGORY_BY_SLUG } from '@/lib/seo/category-content'
 import { CATEGORIES } from '@/types'
 import type { DealFilters } from '@/types'
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { Fish, ArrowUpDown, Store, Tag } from 'lucide-react'
+import { Fish, ArrowUpDown, Store, Tag, X, ChevronDown } from 'lucide-react'
 import type { Metadata } from 'next'
-import { generateBreadcrumbSchema, generateCollectionPageSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
+import {
+  generateBreadcrumbSchema,
+  generateCollectionPageSchema,
+  generateFAQSchema,
+  buildMetadata,
+  BASE_URL,
+  JsonLd,
+} from '@/lib/seo/schemas'
 
-// Categorías con filtros: revalidar cada 2 minutos para mantener frescura
-export const revalidate = 120
+export const dynamic = 'force-dynamic'
 
 const PAGE_SIZE = 12
 
@@ -22,21 +32,22 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!category) return { title: 'Categoría no encontrada | PesCatch' }
 
   const canonicalUrl = `${BASE_URL}/categories/${slug}`
+  const seo = getCategorySeo(slug)
 
   return buildMetadata(
     {
       title: `${category.name} — Chollos y Ofertas | PesCatch`,
-      description: category.description || `Las mejores ofertas en ${category.name.toLowerCase()} de pesca. Encuentra chollos en Amazon, Decathlon y AliExpress.`,
+      description: seo?.intro || category.description || `Las mejores ofertas en ${category.name.toLowerCase()} de pesca. Encuentra chollos en Amazon, Decathlon y AliExpress.`,
       openGraph: {
         title: `${category.name} — Chollos de ${category.name} | PesCatch`,
-        description: category.description || `Encuentra los mejores chollos en ${category.name.toLowerCase()} de pesca.`,
+        description: seo?.intro || category.description || `Encuentra los mejores chollos en ${category.name.toLowerCase()} de pesca.`,
         type: 'website',
         url: canonicalUrl,
       },
       twitter: {
         card: 'summary_large_image',
         title: `${category.name} — Chollos | PesCatch`,
-        description: category.description || `Los mejores chollos en ${category.name.toLowerCase()} al mejor precio.`,
+        description: seo?.intro || category.description || `Los mejores chollos en ${category.name.toLowerCase()} al mejor precio.`,
       },
     },
     canonicalUrl,
@@ -89,12 +100,25 @@ function Pill({ href, active, children }: { href: string; active: boolean; child
   )
 }
 
+function ActiveChip({ label, href }: { label: string; href: string }) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-colors hover:opacity-80"
+      style={{ background: 'rgba(0,212,255,0.12)', border: '1px solid rgba(0,212,255,0.25)', color: '#6AE8FF' }}
+    >
+      {label}
+      <X className="h-3 w-3" style={{ color: '#6AE8FF' }} />
+    </Link>
+  )
+}
+
 export default async function CategoryPage({
   params,
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ sortBy?: string; store?: string; minDiscount?: string; maxPrice?: string; page?: string }>
+  searchParams: Promise<{ sortBy?: string; store?: string; minDiscount?: string; minPrice?: string; maxPrice?: string; page?: string }>
 }) {
   const { slug } = await params
   const sp = await searchParams
@@ -117,6 +141,8 @@ export default async function CategoryPage({
   if (sp.sortBy) currentParams.sortBy = sp.sortBy
   if (sp.store) currentParams.store = sp.store
   if (sp.minDiscount) currentParams.minDiscount = sp.minDiscount
+  if (sp.minPrice) currentParams.minPrice = sp.minPrice
+  if (sp.maxPrice) currentParams.maxPrice = sp.maxPrice
 
   const page = Math.max(1, Number(sp.page) || 1)
 
@@ -126,10 +152,14 @@ export default async function CategoryPage({
   }
   if (sp.store) filters.store = sp.store
   if (sp.minDiscount) filters.minDiscount = parseInt(sp.minDiscount, 10)
+  if (sp.minPrice) filters.minPrice = parseInt(sp.minPrice, 10)
+  if (sp.maxPrice) filters.maxPrice = parseInt(sp.maxPrice, 10)
 
-  const [{ items: deals, total, totalPages }, storeCounts] = await Promise.all([
+  const [{ items: deals, total, totalPages }, storeCounts, seo, categoryPosts] = await Promise.all([
     getDealsPaginated(filters, page, PAGE_SIZE),
     getDealCountsByStore(category.slug),
+    Promise.resolve(getCategorySeo(slug)),
+    Promise.resolve(BLOG_CATEGORY_BY_SLUG[slug]).then(name => name ? getPostsByCategory(name, 3) : []),
   ])
 
   const baseUrl = `/categories/${slug}`
@@ -141,17 +171,27 @@ export default async function CategoryPage({
 
   const collectionSchema = generateCollectionPageSchema({
     title: `${category.name} — Chollos y Ofertas`,
-    description: category.description || `Las mejores ofertas en ${category.name.toLowerCase()} de pesca.`,
+    description: seo?.intro || category.description || `Las mejores ofertas en ${category.name.toLowerCase()} de pesca.`,
     url: `${BASE_URL}${baseUrl}`,
     itemCount: deals.length,
     items: deals.map(d => ({ name: d.title, url: `${BASE_URL}/deals/${d.slug}` })),
   })
 
+  const faqSchema = seo && seo.faq.length > 0 ? generateFAQSchema(seo.faq) : null
+
   const activeSort = sp.sortBy || 'newest'
+  const activeFilters = [
+    sp.store && STORE_OPTIONS.find(o => o.value === sp.store),
+    sp.minDiscount,
+    sp.minPrice,
+    sp.maxPrice,
+  ].filter(Boolean).length
+
+  const clearFiltersUrl = buildFilterUrl(baseUrl, '', '', {})
 
   return (
     <>
-      <JsonLd data={[collectionSchema, breadcrumbs]} />
+      <JsonLd data={faqSchema ? [collectionSchema, breadcrumbs, faqSchema] : [collectionSchema, breadcrumbs]} />
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-8">
         <Breadcrumb items={[
@@ -183,56 +223,81 @@ export default async function CategoryPage({
       )}
 
       {/* Filtros */}
-      <div className="flex flex-wrap items-center gap-4 mb-6 pb-6" style={{ borderBottom: '1px solid #1E3A5F' }}>
-        {/* Sort */}
-        <div className="flex items-center gap-2">
-          <ArrowUpDown className="h-3.5 w-3.5" style={{ color: '#4A6080' }} />
-          <span className="text-xs mr-1" style={{ color: '#4A6080' }}>Ordenar:</span>
-          <div className="flex flex-wrap gap-1.5">
-            {SORT_OPTIONS.map(opt => (
-              <Pill key={opt.value}
-                href={buildFilterUrl(baseUrl, 'sortBy', opt.value, currentParams)}
-                active={activeSort === opt.value}>
-                {opt.label}
-              </Pill>
-            ))}
-          </div>
-        </div>
+      <FilterDrawer activeCount={activeFilters}>
+        <div className="rounded-2xl p-5 mb-6" style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Sort */}
+            <div className="flex items-center gap-2">
+              <ArrowUpDown className="h-3.5 w-3.5" style={{ color: '#4A6080' }} />
+              <span className="text-xs mr-1" style={{ color: '#4A6080' }}>Ordenar:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {SORT_OPTIONS.map(opt => (
+                  <Pill key={opt.value}
+                    href={buildFilterUrl(baseUrl, 'sortBy', opt.value, currentParams)}
+                    active={activeSort === opt.value}>
+                    {opt.label}
+                  </Pill>
+                ))}
+              </div>
+            </div>
 
-        {/* Store */}
-        <div className="flex items-center gap-2">
-          <Store className="h-3.5 w-3.5" style={{ color: '#4A6080' }} />
-          <span className="text-xs mr-1" style={{ color: '#4A6080' }}>Tienda:</span>
-          <div className="flex flex-wrap gap-1.5">
-            {STORE_OPTIONS.map(opt => {
-              const count = opt.value ? (storeCounts[opt.value] || 0) : total
-              return (
-                <Pill key={opt.value}
-                  href={buildFilterUrl(baseUrl, 'store', opt.value, currentParams)}
-                  active={(sp.store || '') === opt.value}>
-                  {opt.label}
-                  {count > 0 && <span className="ml-1 opacity-60">({count})</span>}
-                </Pill>
-              )
-            })}
-          </div>
-        </div>
+            {/* Store */}
+            <div className="flex items-center gap-2">
+              <Store className="h-3.5 w-3.5" style={{ color: '#4A6080' }} />
+              <span className="text-xs mr-1" style={{ color: '#4A6080' }}>Tienda:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {STORE_OPTIONS.map(opt => {
+                  const count = opt.value ? (storeCounts[opt.value] || 0) : total
+                  return (
+                    <Pill key={opt.value}
+                      href={buildFilterUrl(baseUrl, 'store', opt.value, currentParams)}
+                      active={(sp.store || '') === opt.value}>
+                      {opt.label}
+                      {count > 0 && <span className="ml-1 opacity-60">({count})</span>}
+                    </Pill>
+                  )
+                })}
+              </div>
+            </div>
 
-        {/* Discount */}
-        <div className="flex items-center gap-2">
-          <Tag className="h-3.5 w-3.5" style={{ color: '#4A6080' }} />
-          <span className="text-xs mr-1" style={{ color: '#4A6080' }}>Descuento:</span>
-          <div className="flex flex-wrap gap-1.5">
-            {DISCOUNT_OPTIONS.map(opt => (
-              <Pill key={opt.value}
-                href={buildFilterUrl(baseUrl, 'minDiscount', opt.value, currentParams)}
-                active={(sp.minDiscount || '') === opt.value}>
-                {opt.label}
-              </Pill>
-            ))}
+            {/* Discount */}
+            <div className="flex items-center gap-2">
+              <Tag className="h-3.5 w-3.5" style={{ color: '#4A6080' }} />
+              <span className="text-xs mr-1" style={{ color: '#4A6080' }}>Descuento:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {DISCOUNT_OPTIONS.map(opt => (
+                  <Pill key={opt.value}
+                    href={buildFilterUrl(baseUrl, 'minDiscount', opt.value, currentParams)}
+                    active={(sp.minDiscount || '') === opt.value}>
+                    {opt.label}
+                  </Pill>
+                ))}
+              </div>
+            </div>
+
+            {/* Price */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs mr-1" style={{ color: '#4A6080' }}>Precio:</span>
+              <Suspense fallback={<div className="w-full max-w-xs h-5" />}>
+                <PriceRangeSlider min={0} max={500} step={5} basePath={baseUrl} />
+              </Suspense>
+            </div>
           </div>
         </div>
-      </div>
+      </FilterDrawer>
+
+      {/* Filtros activos */}
+      {activeFilters > 0 && (
+        <div className="flex items-center gap-2 flex-wrap mb-6">
+          {sp.store && <ActiveChip label={STORE_OPTIONS.find(o => o.value === sp.store)?.label || sp.store} href={buildFilterUrl(baseUrl, 'store', '', currentParams)} />}
+          {sp.minDiscount && <ActiveChip label={`Desde ${sp.minDiscount}%`} href={buildFilterUrl(baseUrl, 'minDiscount', '', currentParams)} />}
+          {sp.minPrice && <ActiveChip label={`Desde ${sp.minPrice}€`} href={buildFilterUrl(baseUrl, 'minPrice', '', currentParams)} />}
+          {sp.maxPrice && <ActiveChip label={`Hasta ${sp.maxPrice}€`} href={buildFilterUrl(baseUrl, 'maxPrice', '', currentParams)} />}
+          <Link href={clearFiltersUrl} className="text-xs font-medium px-3 py-1.5 hover:underline" style={{ color: '#4A6080' }}>
+            Limpiar filtros
+          </Link>
+        </div>
+      )}
 
       {deals.length > 0 ? (
         <>
@@ -256,7 +321,7 @@ export default async function CategoryPage({
           style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
           <Fish className="h-10 w-10 mx-auto mb-3 opacity-50" style={{ color: '#4A6080' }} />
           <p className="mb-3" style={{ color: '#8BA3C7' }}>No hay chollos que coincidan con los filtros seleccionados.</p>
-          <Link href={`/categories/${slug}`} className="font-semibold hover:underline transition-colors" style={{ color: '#00D4FF' }}>Limpiar filtros</Link>
+          <Link href={clearFiltersUrl} className="font-semibold hover:underline transition-colors" style={{ color: '#00D4FF' }}>Limpiar filtros</Link>
 
           <div className="mt-8 pt-8" style={{ borderTop: '1px solid #1E3A5F' }}>
             <p className="text-sm mb-4" style={{ color: '#8BA3C7' }}>Explora otras categorías</p>
@@ -271,6 +336,51 @@ export default async function CategoryPage({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Bloque SEO: intro + FAQ */}
+      {seo && (
+        <section className="mt-12 pt-8" style={{ borderTop: '1px solid #1E3A5F' }}>
+          <div className="max-w-3xl">
+            <p className="text-sm leading-relaxed" style={{ color: '#8BA3C7' }}>{seo.intro}</p>
+          </div>
+
+          {seo.faq.length > 0 && (
+            <div className="mt-8 grid gap-3 max-w-3xl">
+              {seo.faq.map((item) => (
+                <details key={item.question}
+                  className="rounded-xl px-5 py-4 transition-all duration-200 group"
+                  style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
+                  <summary className="flex items-center justify-between gap-3 cursor-pointer list-none font-semibold text-sm"
+                    style={{ color: '#E8F0FE' }}>
+                    {item.question}
+                    <ChevronDown className="h-4 w-4 flex-shrink-0 transition-transform duration-200 group-open:rotate-180" style={{ color: '#00D4FF' }} />
+                  </summary>
+                  <p className="mt-3 text-sm leading-relaxed" style={{ color: '#8BA3C7' }}>{item.answer}</p>
+                </details>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Posts del blog de la categoría */}
+      {categoryPosts.length > 0 && (
+        <section className="mt-12 pt-8" style={{ borderTop: '1px solid #1E3A5F' }}>
+          <h2 className="text-xl font-bold mb-4" style={{ color: '#E8F0FE' }}>
+            Guías de {category.name.toLowerCase()}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {categoryPosts.map((post) => (
+              <Link key={post.id} href={`/blog/${post.slug}`}
+                className="rounded-xl p-5 transition-all duration-200 hover:border-[#00D4FF]/40"
+                style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
+                <p className="text-sm font-semibold leading-snug" style={{ color: '#E8F0FE' }}>{post.title}</p>
+                <p className="mt-2 text-xs line-clamp-3" style={{ color: '#8BA3C7' }}>{post.excerpt}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
     </div>
     </>
