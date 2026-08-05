@@ -10,7 +10,6 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "sync": "npx tsx scripts/sync.ts",
-    "sync:local": "npx tsx scripts/sync.ts",
     "sync:prod": "npx tsx scripts/sync-prod.ts",
     "publish:prod": "npx tsx scripts/publish-to-prod.ts",
     "push-prices:prod": "npx tsx scripts/push-prices-to-prod.ts",
@@ -24,8 +23,7 @@
     "newsletter": "npx tsx scripts/send-newsletter.ts",
     "clean-expired": "npx tsx scripts/clean-expired-deals.ts",
     "match-products": "npx tsx scripts/match-deals-to-products.ts",
-    "dev:start": "next dev",
-    "dev:up": "start-server-and-test dev:start http://localhost:3000"
+    "backup-db": "npx tsx scripts/backup-db.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
