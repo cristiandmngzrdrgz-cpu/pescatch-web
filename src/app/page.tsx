@@ -52,7 +52,11 @@ export default async function HomePage() {
 
   const totalSavings = latest.reduce((sum, d) => sum + Math.max(0, d.originalPrice - d.salePrice), 0)
   const groupedFeatured = groupDealsByProduct(featured)
-  const groupedLatest = groupDealsByProduct(latest)
+  const groupedLatest = groupDealsByProduct(latest).sort((a, b) => {
+    const aDate = Math.max(...a.deals.map(d => new Date(d.publishedAt).getTime()))
+    const bDate = Math.max(...b.deals.map(d => new Date(d.publishedAt).getTime()))
+    return bDate - aDate
+  })
   const groupedTopDiscounts = groupDealsByProduct(topDiscounts)
 
   const itemListSchema = generateCollectionPageSchema({
