@@ -6,7 +6,8 @@ import * as fs from 'fs'
 import * as path from 'path'
 
 const removedFile = path.resolve(process.cwd(), 'data', 'removed-deals.json')
-const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx'
+const node = process.execPath
+const tsxCli = path.resolve(process.cwd(), 'node_modules', 'tsx', 'dist', 'cli.mjs')
 
 function loadRemovedIds(): string[] {
   if (!fs.existsSync(removedFile)) return []
@@ -19,12 +20,11 @@ function loadRemovedIds(): string[] {
 
 function runPush(apply: boolean): Promise<number> {
   return new Promise((resolve, reject) => {
-    const args = ['tsx', 'scripts/push-prices-to-prod.ts']
+    const args = [tsxCli, 'scripts/push-prices-to-prod.ts']
     if (apply) args.push('--apply')
 
-    const child = spawn(npx, args, {
+    const child = spawn(node, args, {
       stdio: 'inherit',
-      shell: true,
       cwd: process.cwd(),
       env: process.env,
     })

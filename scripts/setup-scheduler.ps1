@@ -3,27 +3,29 @@
 )
 
 $ProjectRoot = "D:\01_PROYECTOS\Workbench\Desktop\Web_chollos_pesca"
-$NodeBin = "C:\Program Files\nodejs\npx.cmd"
+$NodeExe = "C:\Program Files\nodejs\node.exe"
+$TsxCli = "$ProjectRoot\node_modules\tsx\dist\cli.mjs"
 
 $Tasks = @(
   @{
     Name = "PesCatch-DiscoverAuto"
     Description = "Busca nuevos candidatos de chollos automaticamente"
-    Script = "npx tsx scripts/discover/auto.ts"
+    Script = "scripts/discover/auto.ts"
     Hour = 6
     Minute = 0
   }
   @{
     Name = "PesCatch-RefreshPrices"
     Description = "Actualiza precios de todos los chollos (local + Turso)"
-    Script = "npx tsx scripts/refresh-prices-prod.ts --apply"
+    Script = "scripts/refresh-prices-prod.ts"
+    ScriptArgs = "--apply"
     Hour = 8
     Minute = 0
   }
   @{
     Name = "PesCatch-CleanExpired"
     Description = "Marca deals expirados como borrador"
-    Script = "npx tsx scripts/clean-expired-deals.ts"
+    Script = "scripts/clean-expired-deals.ts"
     Hour = 3
     Minute = 0
   }
@@ -31,7 +33,9 @@ $Tasks = @(
 
 function Install-Task {
   param($Task)
-  $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -WindowStyle Hidden -Command ""Set-Location '$ProjectRoot'; $($Task.Script)"""
+  $cmdArgs = "Set-Location '$ProjectRoot'; & '$NodeExe' '$TsxCli' $($Task.Script)"
+  if ($Task.ScriptArgs) { $cmdArgs += " $($Task.ScriptArgs)" }
+  $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command ""$cmdArgs"""
   $Trigger = New-ScheduledTaskTrigger -Daily -At "$($Task.Hour):$($Task.Minute)"
   $Settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -DontStopIfGoingOnBatteries
   $Principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest

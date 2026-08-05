@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Fish, LayoutDashboard, List, PlusCircle, Newspaper, MessageSquare, RefreshCw, ArrowLeft, Menu, X } from 'lucide-react'
+import { Fish, LayoutDashboard, List, PlusCircle, Newspaper, MessageSquare, RefreshCw, ArrowLeft, Menu, X, ClipboardList } from 'lucide-react'
 
 export default function MobileSidebar() {
   const [open, setOpen] = useState(false)
@@ -66,6 +66,9 @@ export default function MobileSidebar() {
               </Link>
 
               <div className="mt-3 mb-1 px-3 text-xs font-semibold uppercase tracking-wider" style={{ color: '#4A6080' }}>Gestión</div>
+              <Link href="/admin/candidates" onClick={() => setOpen(false)} className={linkClass('/admin/candidates')}>
+                <ClipboardList className="h-4 w-4 inline mr-2" />Candidatos
+              </Link>
               <Link href="/admin/comments" onClick={() => setOpen(false)} className={linkClass('/admin/comments')}>
                 <MessageSquare className="h-4 w-4 inline mr-2" />Comentarios
               </Link>
