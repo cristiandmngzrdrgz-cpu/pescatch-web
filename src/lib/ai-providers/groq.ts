@@ -45,6 +45,7 @@ export async function callGroq(
         temperature,
         max_tokens: maxTokens,
       }),
+      signal: AbortSignal.timeout(20000),
     })
 
     if (!response.ok) {

@@ -115,7 +115,7 @@ export async function readGoogleSheets(): Promise<SyncRow[]> {
   }
 
   try {
-    const response = await fetch(CSV_URL)
+    const response = await fetch(CSV_URL, { signal: AbortSignal.timeout(15000) })
     if (!response.ok) {
       console.error(`Failed to fetch CSV: ${response.status} ${response.statusText}`)
       return []

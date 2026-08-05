@@ -62,6 +62,7 @@ async function generateUniqueSlug(base: string, excludeId?: string): Promise<str
 async function processRow(
   row: SyncRow,
   result: SyncResult,
+  skipEnrich: boolean,
 ): Promise<void> {
   const db = getDb()
   const now = new Date().toISOString()
@@ -209,50 +210,53 @@ async function processRow(
     // Auto-enrich new Amazon deals that have no specs yet
     if (isNew) {
       result.created++
-      const amazonUrl = stores.find(s => s.storeId === 'amazon')?.manualUrl || ''
-      const asin = amazonUrl ? extractAsin(amazonUrl) : null
-      if (asin) {
-        try {
-          const { scrapeAmazonDetails } = await import('../../scripts/discover/amazon')
-          const details = await scrapeAmazonDetails(asin)
-          if (details.features.length > 0 || details.description) {
-            const existingDeal = await db.execute({
-              sql: 'SELECT id FROM deals WHERE productId = ? AND storeId = ?',
-              args: [matched.id, 'amazon'],
-            })
-            if (existingDeal.rows.length > 0) {
-              const dealId = existingDeal.rows[0].id as string
-
-              let enrichment
-              try {
-                enrichment = await enrichWithAI({
-                  title: pName,
-                  brand: details.brand || row.brand || '',
-                  description: details.description,
-                  features: details.features,
-                  category: category || '',
-                })
-              } catch {}
-
-              if (!enrichment) {
-                enrichment = generateEnrichment(
-                  pName, row.brand || '',
-                  details.description, details.features,
-                )
-              }
-
-              await enrichDealInDb(dealId, {
-                technicalSpecs: JSON.stringify(enrichment.technicalSpecs),
-                review: enrichment.review,
-                pros: JSON.stringify(enrichment.pros),
-                cons: JSON.stringify(enrichment.cons),
-                brand: details.brand || undefined,
-                imageUrl: details.imageUrl || undefined,
-                description: details.description || undefined,
+      if (!skipEnrich) {
+        const amazonUrl = stores.find(s => s.storeId === 'amazon')?.manualUrl || ''
+        const asin = amazonUrl ? extractAsin(amazonUrl) : null
+        if (asin) {
+          try {
+            const { scrapeAmazonDetails } = await import('../../scripts/discover/amazon')
+            console.log(`  🔍 Scraping Amazon ${asin} for "${pName}"...`)
+            const details = await scrapeAmazonDetails(asin)
+            if (details.features.length > 0 || details.description) {
+              const existingDeal = await db.execute({
+                sql: 'SELECT id FROM deals WHERE productId = ? AND storeId = ?',
+                args: [matched.id, 'amazon'],
               })
+              if (existingDeal.rows.length > 0) {
+                const dealId = existingDeal.rows[0].id as string
+
+                let enrichment
+                try {
+                  enrichment = await enrichWithAI({
+                    title: pName,
+                    brand: details.brand || row.brand || '',
+                    description: details.description,
+                    features: details.features,
+                    category: category || '',
+                  })
+                } catch {}
+
+                if (!enrichment) {
+                  enrichment = generateEnrichment(
+                    pName, row.brand || '',
+                    details.description, details.features,
+                  )
+                }
+
+                await enrichDealInDb(dealId, {
+                  technicalSpecs: JSON.stringify(enrichment.technicalSpecs),
+                  review: enrichment.review,
+                  pros: JSON.stringify(enrichment.pros),
+                  cons: JSON.stringify(enrichment.cons),
+                  brand: details.brand || undefined,
+                  imageUrl: details.imageUrl || undefined,
+                  description: details.description || undefined,
+                })
+              }
             }
-          }
-        } catch {}
+          } catch {}
+        }
       }
     } else {
       result.updated++
@@ -270,7 +274,11 @@ export async function cleanupOrphanedDeals(): Promise<number> {
   return Number(result.rowsAffected) || 0
 }
 
-export async function runSync(): Promise<SyncRunResult> {
+export interface RunSyncOptions {
+  skipEnrich?: boolean
+}
+
+export async function runSync(options: RunSyncOptions = {}): Promise<SyncRunResult> {
   await initSchema()
   await migrateSchema()
 
@@ -301,7 +309,7 @@ export async function runSync(): Promise<SyncRunResult> {
       result.skipped++
       continue
     }
-    await processRow(row, result)
+    await processRow(row, result, options.skipEnrich ?? false)
   }
 
   const hiddenOrphans = await cleanupOrphanedDeals()

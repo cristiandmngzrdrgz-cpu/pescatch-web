@@ -1,10 +1,16 @@
 import 'dotenv/config'
 import { runSync, insertSyncLog } from '../src/lib/run-sync'
 
+function hasFlag(name: string): boolean {
+  return process.argv.includes(name)
+}
+
 async function main() {
   console.log('Syncing products from data source...\n')
 
-  const result = await runSync()
+  const skipEnrich = hasFlag('--no-enrich')
+
+  const result = await runSync({ skipEnrich })
 
   console.log(`Sync complete in ${result.durationMs}ms:`)
   console.log(`  ${result.rowsProcessed} products processed`)
@@ -31,21 +37,6 @@ async function main() {
     hidden_orphans: result.hiddenOrphans,
     errors: result.errors,
   })
-
-  // Auto-refresh prices after sync
-  if (result.created > 0 || result.updated > 0) {
-    console.log('\nRefreshing prices...')
-    try {
-      const { refreshAllPrices } = await import('../src/lib/price-scraper/refresh-all')
-      const refreshed = await refreshAllPrices()
-      console.log(`  ${refreshed.updated} updated, ${refreshed.skipped} skipped, ${refreshed.failed} failed, ${refreshed.removed} removed`)
-      if (refreshed.alerts > 0) {
-        console.log(`  ⚠ ${refreshed.alerts} deals flagged with priceAlert`)
-      }
-    } catch (err) {
-      console.error(`  ✗ Price refresh error: ${(err as Error).message}`)
-    }
-  }
 
   console.log('')
 }

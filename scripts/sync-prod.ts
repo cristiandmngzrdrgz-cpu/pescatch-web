@@ -13,6 +13,10 @@ function loadProdEnv() {
 
 loadProdEnv()
 
+function hasFlag(name: string): boolean {
+  return process.argv.includes(name)
+}
+
 async function main() {
   const target = process.env.TURSO_DATABASE_URL ? 'TURSO (produccion)' : 'LOCAL (data/pescatch.db)'
   console.log(`DB destino: ${target}`)
@@ -20,7 +24,8 @@ async function main() {
     console.error('  Aviso: TURSO_DATABASE_URL no definido. Carga .env.vercel (vercel env pull).')
   }
 
-  const result = await runSync()
+  const skipEnrich = hasFlag('--no-enrich')
+  const result = await runSync({ skipEnrich })
 
   console.log(`\nSync completado en ${result.durationMs}ms:`)
   console.log(`  ${result.rowsProcessed} filas procesadas`)

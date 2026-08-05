@@ -28,6 +28,12 @@ function fetchHeaders(): Record<string, string> {
   }
 }
 
+const FETCH_TIMEOUT_MS = 15000
+
+async function fetchWithTimeout(url: string, headers: Record<string, string>): Promise<Response> {
+  return fetch(url, { headers, redirect: 'follow', signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) })
+}
+
 export async function searchAmazon(
   keyword: string,
   category: string,
@@ -36,7 +42,7 @@ export async function searchAmazon(
 
   const url = `https://www.amazon.es/s?k=${encodeURIComponent(keyword)}&s=review-count-rank`
 
-  const res = await fetch(url, { headers: fetchHeaders(), redirect: 'follow' })
+  const res = await fetchWithTimeout(url, fetchHeaders())
   if (!res.ok) return []
   const html = await res.text()
 
@@ -52,7 +58,7 @@ export async function scrapeAmazonBestsellers(category: string): Promise<AmazonC
   await searchLimiter.wait()
 
   const url = `https://www.amazon.es/gp/bestsellers/sports/${AMAZON_FISHING_NODE}`
-  const res = await fetch(url, { headers: fetchHeaders(), redirect: 'follow' })
+  const res = await fetchWithTimeout(url, fetchHeaders())
   if (!res.ok) return []
   const html = await res.text()
 
@@ -66,7 +72,7 @@ export async function scrapeAmazonNewReleases(category: string): Promise<AmazonC
   await searchLimiter.wait()
 
   const url = `https://www.amazon.es/gp/new-releases/sports/${AMAZON_FISHING_NODE}`
-  const res = await fetch(url, { headers: fetchHeaders(), redirect: 'follow' })
+  const res = await fetchWithTimeout(url, fetchHeaders())
   if (!res.ok) return []
   const html = await res.text()
 
@@ -273,7 +279,7 @@ export async function scrapeAmazonDetails(
 
   const empty: AmazonDetails = { ean: null, brand: null, imageUrl: null, images: [], description: '', features: [], rating: 0, reviewCount: 0 }
   const url = `https://www.amazon.es/dp/${asin}`
-  const res = await fetch(url, { headers: fetchHeaders(), redirect: 'follow' })
+  const res = await fetchWithTimeout(url, fetchHeaders())
   if (!res.ok) return empty
   const html = await res.text()
 
