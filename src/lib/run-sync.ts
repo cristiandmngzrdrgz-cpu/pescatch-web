@@ -144,9 +144,9 @@ async function processRow(
     ]
 
     for (const store of stores) {
-      const apiResult = await store.adapter.lookup(ean)
+      const apiResult = await store.adapter.lookup(ean, { url: store.manualUrl })
 
-      const price = apiResult?.price ?? store.manualPrice
+      const price = store.manualPrice ?? apiResult?.price
       let url = apiResult?.url ?? store.manualUrl
       if (store.storeId === 'amazon' && row.amazonVariantAsin && url) {
         url = buildAmazonUrl(url, row.amazonVariantAsin)

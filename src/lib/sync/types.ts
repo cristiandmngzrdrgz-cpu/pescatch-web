@@ -40,7 +40,7 @@ export interface SyncResult {
 export interface StoreAdapter {
   name: string
   id: string
-  lookup(ean: string): Promise<StoreLookupResult | null>
+  lookup(ean: string, opts?: { url?: string }): Promise<StoreLookupResult | null>
 }
 
 export interface StoreLookupResult {

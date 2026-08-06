@@ -4,6 +4,18 @@ import { braveAvailable, parseSpanishPrice } from '@/lib/scraping-utils'
 import { bravePage } from './brave'
 import { unavailablePrice, isAliExpressNotFoundPage } from './not-available'
 
+const AGENT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125 Safari/537.36'
+
+async function resolveAliExpressUrl(url: string): Promise<string> {
+  if (!url.includes('s.click.aliexpress.com')) return url
+  try {
+    const r = await fetch(url, { redirect: 'follow', headers: { 'user-agent': AGENT_UA } })
+    return r.url || url
+  } catch {
+    return url
+  }
+}
+
 export async function scrapeAliExpress(
   url: string,
   existingPage?: Page,
@@ -12,9 +24,10 @@ export async function scrapeAliExpress(
   const owned = !existingPage
 
   try {
+    const target = await resolveAliExpressUrl(url)
     const page = existingPage || await bravePage(false)
 
-    await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 })
+    await page.goto(target, { waitUntil: 'networkidle', timeout: 30000 })
 
     const bodyText = await page.evaluate(() => document.body?.innerText ?? '').catch(() => '')
     if (isAliExpressNotFoundPage(bodyText)) {
@@ -22,19 +35,31 @@ export async function scrapeAliExpress(
       return unavailablePrice(url)
     }
 
+    // El precio de venta real es el que aparece junto al bloque "Termina :" (precio
+    // registrado para la variante por defecto, con IVA). No usar la API, que da un
+    // precio "desde" distinto del que paga el cliente.
     const price = await page.evaluate(() => {
       const selectors = [
         '.product-price-value',
-        '[class*="Price"]',
-        '[class*="price"]',
+        '[class*="product-price"]',
+        '[class*="Price--"]',
         '.sku-price',
-        '.es--price--',
+        '.es--price--primary',
         'span[data-pl="product-price"]',
       ]
       for (const sel of selectors) {
         const el = document.querySelector(sel)
-        if (el) return el.textContent?.trim() ?? null
+        const t = el?.textContent?.trim()
+        if (t && /[\d.]/.test(t)) return t
       }
+
+      const text = document.body?.innerText ?? ''
+      const termina = text.match(/Termina\s*:?\s*\n?\s*(\d[\d.,]*)\s*€/i)
+      if (termina) return termina[1]
+
+      const first = text.match(/(?:^|[\n.])\s*(\d[\d.,]*)\s*€/m)
+      if (first) return first[1]
+
       return null
     })
 
@@ -43,7 +68,7 @@ export async function scrapeAliExpress(
     if (!price) return null
     const parsed = parseSpanishPrice(price)
     if (parsed <= 0 || parsed > 5000) return null
-    return { price: parsed, stock: 'in_stock', url, shipping: 0 }
+    return { price: parsed, stock: 'in_stock', url: target, shipping: 0 }
   } catch {
     return null
   }

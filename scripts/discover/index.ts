@@ -122,12 +122,12 @@ async function discover() {
     console.log('  ❌ Brave no disponible. Saltando.')
   }
 
-  // Fase 3: AliExpress directo + fallback BrightData
+  // Fase 3: AliExpress vía API + fallback BrightData
   console.log('\n── FASE 3: AliExpress directo ──')
   let aeNew = 0
   let aeFallback = false
   try {
-    console.log('  Lanzando scraper AliExpress (Chromium)...')
+    console.log('  Buscando chollos vía API de AliExpress...')
     const aliexpressProducts = await scrapeAliExpressAll({
       onProgress: (keyword, count) => {
         console.log(`    "${keyword}": +${count}`)
