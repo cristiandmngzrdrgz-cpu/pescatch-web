@@ -75,3 +75,7 @@ next-env.d.ts
 # enrichment pipeline (generated artifacts)
 /scripts/enrich-cache/
 /enrich-report.md
+
+# discover: salidas regenerables por ejecución (no son cache mantenida)
+/scripts/discover/candidatos-ae-*.json
+/scripts/discover/verified-ae-prices.json
