@@ -217,8 +217,8 @@ function ScoreBar({ value, label }: { value: number; label: string }) {
   )
 }
 
-const BADGE_LABELS = ['Mejor elección', 'Gama alta', 'Calidad-precio', 'Recomendada', 'Económica']
-const BADGE_COLORS = ['#00D4FF', '#6366F1', '#22C55E', '#F59E0B', '#EF4444']
+const BADGE_LABELS = ['Mejor calidad-precio', 'Mejor para agua salada', 'Gama alta', 'Mejor baitcasting barato', 'Para lance largo']
+const BADGE_COLORS = ['#22C55E', '#00D4FF', '#6366F1', '#F59E0B', '#EF4444']
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -227,20 +227,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   const { products, clean } = extractProducts(post.content)
 
-  const sortedByPrice = [...products].sort((a, b) => {
-    const aPrice = parseFloat((a.stores?.[0]?.price || '0').replace('€', '').replace('~', '').split('-')[0].trim())
-    const bPrice = parseFloat((b.stores?.[0]?.price || '0').replace('€', '').replace('~', '').split('-')[0].trim())
-    return bPrice - aPrice
-  })
   function badgeLabel(i: number): string {
-    const product = products[i]
-    const idx = sortedByPrice.indexOf(product)
-    return idx >= 0 && idx < BADGE_LABELS.length ? BADGE_LABELS[idx] : ''
+    return BADGE_LABELS[i] ?? ''
   }
   function badgeColor(i: number): string {
-    const product = products[i]
-    const idx = sortedByPrice.indexOf(product)
-    return idx >= 0 && idx < BADGE_COLORS.length ? BADGE_COLORS[idx] : BADGE_COLORS[4]
+    return BADGE_COLORS[i] ?? BADGE_COLORS[4]
   }
 
   const toc = extractToc(clean)
