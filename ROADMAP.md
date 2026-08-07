@@ -63,7 +63,7 @@
 - [ ] **Vercel Cron / GH Action** para sync diario — Hoy solo Windows Task Scheduler local (`scripts/setup-scheduler.ps1`: discover/refresh-prices/clean-expired)
 - [ ] **APIs reales de tiendas** — Amazon PA, Decathlon TradeDoubler, AliExpress. Los adapters son stubs (sin API keys configuradas)
 - [ ] Google Sheets range dinámico (reemplazar `A1:R100` hardcodeado)
-- [ ] DNS sin www: redirección pendiente → SEO split
+- [x] DNS canónico: `pescatch.es` → `www.pescatch.es` (308); `BASE_URL` ya apunta a www
 - [ ] Newsletter cron en Vercel
 
 ---

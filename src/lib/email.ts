@@ -1,4 +1,4 @@
-import { Resend } from 'resend'
+﻿import { Resend } from 'resend'
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -70,7 +70,7 @@ export function buildNewsletterHtml(deals: Array<{
   slug: string
   imageUrl?: string
 }>, unsubscribeUrl: string): string {
-  const BASE_URL = 'https://pescatch.es'
+  const BASE_URL = 'https://www.pescatch.es'
   const dealsHtml = deals.map(deal => `
     <div class="deal-card">
       <p class="deal-title">${deal.title}</p>
@@ -118,7 +118,7 @@ export function buildPriceAlertHtml(deal: {
   storeName: string
   slug: string
 }, unsubscribeUrl: string): string {
-  const BASE_URL = 'https://pescatch.es'
+  const BASE_URL = 'https://www.pescatch.es'
   const savings = deal.previousPrice - deal.salePrice
 
   return `

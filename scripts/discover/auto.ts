@@ -1,4 +1,4 @@
-import 'dotenv/config'
+﻿import 'dotenv/config'
 import { CATEGORIES } from './keywords'
 import { scrapeAmazonDetails, type AmazonCandidate } from './amazon'
 import { scrapeAliExpressAll } from './aliexpress-scraper'
@@ -163,7 +163,7 @@ async function discoverAuto() {
         <p>Se encontraron ${saved} nuevos productos candidatos:</p>
         ${body}
         <div style="text-align: center; margin-top: 24px;">
-          <a href="https://pescatch.es/admin/candidates" class="btn">Revisar candidatos</a>
+          <a href="https://www.pescatch.es/admin/candidates" class="btn">Revisar candidatos</a>
         </div>
       `),
     )

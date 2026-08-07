@@ -44,7 +44,7 @@ export function MetaFieldsForm({ form, updateField }: {
         <Input
           value={form.canonicalUrl}
           onChange={e => updateField('canonicalUrl', e.target.value)}
-          placeholder="Ej: https://pescatch.es/deals/carrete-shimano-2025"
+          placeholder="Ej: https://www.pescatch.es/deals/carrete-shimano-2025"
           className="h-11 rounded-xl"
           style={{ background: '#0B1120', borderColor: '#1E3A5F', color: '#E8F0FE' }}
         />

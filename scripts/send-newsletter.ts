@@ -1,9 +1,9 @@
-import 'dotenv/config'
+﻿import 'dotenv/config'
 import { getDb } from '../src/lib/db'
 import { seedDatabase } from '../src/lib/seed'
 import { sendEmail, isEmailConfigured, buildNewsletterHtml } from '../src/lib/email'
 
-const BASE_URL = 'https://pescatch.es'
+const BASE_URL = 'https://www.pescatch.es'
 
 async function sendNewsletter() {
   if (!isEmailConfigured()) {

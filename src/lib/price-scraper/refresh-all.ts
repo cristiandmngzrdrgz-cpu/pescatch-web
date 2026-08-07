@@ -1,4 +1,4 @@
-import { getDb } from '@/lib/db'
+﻿import { getDb } from '@/lib/db'
 import { scrapeStore, updateDealInDb } from './index'
 import { buildAmazonUrl, extractAsin } from '@/lib/amazon-affiliate'
 import { logScrapingHealth } from '@/lib/scraping-health'
@@ -119,7 +119,7 @@ export async function refreshAllPrices(): Promise<RefreshResult> {
         <p class="deal-title">${d.title}</p>
         <p style="color: #FF4757;">⚠️ Cambio de precio significativo: ${d.salePrice}€ (antes ${d.originalPrice}€)</p>
         <p style="color: #8BA3C7;">${d.storeName}</p>
-        <a href="https://pescatch.es/deals/${d.slug}" class="btn" style="margin-top: 8px;">Ver chollo</a>
+        <a href="https://www.pescatch.es/deals/${d.slug}" class="btn" style="margin-top: 8px;">Ver chollo</a>
       </div>
     `).join('')
 

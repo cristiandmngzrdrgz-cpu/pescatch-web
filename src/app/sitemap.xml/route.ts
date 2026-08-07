@@ -2,7 +2,7 @@ import { getDeals, getBrands } from '@/data/queries'
 import { getPosts } from '@/data/blog-queries'
 import { CATEGORIES } from '@/types'
 
-const BASE_URL = 'https://pescatch.es'
+const BASE_URL = 'https://www.pescatch.es'
 
 export async function GET() {
   const [deals, posts, brands] = await Promise.all([

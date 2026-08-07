@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
-const BASE_URL = 'https://pescatch.es'
+const BASE_URL = 'https://www.pescatch.es'
 
 const organizationSchema = {
   '@context': 'https://schema.org',

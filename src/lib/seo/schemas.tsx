@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-export const BASE_URL = 'https://pescatch.es'
+export const BASE_URL = 'https://www.pescatch.es'
 
 export interface BreadcrumbItem {
   name: string

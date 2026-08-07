@@ -1,4 +1,4 @@
-import 'dotenv/config'
+﻿import 'dotenv/config'
 import { config } from 'dotenv'
 import { createClient } from '@libsql/client'
 import type { Client } from '@libsql/client'
@@ -12,7 +12,7 @@ function loadProdEnv() {
 }
 loadProdEnv()
 
-const BASE_URL = 'https://pescatch.es'
+const BASE_URL = 'https://www.pescatch.es'
 
 interface SeoData {
   metaTitle: string

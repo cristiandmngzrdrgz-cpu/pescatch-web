@@ -3,7 +3,7 @@ export async function GET() {
 Allow: /
 Disallow: /admin
 
-Sitemap: https://pescatch.es/sitemap.xml
+Sitemap: https://www.pescatch.es/sitemap.xml
 `
 
   return new Response(body, {

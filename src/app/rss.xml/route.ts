@@ -1,7 +1,7 @@
 import { getPosts } from '@/data/blog-queries'
 import { getDeals } from '@/data/queries'
 
-const BASE_URL = 'https://pescatch.es'
+const BASE_URL = 'https://www.pescatch.es'
 
 function escapeXml(text: string): string {
   return text
