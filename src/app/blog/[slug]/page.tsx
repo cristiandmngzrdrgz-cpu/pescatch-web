@@ -154,27 +154,29 @@ function mdToHtml(md: string, products: ProductEntry[]): string {
     const i = num - 1
     const p = products[i]
     if (!p) return ''
-    return `<div class="my-8 rounded-2xl overflow-hidden" style="position:relative;height:280px;background:linear-gradient(135deg,#1A2535,rgba(0,212,255,0.03));border:1px solid #1E3A5F">
-      <img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.title)}" class="absolute inset-0 w-full h-full object-contain p-6" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%" />
-      <div class="absolute bottom-0 left-0 right-0 px-5 py-3" style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(180deg,transparent 0%,rgba(11,18,32,0.85) 100%)">
+    return `<div class="my-8 rounded-2xl overflow-hidden" style="background:#1A2535;border:1px solid #1E3A5F">
+      <div style="position:relative;height:280px;background:linear-gradient(135deg,#1A2535,rgba(0,212,255,0.03))">
+        <img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.title)}" class="absolute inset-0 w-full h-full object-contain p-6" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%" />
+      </div>
+      <div style="padding:10px 20px;border-top:1px solid #1E3A5F;background:rgba(11,18,32,0.6)">
         <span class="text-xs font-semibold" style="color:#00D4FF">${escapeHtml(p.title)}</span>
       </div>
     </div>`
   })
 
-  html = html.replace(/<h2 id="[^"]*">(.+?)<\/h2>/g, (_, text) => {
+  html = html.replace(/<h2(?: id="[^"]*")?>(.+?)<\/h2>/g, (_, text) => {
     const clean = text.replace(/<[^>]*>/g, '')
     const id = slugify(clean)
-    return `<div class="flex items-center gap-3 mt-10 mb-4"><div class="w-1 h-8 rounded-full" style="background:linear-gradient(180deg,#00D4FF,#FFB800)"></div><h2 id="${id}" class="text-2xl font-bold scroll-mt-24" style="color:#E8F0FE">${text}</h2></div>`
+    return `<div class="flex items-center gap-4 mt-12 mb-6"><div class="w-1.5 h-10 rounded-full" style="background:linear-gradient(180deg,#00D4FF,#FFB800);box-shadow:0 0 12px rgba(0,212,255,0.35)"></div><h2 id="${id}" class="text-3xl md:text-4xl font-extrabold scroll-mt-24 leading-tight" style="color:#E8F0FE;text-shadow:0 0 24px rgba(0,212,255,0.12)">${text}</h2></div>`
   })
 
-  html = html.replace(/<h3 id="[^"]*">(.+?)<\/h3>/g, (_, text) => {
+  html = html.replace(/<h3(?: id="[^"]*")?>(.+?)<\/h3>/g, (_, text) => {
     const clean = text.replace(/<[^>]*>/g, '')
     const id = slugify(clean)
     return `<h3 id="${id}" class="text-xl font-bold mt-8 mb-3" style="color:#E8F0FE">${text}</h3>`
   })
 
-  html = html.replace(/<h4 id="[^"]*">(.+?)<\/h4>/g, (_, text) => {
+  html = html.replace(/<h4(?: id="[^"]*")?>(.+?)<\/h4>/g, (_, text) => {
     const clean = text.replace(/<[^>]*>/g, '')
     const id = slugify(clean)
     return `<h4 id="${id}" class="text-lg font-bold mt-6 mb-2" style="color:#8BA3C7">${text}</h4>`

@@ -8,7 +8,7 @@ import {
 import { appendRow, readAllRows } from '../../src/lib/sync/google-sheets-client'
 import { scrapeAliExpressAll } from './aliexpress-scraper'
 import brightdataCache from './brightdata-cache.json'
-import { scrapeDecathlonDeals, braveAvailable } from './decathlon-scraper'
+import { braveAvailable } from './decathlon-scraper'
 import { searchAmazonAll, scrapeBestsellersStealth, scrapeNewReleasesStealth } from './amazon-scraper'
 
 interface ScoredCandidate extends AmazonCandidate {
@@ -204,49 +204,8 @@ async function discover() {
     console.log(`  ${bdNew} productos desde BrightData cache`)
   }
 
-  // Fase 4: Decathlon direct scraper
-  console.log('\n── FASE 4: Decathlon directo ──')
-  if (braveAvailable()) {
-    console.log('  Lanzando scraper Decathlon (12 páginas)...')
-    const decathlonProducts = await scrapeDecathlonDeals({
-      onProgress: (page, added) => {
-        console.log(`    Página ${page}: +${added} productos`)
-      },
-    })
-    let dcNew = 0
-    for (const p of decathlonProducts) {
-      const url = p.url.toLowerCase()
-      if (existingUrls.has(url)) continue
-      const discount = p.discountPercent || (p.originalPrice && p.salePrice && p.originalPrice > p.salePrice
-        ? Math.round(((p.originalPrice - p.salePrice) / p.originalPrice) * 100)
-        : 0)
-      const score = Math.round((p.rating || 0) * 6) +
-        Math.min(25, Math.round(Math.log10((p.reviewsCount || 1)) * 8)) +
-        (discount >= 10 ? Math.min(25, Math.round(discount * 1.5)) : 0) +
-        (p.brand && POPULAR_BRANDS.some(b => p.brand!.toLowerCase().includes(b)) ? 30 : (p.brand ? 0 : -10))
-      allCandidates.push({
-        asin: '',
-        title: p.title,
-        price: p.salePrice || 0,
-        originalPrice: p.originalPrice,
-        rating: p.rating || 0,
-        reviews: p.reviewsCount || 0,
-        url: p.url,
-        keyword: 'decathlon',
-        category: p.category,
-        imageUrl: p.imageUrl,
-        brand: p.brand,
-        ean: null,
-        score,
-        source: 'Decathlon directo',
-        isNew: true,
-      })
-      dcNew++
-    }
-    console.log(`  ${dcNew} productos desde scraper directo`)
-  } else {
-    console.log('  ❌ Brave no disponible. Saltando.')
-  }
+  // Fase 4: Decathlon (sin afiliación, excluido)
+  // Nota: Decathlon no está afiliado actualmente → no se descubren chollos de esta tienda.
 
   // Mark existing products
   for (const c of allCandidates) {

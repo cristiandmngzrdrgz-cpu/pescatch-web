@@ -1,7 +1,6 @@
 import 'dotenv/config'
 import { readAllRows, appendRow, ensureHeaders } from '../../src/lib/sync/google-sheets-client'
 import { scrapeAmazonDetails } from './amazon'
-import { scrapeDecathlonDetails, braveAvailable } from './decathlon-scraper'
 import { generateEnrichment } from '../../src/lib/enrich-deal'
 import * as fs from 'fs'
 
@@ -54,22 +53,12 @@ async function main() {
         if (details.features.length > 0 && c.features.length === 0) c.features = details.features
         console.log(`${details.imageUrl ? '✅' : '⚠ sin imagen'}${details.features.length > 0 ? ` (${details.features.length} specs)` : ''}`)
       } catch { console.log('error') }
-    } else if (c.store === 'decathlon' && braveAvailable()) {
-      process.stdout.write(`  🏪 Decathlon: ${c.title.slice(0, 50)}... `)
-      try {
-        const details = await scrapeDecathlonDetails(c.url)
-        if (details.ean && !c.asin) c.asin = details.ean
-        if (details.brand && !c.brand) c.brand = details.brand
-        if (details.description && !c.description) c.description = details.description
-        if (details.images.length > 0 && !c.imageUrl) c.imageUrl = details.images[0]
-        console.log(details.ean ? `EAN: ${details.ean}` : '✅')
-      } catch { console.log('error') }
     } else {
       console.log(`  📌 ${c.title.slice(0, 50)} (sin enriquecer)`)
     }
   }
 
-  await ensureHeaders(['amazonOriginalPrice', 'decathlonOriginalPrice', 'aliexpressOriginalPrice', 'technicalSpecs', 'review', 'pros', 'cons'])
+  await ensureHeaders(['amazonOriginalPrice', 'aliexpressOriginalPrice', 'technicalSpecs', 'review', 'pros', 'cons'])
   const { headers } = await readAllRows()
 
   let added = 0
@@ -90,10 +79,6 @@ async function main() {
         case 'amazonUrl': return c.store === 'amazon' ? c.url : ''
         case 'amazonStock': return c.store === 'amazon' ? 'in_stock' : ''
         case 'amazonOriginalPrice': return c.store === 'amazon' && c.originalPrice ? c.originalPrice : ''
-        case 'decathlonPrice': return c.store === 'decathlon' ? c.price : ''
-        case 'decathlonUrl': return c.store === 'decathlon' ? c.url : ''
-        case 'decathlonStock': return c.store === 'decathlon' ? 'in_stock' : ''
-        case 'decathlonOriginalPrice': return c.store === 'decathlon' && c.originalPrice ? c.originalPrice : ''
         case 'aliexpressPrice': return c.store === 'aliexpress' ? c.price : ''
         case 'aliexpressUrl': return c.store === 'aliexpress' ? c.url : ''
         case 'aliexpressStock': return c.store === 'aliexpress' ? 'in_stock' : ''

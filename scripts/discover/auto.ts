@@ -2,7 +2,7 @@ import 'dotenv/config'
 import { CATEGORIES } from './keywords'
 import { scrapeAmazonDetails, type AmazonCandidate } from './amazon'
 import { scrapeAliExpressAll } from './aliexpress-scraper'
-import { scrapeDecathlonDeals, braveAvailable } from './decathlon-scraper'
+import { braveAvailable } from './decathlon-scraper'
 import { searchAmazonAll, scrapeBestsellersStealth, scrapeNewReleasesStealth } from './amazon-scraper'
 import { savePendingCandidates } from '../../src/lib/pending-candidates'
 import { initSchema, migrateSchema } from '../../src/lib/db'
@@ -80,43 +80,11 @@ async function discoverAuto() {
       allCandidates.push({ ...r, score: scoreCandidate(r), source: 'Amazon Novedades' })
     }
     console.log(`  ${newReleases.length} novedades`)
-
-    console.log('\n── FASE 3: Decathlon directo ──')
-    const decathlonProducts = await scrapeDecathlonDeals({ maxPages: 5 })
-    for (const p of decathlonProducts) {
-      const url = p.url.toLowerCase()
-      if (seenUrls.has(url)) continue
-      seenUrls.add(url)
-      const discount = p.discountPercent || (p.originalPrice && p.salePrice && p.originalPrice > p.salePrice
-        ? Math.round(((p.originalPrice - p.salePrice) / p.originalPrice) * 100)
-        : 0)
-      const score = Math.round((p.rating || 0) * 6) +
-        Math.min(25, Math.round(Math.log10((p.reviewsCount || 1)) * 8)) +
-        (discount >= 10 ? Math.min(25, Math.round(discount * 1.5)) : 0) +
-        (p.brand && POPULAR_BRANDS.some(b => p.brand!.toLowerCase().includes(b)) ? 30 : (p.brand ? 0 : -10))
-      allCandidates.push({
-        asin: '',
-        title: p.title,
-        price: p.salePrice || 0,
-        originalPrice: p.originalPrice,
-        rating: p.rating || 0,
-        reviews: p.reviewsCount || 0,
-        url: p.url,
-        keyword: 'decathlon',
-        category: p.category,
-        imageUrl: p.imageUrl,
-        brand: p.brand,
-        ean: null,
-        score,
-        source: 'Decathlon directo',
-      })
-    }
-    console.log(`  ${decathlonProducts.length} productos Decathlon`)
   } else {
     console.log('  ❌ Brave no disponible. Saltando scrapers de navegador.')
   }
 
-  console.log('\n── FASE 4: AliExpress directo ──')
+  console.log('\n── FASE 3: AliExpress directo ──')
   try {
     const aliexpressProducts = await scrapeAliExpressAll()
     for (const p of aliexpressProducts) {
