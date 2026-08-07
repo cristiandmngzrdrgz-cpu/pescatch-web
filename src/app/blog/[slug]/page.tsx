@@ -23,6 +23,8 @@ interface ProductEntry {
   scores: Record<string, number>
   stores: ProductStore[]
   slug?: string
+  badge?: string
+  badgeColor?: string
 }
 
 function extractProducts(content: string): { products: ProductEntry[]; clean: string } {
@@ -34,13 +36,15 @@ function extractProducts(content: string): { products: ProductEntry[]; clean: st
 
     let products: ProductEntry[]
     if (raw[0]?.stores) {
-      products = raw.map((r: Partial<ProductEntry> & { slug?: string }) => ({ ...r, slug: r.slug }))
+      products = raw.map((p: Partial<ProductEntry> & { slug?: string }) => ({ ...p, slug: p.slug }))
     } else {
-      products = raw.map((p: { asin?: string; title: string; price: string; rating: number; image: string; scores: Record<string, number> }) => ({
+      products = raw.map((p: { asin?: string; title: string; price: string; rating: number; image: string; scores: Record<string, number>; badge?: string; badgeColor?: string }) => ({
         title: p.title,
         rating: p.rating,
         image: p.image,
         scores: p.scores,
+        badge: p.badge,
+        badgeColor: p.badgeColor,
         stores: [{ name: 'Amazon', url: `https://www.amazon.es/dp/${p.asin}`, price: p.price }],
       }))
     }
@@ -217,8 +221,8 @@ function ScoreBar({ value, label }: { value: number; label: string }) {
   )
 }
 
-const BADGE_LABELS = ['Mejor calidad-precio', 'Mejor para agua salada', 'Gama alta', 'Mejor baitcasting barato', 'Para lance largo']
-const BADGE_COLORS = ['#22C55E', '#00D4FF', '#6366F1', '#F59E0B', '#EF4444']
+const BADGE_LABELS = ['Mejor elección', 'Gama alta', 'Calidad-precio', 'Recomendada', 'Económica']
+const BADGE_COLORS = ['#00D4FF', '#6366F1', '#22C55E', '#F59E0B', '#EF4444']
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -228,10 +232,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const { products, clean } = extractProducts(post.content)
 
   function badgeLabel(i: number): string {
-    return BADGE_LABELS[i] ?? ''
+    return products[i]?.badge ?? BADGE_LABELS[i] ?? ''
   }
   function badgeColor(i: number): string {
-    return BADGE_COLORS[i] ?? BADGE_COLORS[4]
+    return products[i]?.badgeColor ?? BADGE_COLORS[i] ?? BADGE_COLORS[4]
   }
 
   const toc = extractToc(clean)
