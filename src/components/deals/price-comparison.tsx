@@ -3,6 +3,7 @@
 import type { Deal } from '@/types'
 import { formatPrice } from '@/lib/utils'
 import { buildAmazonUrl } from '@/lib/amazon-affiliate'
+import { trackDealClick } from '@/lib/analytics'
 import { Store, Star, ArrowRight, BadgeCheck } from 'lucide-react'
 
 interface PriceComparisonProps {
@@ -85,6 +86,7 @@ export function PriceComparison({ deals, currentDealId }: PriceComparisonProps) 
               href={deal.store.id === 'amazon' ? buildAmazonUrl(deal.affiliateUrl) : deal.affiliateUrl}
               target="_blank"
               rel="nofollow sponsored"
+              onClick={() => trackDealClick(deal.id, deal.store.name, deal.category)}
               className="group grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_80px_90px_55px_1fr_auto] gap-2 px-5 py-3.5 items-center transition-all duration-200 no-underline hover:bg-[#1A2535]/50"
               style={{
                 background: isCurrent ? 'rgba(0,212,255,0.03)' : undefined,

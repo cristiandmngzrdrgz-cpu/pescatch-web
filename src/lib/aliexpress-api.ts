@@ -226,3 +226,32 @@ export function parseProductIdFromUrl(url: string): string | null {
   const match = url.match(/\/item\/(\d+)(?:\.html)?/i)
   return match ? match[1] : null
 }
+
+const AGENT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125 Safari/537.36'
+const ITEM_URL_RE = /\/(?:item|dp)\/(\d+)(?:\.html)?/i
+
+/**
+ * Resuelve el productId a partir de una URL de AliExpress.
+ * - `/item/<id>.html`: se extrae directamente.
+ * - `s.click.aliexpress.com/...`: sigue el redirect HTTP hasta la URL real del item
+ *   y extrae el PID (misma técnica que scripts/discover/verify-ae-prices.ts).
+ * Devuelve `null` si no se puede extraer.
+ */
+export async function resolveProductIdFromUrl(url: string): Promise<string | null> {
+  const direct = parseProductIdFromUrl(url)
+  if (direct) return direct
+
+  if (!url.includes('s.click.aliexpress.com')) return null
+
+  try {
+    const res = await fetch(url, {
+      redirect: 'follow',
+      headers: { 'user-agent': AGENT_UA },
+      signal: AbortSignal.timeout(15000),
+    })
+    const m = res.url.match(ITEM_URL_RE)
+    return m ? m[1] : null
+  } catch {
+    return null
+  }
+}

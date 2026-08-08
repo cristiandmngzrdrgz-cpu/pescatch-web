@@ -113,6 +113,7 @@ export async function upsertDeal(
 
   const discountPercent = Math.round(((originalPrice - salePrice) / (originalPrice || 1)) * 100)
   const store = getStoreInfo(storeId)
+  const commission = Math.round(salePrice * (store.commissionRate || 0) * 100) / 100
 
   // Check if a deal for this product+store already exists (for returning the id)
   const existing = await db.execute({
@@ -127,9 +128,9 @@ export async function upsertDeal(
        sql: `UPDATE deals SET
          title = ?, slug = ?, originalPrice = ?, salePrice = ?, shippingCost = ?, discountPercent = ?,
          stockStatus = ?, affiliateUrl = ?, storeName = ?, storeUrl = ?,
-         storeReputation = ?, storeCommissionRate = ?, expiresAt = ?, updatedAt = ?
+         storeReputation = ?, storeCommissionRate = ?, commission = ?, expiresAt = ?, updatedAt = ?
        WHERE id = ?`,
-       args: [title, slug, originalPrice, salePrice, shippingCost, discountPercent, stockStatus, affiliateUrl, storeName, store.url || '', store.reputation, store.commissionRate || 0, null, now, dealId],
+       args: [title, slug, originalPrice, salePrice, shippingCost, discountPercent, stockStatus, affiliateUrl, storeName, store.url || '', store.reputation, store.commissionRate || 0, commission, null, now, dealId],
     })
 
     return dealId
@@ -158,7 +159,7 @@ export async function upsertDeal(
       affiliateUrl, '', '', '[]',
       stockStatus, 0, 0, 0,
       '{}', '', '[]', '[]',
-      0, 0, 0, 0,
+      0, 0, 0, commission,
       '', '', null, now, now, now,
     ] as InValue[],
   })

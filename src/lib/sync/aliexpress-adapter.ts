@@ -1,7 +1,7 @@
 import type { StoreAdapter, StoreLookupResult } from './types'
 import {
   getProductDetails,
-  parseProductIdFromUrl,
+  resolveProductIdFromUrl,
   searchProducts,
 } from '@/lib/aliexpress-api'
 
@@ -10,7 +10,7 @@ export const aliexpressAdapter: StoreAdapter = {
   id: 'aliexpress',
 
   async lookup(ean: string, opts?: { url?: string }): Promise<StoreLookupResult | null> {
-    const productId = opts?.url ? parseProductIdFromUrl(opts.url) : null
+    const productId = opts?.url ? await resolveProductIdFromUrl(opts.url) : null
 
     if (productId) {
       const details = await getProductDetails([productId])

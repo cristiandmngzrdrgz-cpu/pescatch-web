@@ -158,6 +158,14 @@ function mdToHtml(md: string, products: ProductEntry[]): string {
     const i = num - 1
     const p = products[i]
     if (!p) return ''
+    const bestProduct = p.stores.reduce((a, b) => parseFloat(a.price) < parseFloat(b.price) ? a : b)
+    const extraStores = p.stores
+      .filter((s) => s !== bestProduct)
+      .map((s) => `<a href="${escapeHtml(bestStoreUrl(s))}" target="_blank" rel="nofollow sponsored" style="color:#4A6080;font-size:12px;text-decoration:underline">${escapeHtml(s.name)} ${escapeHtml(s.price)}</a>`)
+      .join(' · ')
+    const pescatchLink = p.slug
+      ? `<a href="/deals/${escapeHtml(p.slug)}" target="_blank" rel="nofollow sponsored" style="color:#00D4FF;font-size:12px;font-weight:700;text-decoration:none;border:1px solid rgba(0,212,255,0.25);border-radius:8px;padding:8px 12px;background:rgba(0,212,255,0.08)">Ver en PesCatch</a>`
+      : ''
     return `<div class="my-8 rounded-2xl overflow-hidden" style="background:#1A2535;border:1px solid #1E3A5F">
       <div style="position:relative;height:280px;background:linear-gradient(135deg,#1A2535,rgba(0,212,255,0.03))">
         <img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.title)}" class="absolute inset-0 w-full h-full object-contain p-6" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%" />
@@ -165,6 +173,11 @@ function mdToHtml(md: string, products: ProductEntry[]): string {
       <div style="padding:10px 20px;border-top:1px solid #1E3A5F;background:rgba(11,18,32,0.6)">
         <span class="text-xs font-semibold" style="color:#00D4FF">${escapeHtml(p.title)}</span>
       </div>
+      <div style="padding:12px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid #1E3A5F;background:rgba(11,18,32,0.4)">
+        <a href="${escapeHtml(bestStoreUrl(bestProduct))}" target="_blank" rel="nofollow sponsored" style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#00D4FF;color:#0B1120;font-weight:700;font-size:13px;text-decoration:none;border-radius:10px;padding:10px 16px;min-width:180px">Comprar · ${escapeHtml(bestProduct.price)} <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg></a>
+        ${pescatchLink}
+      </div>
+      ${extraStores ? `<div style="padding:2px 20px 12px;color:#4A6080;font-size:12px">Todas las tiendas: ${extraStores}</div>` : ''}
     </div>`
   })
 
