@@ -79,3 +79,4 @@ next-env.d.ts
 # discover: salidas regenerables por ejecución (no son cache mantenida)
 /scripts/discover/candidatos-ae-*.json
 /scripts/discover/verified-ae-prices.json
+/scripts/discover/ae-images.json

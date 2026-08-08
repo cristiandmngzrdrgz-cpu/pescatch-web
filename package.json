@@ -15,6 +15,7 @@
     "push-prices:prod": "npx tsx scripts/push-prices-to-prod.ts",
     "refresh-prices": "npx tsx scripts/refresh-prices.ts",
     "refresh-prices:prod": "npx tsx scripts/refresh-prices-prod.ts",
+    "push-candidates:prod": "npx tsx scripts/push-candidates-to-prod.ts",
     "discover": "npx tsx scripts/discover/index.ts",
     "discover:run": "npx tsx scripts/discover/run.ts",
     "discover:apply": "npx tsx scripts/discover/apply.ts",
