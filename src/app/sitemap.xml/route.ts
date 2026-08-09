@@ -16,6 +16,8 @@ export async function GET() {
   const urls = [
     { loc: '/', priority: '1.0', changefreq: 'daily', lastmod: '' },
     { loc: '/categories', priority: '0.9', changefreq: 'weekly', lastmod: '' },
+    { loc: '/top-chollos', priority: '0.9', changefreq: 'daily', lastmod: '' },
+    { loc: '/chollos-hoy', priority: '0.7', changefreq: 'daily', lastmod: '' },
     { loc: '/search', priority: '0.8', changefreq: 'daily', lastmod: '' },
     { loc: '/favoritos', priority: '0.5', changefreq: 'daily', lastmod: '' },
     { loc: '/blog', priority: '0.9', changefreq: 'weekly', lastmod: '' },

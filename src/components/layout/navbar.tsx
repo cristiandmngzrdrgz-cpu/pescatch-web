@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, Suspense } from 'react'
-import { Menu, X, Fish, ChevronDown, Tag, Search, Heart } from 'lucide-react'
+import { Menu, X, Fish, ChevronDown, Tag, Search, Heart, Zap } from 'lucide-react'
 import { CATEGORIES } from '@/types'
 import { SearchInput } from '@/components/search/search-input'
 import { Input } from '@/components/ui/input'
@@ -87,6 +87,12 @@ export function Navbar() {
             style={{ color: '#8BA3C7' }}>
             Blog
           </Link>
+          <Link href="/top-chollos"
+            className="flex items-center gap-1 text-[0.925rem] font-medium transition-colors duration-200 hover:text-[#FFB800]"
+            style={{ color: '#8BA3C7' }}>
+            <Zap className="h-3.5 w-3.5" />
+            Top Chollos
+          </Link>
           <Link href="/"
             className="flex items-center gap-1 text-[0.925rem] font-medium transition-colors duration-200 hover:text-[#FFB800]"
             style={{ color: '#8BA3C7' }}>
@@ -142,6 +148,8 @@ export function Navbar() {
                   subs: cat.subcategories.map(s => ({ href: `/categories/${cat.slug}/${s.slug}`, label: s.name })),
                 })),
                 { href: '/blog', label: 'Blog' },
+                { href: '/top-chollos', label: 'Top Chollos' },
+                { href: '/chollos-hoy', label: 'Chollos de Hoy' },
                 { href: '/favoritos', label: 'Favoritos' },
                 { href: '/search', label: 'Buscar' },
               ].map((item, i) => (

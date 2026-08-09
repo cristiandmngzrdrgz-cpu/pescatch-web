@@ -33,6 +33,8 @@ export function Footer() {
             <h3 className="font-semibold mb-5 text-sm uppercase tracking-wider" style={{ color: '#E8F0FE' }}>Enlaces</h3>
             <ul className="space-y-2.5">
               {[
+                { href: '/top-chollos', label: 'Top Chollos' },
+                { href: '/chollos-hoy', label: 'Chollos de Hoy' },
                 { href: '/search', label: 'Buscar Ofertas' },
                 { href: '/categories', label: 'Categorías' },
                 { href: '/about', label: 'Sobre Nosotros' },

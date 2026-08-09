@@ -2,7 +2,7 @@
 
 > Web de chollos de material de pesca. Dominio: `pescatch.es`
 > Tech stack: Next.js 16 + TypeScript + Tailwind CSS 4 + shadcn/ui + SQLite/Turso
-> **Última actualización:** 2026-08-02 (revisión completa del proyecto)
+> **Última actualización:** 2026-08-08
 
 ---
 
@@ -54,7 +54,7 @@
 ## Fase 4 — Engagement (EN CURSO)
 
 - [ ] **Alertas de precio por email (usuario)** — Base parcial: flag `deals.priceAlert` + email al admin cuando hay bajadas. Falta: tabla `price_alerts`, endpoint suscripción, modal en ficha, script cron. *(parcial en `refresh-all.ts` + `email.ts`)*
-- [ ] **Newsletter semanal automatizado** — Backend completo; falta `RESEND_API_KEY` en env + cron. Hoy el envío es manual (`npm run newsletter`) y no operativo sin API key
+- [ ] **Newsletter semanal automatizado** — Backend completo; falta `RESEND_API_KEY` en env + cron. Hoy el envío es manual (`npx tsx scripts/send-newsletter.ts`) y no operativo sin API key
 - [ ] Bot de Telegram / canal público
 - [ ] Tests: ampliar cobertura (hoy hay vitest + `src/__tests__/queries.test.ts`, 14 tests)
 
@@ -74,6 +74,14 @@
 - **Producción = Turso** (`TURSO_DATABASE_URL` en `.env.vercel`), no SQLite local. `db.ts` lee env en tiempo de llamada.
 - **Tests**: ya existen (vitest, 14 tests). Uno fallaba por bug `createPost` (18 placeholders/19 columnas) — **arreglado Ago 2026**.
 - **Scripts one-off** (~29) movidos a `scripts/_archive/` (batch*/check*/update*/content/sombrero/test-stealth/etc.)
+
+## Agosto 2026 — Monetización + SEO
+
+- **Monetización completada (A/B/D)**: `trackDealClick` en comparador (`price-comparison.tsx`), auto-cálculo de `commission` en `matcher.ts` (INSERT+UPDATE, `salePrice × commissionRate`), `resolveProductIdFromUrl` en `aliexpress-api.ts` (resuelve `s.click` → PID por redirect, usado por `aliexpress-adapter.ts`). Commit `bd45e59`.
+- **Newsletter**: `.env` documentado con pasos Resend (`RESEND_API_KEY`/`ADMIN_EMAIL`/`EMAIL_FROM` descomentables). Falta la key del usuario.
+- **Blog `mejores-senuelos-spinning-2026`**: "Los mejores señuelos de spinning de 2026" — 7 productos con precio verificado (Amazon/Decathlon/AliExpress) enlazados a deals reales de la web.
+- **CTA de compra global en blog**: cada `<!--PRODUCT_IMG:N-->` renderiza bloque con botón "Comprar · precio" (mejor tienda, `?tag=` en Amazon) + "Ver en PesCatch" + alternativas. Aplica a todos los posts.
+- **Páginas SEO nuevas**: `/top-chollos` (mayores descuentos + más votados) y `/chollos-hoy` (publicados hoy), con JSON-LD CollectionPage/Breadcrumb/FAQ, sitemap y enlaces en navbar/footer.
 
 ---
 
