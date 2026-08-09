@@ -2,7 +2,7 @@ import type { ScrapedPrice, PriceScrapeResult } from './types'
 import { RateLimiter } from './rate-limiter'
 import { scrapeAmazon } from './amazon'
 import { scrapeDecathlon } from './decathlon'
-import { scrapeAliExpress } from './aliexpress'
+import { scrapeAliExpress, scrapeAliExpressApi } from './aliexpress'
 import { extractAsin } from '@/lib/amazon-affiliate'
 import { withRetry } from '@/lib/scraping-utils'
 
@@ -14,6 +14,7 @@ export async function scrapeStore(
   url: string,
   storeId: string,
   productTitle?: string,
+  currentPrice?: number,
 ): Promise<PriceScrapeResult> {
   switch (storeId) {
     case 'amazon': {
@@ -66,6 +67,29 @@ export async function scrapeStore(
     }
 
     case 'aliexpress': {
+      // Vía 1: API de afiliados (sin navegador ni captcha). Solo disponible si
+      // hay productId resoluble (directo o s.click → redirect). La API da a
+      // veces un precio "desde" (mín. de variantes/sin IVA) distinto del real;
+      // para no corromper precios publicados, se aplica un gate: si el precio
+      // de la API difiere >15% del actual en BD, se descarta (cuenta como
+      // failed y no toca nada).
+      const apiResult = await scrapeAliExpressApi(url)
+      if (apiResult) {
+        const dev = currentPrice
+          ? Math.abs(apiResult.price - currentPrice) / currentPrice
+          : 0
+        if (!currentPrice || dev <= 0.15) {
+          return { success: true, storeId, price: apiResult }
+        }
+        return {
+          success: false,
+          storeId,
+          error: `API price ${apiResult.price}€ differs >15% from current ${currentPrice}€`,
+        }
+      }
+
+      // Vía 2: navegador Brave (fallback). Si no hay API keys o el pid no se
+      // resuelve, se intenta el scrape real.
       const result = await withRetry(
         async () => {
           await aliexpressLimiter.wait()

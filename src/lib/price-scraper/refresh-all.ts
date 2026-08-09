@@ -61,7 +61,8 @@ export async function refreshAllPrices(): Promise<RefreshResult> {
       if (asin) scrapeUrl = buildAmazonUrl(asin)
     }
 
-    const scrapeResult = await scrapeStore(scrapeUrl, deal.storeId, deal.title)
+    const currentPrice = deal.storeId === 'aliexpress' ? deal.salePrice : undefined
+    const scrapeResult = await scrapeStore(scrapeUrl, deal.storeId, deal.title, currentPrice)
 
     if (!scrapeResult.success || !scrapeResult.price) {
       failed++

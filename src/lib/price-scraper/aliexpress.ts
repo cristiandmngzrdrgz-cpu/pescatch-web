@@ -3,8 +3,31 @@ import type { Page } from 'playwright'
 import { braveAvailable, parseSpanishPrice } from '@/lib/scraping-utils'
 import { bravePage } from './brave'
 import { unavailablePrice, isAliExpressNotFoundPage } from './not-available'
+import { getProductDetails, resolveProductIdFromUrl } from '@/lib/aliexpress-api'
 
 const AGENT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125 Safari/537.36'
+
+/**
+ * Precio vía API de afiliados de AliExpress (sin navegador ni captcha).
+ * Resuelve el productId de la URL (directo o s.click → redirect) y consulta
+ * `aliexpress.affiliate.productdetail.get`. Devuelve null si no hay productId
+ * resoluble, la API falla o no devuelve precio real.
+ */
+export async function scrapeAliExpressApi(url: string): Promise<ScrapedPrice | null> {
+  const productId = await resolveProductIdFromUrl(url)
+  if (!productId) return null
+
+  const details = await getProductDetails([productId])
+  const product = details[0]
+  if (!product || product.price <= 0) return null
+
+  return {
+    price: product.price,
+    stock: product.availableQuantity === 0 ? 'out_of_stock' : 'in_stock',
+    url: product.productUrl || url,
+    shipping: 0,
+  }
+}
 
 async function resolveAliExpressUrl(url: string): Promise<string> {
   if (!url.includes('s.click.aliexpress.com')) return url
