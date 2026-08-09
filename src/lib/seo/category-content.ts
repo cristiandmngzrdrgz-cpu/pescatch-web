@@ -16,7 +16,7 @@ export const BLOG_CATEGORY_BY_SLUG: Record<string, string> = {
 export const CATEGORY_SEO: Record<string, CategorySeoContent> = {
   carretes: {
     intro:
-      'Los carretes de pesca son el corazón del equipo: de spinning para lanzar señuelos, de surfcasting para distancias largas o de jigging para trabajar el fondo. Aquí recopilamos los mejores chollos en carretes de Shimano, Daiwa, Penn, Abu Garcia y Mitchell, con descuentos reales en Amazon, Decathlon y AliExpress.',
+      'Los carretes de pesca son el corazón del equipo: de spinning para lanzar señuelos, de surfcasting para distancias largas o de jigging para trabajar el fondo. Aquí recopilamos los mejores chollos en carretes de Shimano, Daiwa, Penn, Abu Garcia y Mitchell, con descuentos reales en Amazon y AliExpress.',
     faq: [
       {
         question: '¿Qué carrete de pesca me compro?',
@@ -31,13 +31,13 @@ export const CATEGORY_SEO: Record<string, CategorySeoContent> = {
       {
         question: '¿Dónde encontrar carretes baratos?',
         answer:
-          'En PesCatch rastreamos ofertas de carretes en Amazon, Decathlon y AliExpress. Revisa la categoría a menudo: los descuentos en modelos de gama media-alta suelen durar pocos días.',
+          'En PesCatch rastreamos ofertas de carretes en Amazon y AliExpress. Revisa la categoría a menudo: los descuentos en modelos de gama media-alta suelen durar pocos días.',
       },
     ],
   },
   canas: {
     intro:
-      'La caña es la herramienta que transmite cada picada: de spinning, surfcasting, jigging o eging, cada modalidad pide un modelo concreto. Reunimos los mejores chollos en cañas de Shimano, Daiwa, PENN y Caperlan, con ofertas verificadas en Amazon, Decathlon y AliExpress.',
+      'La caña es la herramienta que transmite cada picada: de spinning, surfcasting, jigging o eging, cada modalidad pide un modelo concreto. Reunimos los mejores chollos en cañas de Shimano, Daiwa, PENN y Caperlan, con ofertas verificadas en Amazon y AliExpress.',
     faq: [
       {
         question: '¿Qué caña necesito para pescar en la playa?',
@@ -58,7 +58,7 @@ export const CATEGORY_SEO: Record<string, CategorySeoContent> = {
   },
   senuelos: {
     intro:
-      'Los señuelos son el engaño perfecto para cada depredador: vinilos, paseantes, jigs, cucharillas y señuelos de eging. Aquí encontrarás los mejores chollos en señuelos y kits de señuelos en Amazon, Decathlon y AliExpress, ideales para spinning, jigging y curricán.',
+      'Los señuelos son el engaño perfecto para cada depredador: vinilos, paseantes, jigs, cucharillas y señuelos de eging. Aquí encontrarás los mejores chollos en señuelos y kits de señuelos en Amazon y AliExpress, ideales para spinning, jigging y curricán.',
     faq: [
       {
         question: '¿Qué señuelo usar para la lubina?',
@@ -79,7 +79,7 @@ export const CATEGORY_SEO: Record<string, CategorySeoContent> = {
   },
   accesorios: {
     intro:
-      'Del plomo al fluorocarbono, pasando por cajas, sacos y herramientas: los accesorios completan tu equipo de pesca. Recopilamos chollos de accesorios de pesca en Amazon, Decathlon y AliExpress, para que ahorres en lo que siempre se acaba gastando.',
+      'Del plomo al fluorocarbono, pasando por cajas, sacos y herramientas: los accesorios completan tu equipo de pesca. Recopilamos chollos de accesorios de pesca en Amazon y AliExpress, para que ahorres en lo que siempre se acaba gastando.',
     faq: [
       {
         question: '¿Qué accesorios son imprescindibles para pescar?',
@@ -95,7 +95,7 @@ export const CATEGORY_SEO: Record<string, CategorySeoContent> = {
   },
   ropa: {
     intro:
-      'Vadeadores, chaquetas, guantes y ropa técnica para pescadores: la ropa adecuada marca la diferencia en una jornada larga. Aquí verás chollos de ropa de pesca en Amazon, Decathlon y AliExpress, con descuentos reales y stock actualizado.',
+      'Vadeadores, chaquetas, guantes y ropa técnica para pescadores: la ropa adecuada marca la diferencia en una jornada larga. Aquí verás chollos de ropa de pesca en Amazon y AliExpress, con descuentos reales y stock actualizado.',
     faq: [
       {
         question: '¿Qué vadeador me compro?',
@@ -106,7 +106,7 @@ export const CATEGORY_SEO: Record<string, CategorySeoContent> = {
   },
   nautica: {
     intro:
-      'Equipamiento náutico, kayaks y accesorios para pescar desde el agua. Publicamos ofertas verificadas en Amazon, Decathlon y AliExpress para que equipes tu embarcación o kayak sin pagar de más.',
+      'Equipamiento náutico, kayaks y accesorios para pescar desde el agua. Publicamos ofertas verificadas en Amazon y AliExpress para que equipes tu embarcación o kayak sin pagar de más.',
     faq: [
       {
         question: '¿Qué necesito para pescar desde kayak?',

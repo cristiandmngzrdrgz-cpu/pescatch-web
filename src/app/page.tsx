@@ -18,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildMetadata(
     {
       title: 'PesCatch - Chollos de Material de Pesca',
-      description: 'Los mejores chollos y ofertas de material de pesca en España. Carretes, cañas, señuelos y accesorios al mejor precio en Amazon, Decathlon y AliExpress. Guías y comparativas escritas por pescadores.',
+      description: 'Los mejores chollos y ofertas de material de pesca en España. Carretes, cañas, señuelos y accesorios al mejor precio en Amazon y AliExpress. Guías y comparativas escritas por pescadores.',
       openGraph: {
         title: 'PesCatch - Chollos de Material de Pesca',
         description: 'Los mejores chollos y ofertas de material de pesca en España. Ahorra hasta un 50%.',
@@ -122,7 +122,7 @@ export default async function HomePage() {
               </h1>
 
               <p className="text-lg sm:text-xl leading-relaxed mb-8 max-w-lg" style={{ color: '#A0B8D8' }}>
-                Analizamos y comparamos el material de pesca para que aciertes en cada compra. <strong style={{ color: '#E8F0FE' }}>Guías honestas, chollos verificados</strong> en Amazon, Decathlon y AliExpress.
+                Analizamos y comparamos el material de pesca para que aciertes en cada compra. <strong style={{ color: '#E8F0FE' }}>Guías honestas, chollos verificados</strong> en Amazon y AliExpress.
               </p>
 
               <div className="flex flex-wrap gap-3">
@@ -153,7 +153,7 @@ export default async function HomePage() {
               <div className="mt-10 flex flex-wrap gap-5">
                 {[
                   { icon: BookOpen, text: 'Guías de compra', sub: 'Comparativas y análisis detallados' },
-                  { icon: Shield, text: 'Multi-tienda', sub: 'Amazon · Decathlon · AliExpress' },
+                  { icon: Shield, text: 'Multi-tienda', sub: 'Amazon · AliExpress' },
                   { icon: Users, text: `${totalDeals} ofertas`, sub: `Más de ${totalSavings.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })} ahorrados` },
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-3">

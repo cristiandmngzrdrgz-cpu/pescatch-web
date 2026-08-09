@@ -17,13 +17,11 @@ interface ProductCardProps {
 
 const storeIcons: Record<string, string> = {
   amazon: 'https://m.media-amazon.com/images/G/01/gc/designs/livepreview/amazon_logo_rgb._V605225354_.png',
-  decathlon: 'https://contents.mediadecathlon.com/p1965411/decathlon-logo.png',
   aliexpress: 'https://ae01.alicdn.com/kf/Sad0e0c1e3a9f4b1c8c6b7a3d4e5f6g7h/logo.png',
 }
 
 const storeLabel: Record<string, string> = {
   amazon: 'Amazon',
-  decathlon: 'Decathlon',
   aliexpress: 'AliExpress',
 }
 

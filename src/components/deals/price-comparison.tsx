@@ -14,7 +14,6 @@ interface PriceComparisonProps {
 function storeColor(storeId: string): string {
   switch (storeId) {
     case 'amazon': return '#FF9900'
-    case 'decathlon': return '#0082C3'
     case 'aliexpress': return '#FF4747'
     default: return '#00D4FF'
   }
@@ -23,7 +22,6 @@ function storeColor(storeId: string): string {
 function storeIcon(storeId: string): string {
   switch (storeId) {
     case 'amazon': return 'A'
-    case 'decathlon': return 'D'
     case 'aliexpress': return 'X'
     default: return storeId.charAt(0).toUpperCase()
   }
@@ -32,7 +30,6 @@ function storeIcon(storeId: string): string {
 function storeLabel(storeId: string): string {
   switch (storeId) {
     case 'amazon': return 'Amazon'
-    case 'decathlon': return 'Decathlon'
     case 'aliexpress': return 'AliExpress'
     default: return storeId
   }

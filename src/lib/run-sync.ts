@@ -2,7 +2,6 @@ import { getDb, initSchema, migrateSchema } from './db'
 import { matchByEan, matchBySlug, insertProduct, updateProduct, upsertDeal, recordPricePoint } from './sync/matcher'
 import { readJsonFile } from './sync/reader-json'
 import { readGoogleSheets } from './sync/reader-sheets'
-import { decathlonAdapter } from './sync/decathlon-adapter'
 import { amazonAdapter } from './sync/amazon-adapter'
 import { aliexpressAdapter } from './sync/aliexpress-adapter'
 import { buildAmazonUrl } from './amazon-affiliate'
@@ -139,7 +138,6 @@ async function processRow(
 
     const stores: { storeId: string; adapter: StoreAdapter; manualPrice?: number; manualUrl?: string; manualShipping?: number; manualStock?: string; manualOriginalPrice?: number }[] = [
       { storeId: 'amazon', adapter: amazonAdapter, manualPrice: row.amazonPrice, manualUrl: row.amazonUrl, manualShipping: row.amazonShipping, manualStock: row.amazonStock, manualOriginalPrice: row.amazonOriginalPrice },
-      { storeId: 'decathlon', adapter: decathlonAdapter, manualPrice: row.decathlonPrice, manualUrl: row.decathlonUrl, manualShipping: row.decathlonShipping, manualStock: row.decathlonStock, manualOriginalPrice: row.decathlonOriginalPrice },
       { storeId: 'aliexpress', adapter: aliexpressAdapter, manualPrice: row.aliexpressPrice, manualUrl: row.aliexpressUrl, manualShipping: row.aliexpressShipping, manualStock: row.aliexpressStock, manualOriginalPrice: row.aliexpressOriginalPrice },
     ]
 

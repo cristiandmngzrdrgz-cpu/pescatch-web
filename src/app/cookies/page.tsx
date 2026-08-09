@@ -52,7 +52,7 @@ export default function CookiesPage() {
         <section>
           <h2 className="text-xl font-bold mb-3" style={{ color: '#E8F0FE' }}>4. Cookies de terceros</h2>
           <p className="text-sm leading-relaxed">
-            Los enlaces de afiliado redirigen a sitios de terceros (Amazon, AliExpress, Decathlon, etc.)
+            Los enlaces de afiliado redirigen a sitios de terceros (Amazon, AliExpress, etc.)
             que tienen sus propias políticas de cookies. Recomendamos revisar las políticas de cada
             plataforma antes de realizar una compra.
           </p>

@@ -39,7 +39,7 @@ export default function AboutPage() {
           <h2 className="text-xl font-bold mb-3" style={{ color: '#E8F0FE' }}>Cómo verificamos los chollos</h2>
           <div className="space-y-3">
             {[
-              'Monitorizamos precios en Amazon, AliExpress, Decathlon, eBay y más tiendas.',
+              'Monitorizamos precios en Amazon, AliExpress y más tiendas.',
               'Comparamos con el precio medio del mercado.',
               'Solo publicamos deals con al menos un 15% de descuento real.',
               'Verificamos disponibilidad, envío y reputación de la tienda.',

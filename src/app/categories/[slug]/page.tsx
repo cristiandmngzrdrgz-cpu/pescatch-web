@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return buildMetadata(
     {
       title: `${category.name} — Chollos y Ofertas | PesCatch`,
-      description: seo?.intro || category.description || `Las mejores ofertas en ${category.name.toLowerCase()} de pesca. Encuentra chollos en Amazon, Decathlon y AliExpress.`,
+      description: seo?.intro || category.description || `Las mejores ofertas en ${category.name.toLowerCase()} de pesca. Encuentra chollos en Amazon y AliExpress.`,
       openGraph: {
         title: `${category.name} — Chollos de ${category.name} | PesCatch`,
         description: seo?.intro || category.description || `Encuentra los mejores chollos en ${category.name.toLowerCase()} de pesca.`,
@@ -73,7 +73,6 @@ const DISCOUNT_OPTIONS = [
 const STORE_OPTIONS = [
   { value: '', label: 'Todas las tiendas' },
   { value: 'amazon', label: 'Amazon' },
-  { value: 'decathlon', label: 'Decathlon' },
   { value: 'aliexpress', label: 'AliExpress' },
 ] as const
 

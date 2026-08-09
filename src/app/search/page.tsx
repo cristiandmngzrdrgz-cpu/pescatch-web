@@ -32,7 +32,6 @@ const DISCOUNT_OPTIONS = [
 
 const STORE_LABELS: Record<string, string> = {
   amazon: 'Amazon',
-  decathlon: 'Decathlon',
   aliexpress: 'AliExpress',
   'fishing-tackle-bait': 'Fishing T&B',
   'total-fishing-tackle': 'Total Fishing',
@@ -66,7 +65,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
     ? `Resultados para "${query}" | PesCatch`
     : 'Todos los chollos | PesCatch'
   const description = query
-    ? `Busca y compara ofertas de material de pesca para "${query}" en Amazon, Decathlon y AliExpress.`
+    ? `Busca y compara ofertas de material de pesca para "${query}" en Amazon y AliExpress.`
     : 'Todos los chollos y ofertas de material de pesca. Carretes, cañas, señuelos y accesorios al mejor precio.'
   const canonicalUrl = `${BASE_URL}/search${query ? `?q=${encodeURIComponent(query)}` : ''}`
 

@@ -17,7 +17,7 @@ export default function TermsPage() {
           <h2 className="text-xl font-bold mb-3" style={{ color: '#E8F0FE' }}>2. Descripción del servicio</h2>
           <p className="text-sm leading-relaxed">
             PesCatch es una plataforma de búsqueda y comparación de ofertas de material de pesca. Publicamos
-            deals verificados manualmente procedentes de tiendas online como Amazon, AliExpress, Decathlon
+            deals verificados manualmente procedentes de tiendas online como Amazon, AliExpress
             y otras. El servicio es gratuito para el usuario final.
           </p>
         </section>

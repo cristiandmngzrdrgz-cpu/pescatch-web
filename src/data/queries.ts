@@ -5,6 +5,17 @@ import { normalizeCategory, normalizeSubcategory } from '@/lib/normalize-categor
 import type { InValue } from '@libsql/client'
 import { cache } from 'react'
 
+// ─── Tiendas deshabilitadas (temporal) ────────────────────────────────────────
+// Decathlon queda oculto de las queries públicas hasta que se consiga su afiliado.
+// Se reactiva vaciando el array (los datos permanecen en la BD).
+export const DISABLED_STORES: string[] = ['decathlon']
+
+export function storeFilterClause(includeHidden: boolean): string {
+  if (includeHidden || DISABLED_STORES.length === 0) return ''
+  const placeholders = DISABLED_STORES.map(() => '?').join(',')
+  return ` AND storeId NOT IN (${placeholders})`
+}
+
 // ─── Shared filter builder ────────────────────────────────────────────────────
 // Centralises WHERE construction so getDeals and getDealsPaginated stay in sync.
 function buildWhereClause(
@@ -16,6 +27,8 @@ function buildWhereClause(
 
   if (!includeHidden) {
     where += " AND status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now'))"
+    where += storeFilterClause(false)
+    params.push(...DISABLED_STORES)
   }
 
   if (!filters) return { where, params }
@@ -52,6 +65,10 @@ function buildWhereClause(
   if (filters.maxPrice) {
     where += ' AND salePrice <= ?'
     params.push(filters.maxPrice)
+  }
+  if (filters.publishedSince) {
+    where += ' AND publishedAt >= ?'
+    params.push(filters.publishedSince)
   }
 
   return { where, params }
@@ -288,8 +305,9 @@ export async function getDealsPaginated(
 export async function getDealBySlug(slug: string, includeHidden = false): Promise<Deal | undefined> {
   const sql = includeHidden
     ? 'SELECT * FROM deals WHERE slug = ?'
-    : "SELECT * FROM deals WHERE slug = ? AND status = 'published'"
-  return loadDeal(sql, [slug])
+    : `SELECT * FROM deals WHERE slug = ? AND status = 'published'${storeFilterClause(false)}`
+  const params: InValue[] = [slug, ...(includeHidden ? [] : DISABLED_STORES)]
+  return loadDeal(sql, params)
 }
 
 export async function getDealById(id: string): Promise<Deal | undefined> {
@@ -297,10 +315,9 @@ export async function getDealById(id: string): Promise<Deal | undefined> {
 }
 
 export async function getFeaturedDeals(includeHidden = false): Promise<Deal[]> {
-  const sql = includeHidden
-    ? 'SELECT * FROM deals WHERE featured = 1 ORDER BY publishedAt DESC'
-    : "SELECT * FROM deals WHERE featured = 1 AND status = 'published' ORDER BY publishedAt DESC"
-  return loadDeals(sql)
+  const hiddenClause = includeHidden ? '' : ` AND status = 'published'${storeFilterClause(false)}`
+  const sql = `SELECT * FROM deals WHERE featured = 1${hiddenClause} ORDER BY publishedAt DESC`
+  return loadDeals(sql, includeHidden ? [] : (DISABLED_STORES as InValue[]))
 }
 
 export async function getDealCountsByCategory(): Promise<Record<string, number>> {
@@ -308,7 +325,7 @@ export async function getDealCountsByCategory(): Promise<Record<string, number>>
   await seedDatabase()
 
   const result = await db.execute(
-    "SELECT category, COUNT(*) as count FROM deals WHERE status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now')) GROUP BY category"
+    { sql: `SELECT category, COUNT(*) as count FROM deals WHERE status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now'))${storeFilterClause(false)} GROUP BY category`, args: DISABLED_STORES as InValue[] }
   )
   const map: Record<string, number> = {}
   for (const row of result.rows) {
@@ -321,8 +338,8 @@ export async function getDealCountsByStore(category?: string): Promise<Record<st
   const db = getDb()
   await seedDatabase()
 
-  let sql = "SELECT storeId, COUNT(*) as count FROM deals WHERE status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now'))"
-  const params: InValue[] = []
+  let sql = `SELECT storeId, COUNT(*) as count FROM deals WHERE status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now'))${storeFilterClause(false)}`
+  const params: InValue[] = [...DISABLED_STORES]
 
   if (category) {
     sql += ' AND LOWER(category) = LOWER(?)'
@@ -344,13 +361,13 @@ export async function getBrands(): Promise<Array<{ brand: string; count: number;
   await seedDatabase()
 
   const result = await db.execute(
-    `SELECT brand, COUNT(*) as count, MIN(salePrice) as minPrice,
+    { sql: `SELECT brand, COUNT(*) as count, MIN(salePrice) as minPrice,
             MAX(discountPercent) as maxDiscount
      FROM deals
      WHERE status = 'published' AND brand != ''
-       AND (expiresAt IS NULL OR expiresAt > datetime('now'))
+       AND (expiresAt IS NULL OR expiresAt > datetime('now'))${storeFilterClause(false)}
      GROUP BY LOWER(brand)
-     ORDER BY count DESC, brand ASC`
+     ORDER BY count DESC, brand ASC`, args: DISABLED_STORES as InValue[] }
   )
 
   return result.rows.map(r => ({
@@ -381,13 +398,13 @@ export async function getSubcategories(category: string): Promise<string[]> {
 }
 
 export async function getRelatedDeals(deal: Deal, limit = 4, includeHidden = false): Promise<Deal[]> {
-  const hiddenClause = includeHidden ? '' : " AND status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now'))"
+  const hiddenClause = includeHidden ? '' : ` AND status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now'))${storeFilterClause(false)}`
   return loadDeals(
     `SELECT * FROM deals
      WHERE id != ?${hiddenClause} AND (LOWER(category) = LOWER(?) OR tags LIKE ?)
      ORDER BY discountPercent DESC
      LIMIT ?`,
-    [deal.id, normalizeCategory(deal.category), `%${deal.tags[0] || ''}%`, limit],
+    [deal.id, ...(includeHidden ? [] : DISABLED_STORES), normalizeCategory(deal.category), `%${deal.tags[0] || ''}%`, limit],
   )
 }
 
@@ -456,8 +473,8 @@ export async function getProductByEan(ean: string): Promise<Product | undefined>
 export async function getDealsByProduct(productId: string, includeHidden = false): Promise<Deal[]> {
   const sql = includeHidden
     ? 'SELECT * FROM deals WHERE productId = ? ORDER BY salePrice ASC'
-    : "SELECT * FROM deals WHERE productId = ? AND status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now')) ORDER BY salePrice ASC"
-  return loadDeals(sql, [productId])
+    : `SELECT * FROM deals WHERE productId = ? AND status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now'))${storeFilterClause(false)} ORDER BY salePrice ASC`
+  return loadDeals(sql, [productId, ...(includeHidden ? [] : DISABLED_STORES)])
 }
 
 export async function migrateExistingDealsToProducts() {

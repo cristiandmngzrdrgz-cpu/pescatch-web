@@ -31,6 +31,7 @@ export async function refreshAllPrices(): Promise<RefreshResult> {
      COALESCE(variantAsin, '') as variantAsin
      FROM deals
      WHERE status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now')) AND affiliateUrl != ''
+     AND storeId != 'decathlon'
      ORDER BY storeId, title`
   )
 

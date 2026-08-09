@@ -18,7 +18,6 @@ interface DealCardProps {
 
 const storeLabel: Record<string, string> = {
   amazon: 'Amazon',
-  decathlon: 'Decathlon',
   aliexpress: 'AliExpress',
 }
 

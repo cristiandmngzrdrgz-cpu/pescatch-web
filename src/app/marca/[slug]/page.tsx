@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return buildMetadata(
     {
       title: `${brand} — Chollos y Ofertas de ${brand} | PesCatch`,
-      description: `Encuentra los mejores chollos de ${brand} en pesca.${match ? ` ${match.count} ofertas en Amazon, Decathlon y AliExpress.` : ''}`,
+      description: `Encuentra los mejores chollos de ${brand} en pesca.${match ? ` ${match.count} ofertas en Amazon y AliExpress.` : ''}`,
       openGraph: {
         title: `${brand} — Chollos de ${brand} en PesCatch`,
         description: `Los mejores chollos de ${brand} en material de pesca al mejor precio.`,

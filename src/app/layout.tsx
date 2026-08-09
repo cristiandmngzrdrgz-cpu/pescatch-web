@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     default: 'PesCatch - Chollos de Pesca',
     template: '%s | PesCatch',
   },
-  description: 'Los mejores chollos y ofertas de material de pesca en España. Carretes, cañas, señuelos y accesorios al mejor precio en Amazon, AliExpress y Decathlon.',
+  description: 'Los mejores chollos y ofertas de material de pesca en España. Carretes, cañas, señuelos y accesorios al mejor precio en Amazon y AliExpress.',
   keywords: ['chollos pesca', 'ofertas pesca', 'material pesca', 'cañas', 'carretes', 'señuelos', 'ahorrar pesca'],
   authors: [{ name: 'PesCatch' }],
   creator: 'PesCatch',
@@ -86,10 +86,8 @@ export default function RootLayout({
         <link rel="alternate" type="application/rss+xml" title="PesCatch RSS Feed" href={`${BASE_URL}/rss.xml`} />
         <link rel="alternate" type="application/rss+xml" title="PesCatch Chollos RSS" href={`${BASE_URL}/deals.xml`} />
         <link rel="preconnect" href="https://m.media-amazon.com" />
-        <link rel="preconnect" href="https://contents.mediadecathlon.com" />
         <link rel="preconnect" href="https://ae01.alicdn.com" />
         <link rel="dns-prefetch" href="https://m.media-amazon.com" />
-        <link rel="dns-prefetch" href="https://contents.mediadecathlon.com" />
         <link rel="dns-prefetch" href="https://ae01.alicdn.com" />
       </head>
       <body className="min-h-full flex flex-col" style={{ background: 'var(--background)', color: '#E8F0FE' }}>

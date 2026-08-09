@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const subcategory = category?.subcategories.find(s => s.slug === sub)
   if (!category || !subcategory) return { title: 'Subcategoría no encontrada | PesCatch' }
   const title = `${subcategory.name} de ${category.name} — Chollos y Ofertas | PesCatch`
-  const description = `Las mejores ofertas en ${subcategory.name.toLowerCase()} de ${category.name.toLowerCase()}. Chollos en material de pesca en Amazon, Decathlon y AliExpress.`
+  const description = `Las mejores ofertas en ${subcategory.name.toLowerCase()} de ${category.name.toLowerCase()}. Chollos en material de pesca en Amazon y AliExpress.`
   const canonicalUrl = `${BASE_URL}/categories/${slug}/${sub}`
   return buildMetadata(
     {
@@ -58,7 +58,6 @@ const DISCOUNT_OPTIONS = [
 const STORE_OPTIONS = [
   { value: '', label: 'Todas las tiendas' },
   { value: 'amazon', label: 'Amazon' },
-  { value: 'decathlon', label: 'Decathlon' },
   { value: 'aliexpress', label: 'AliExpress' },
 ] as const
 

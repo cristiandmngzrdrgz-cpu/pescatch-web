@@ -20,7 +20,6 @@ export default function AffiliatePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
               { name: 'Amazon Associates', desc: 'El programa de afiliados de Amazon. Comisiones entre 1-10% según categoría.', url: 'https://affiliate-program.amazon.es' },
-              { name: 'Awin (Decathlon)', desc: 'Red de afiliados que incluye tiendas como Decathlon, El Corte Inglés y más.', url: 'https://www.awin.com/es' },
               { name: 'AliExpress Affiliate', desc: 'Programa de afiliados de AliExpress para productos de pesca.', url: 'https://portals.aliexpress.com' },
               { name: 'eBay Partner Network', desc: 'Programa de afiliados de eBay para productos de segunda mano y nuevos.', url: 'https://partnernetwork.ebay.es' },
             ].map((partner) => (

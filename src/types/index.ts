@@ -145,6 +145,7 @@ export interface DealFilters {
   minDiscount?: number
   minPrice?: number
   maxPrice?: number
+  publishedSince?: string
   sortBy?: 'discount' | 'price_asc' | 'price_desc' | 'newest' | 'popular'
   search?: string
   page?: number
@@ -244,6 +245,5 @@ export interface BlogPost {
 
 export const STORES: Store[] = [
   { id: 'amazon', slug: 'amazon', name: 'Amazon', reputation: 'good', url: 'https://amazon.es', commissionRate: 0.05 },
-  { id: 'decathlon', slug: 'decathlon', name: 'Decathlon', reputation: 'good', url: 'https://decathlon.es', commissionRate: 0.03 },
   { id: 'aliexpress', slug: 'aliexpress', name: 'AliExpress', reputation: 'neutral', url: 'https://aliexpress.com', commissionRate: 0.08 },
 ]
