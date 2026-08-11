@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminApiCheck } from '@/lib/admin-auth'
-import { approveCandidate, rejectCandidate, getPendingCandidates, getCandidateCount } from '@/lib/pending-candidates'
+import { approveCandidate, rejectCandidate, getPendingCandidates, getCandidateCount, getCandidateById } from '@/lib/pending-candidates'
 import { readAllRows, appendRow } from '@/lib/sync/google-sheets-client'
 
 export async function GET() {
@@ -25,33 +25,33 @@ export async function POST(request: NextRequest) {
   }
 
   if (action === 'approve') {
+    const candidate = await getCandidateById(id)
+    if (!candidate) return NextResponse.json({ error: 'Candidate not found' }, { status: 404 })
+
     const ok = await approveCandidate(id)
     if (!ok) return NextResponse.json({ error: 'Candidate not found' }, { status: 404 })
 
     try {
       const { headers } = await readAllRows()
-      const candidate = (await getPendingCandidates(100)).find(c => c.id === id)
-      if (candidate) {
-        const store = detectStore(candidate.url)
-        const rowData: Record<string, string | number | boolean> = {
-          ean: store === 'amazon' ? (candidate.ean ?? '').replace(/[^\d]/g, '') : (candidate.ean || ''),
-          name: candidate.title,
-          brand: candidate.brand || '',
-          category: candidate.category,
-          imageUrl: candidate.imageUrl || '',
-          [`${store}Price`]: candidate.price,
-          [`${store}Url`]: candidate.url,
-          [`${store}Stock`]: 'in_stock',
-        }
-        if (store === 'amazon' && candidate.asin) {
-          rowData.amazonVariantAsin = candidate.asin
-        }
-        if (candidate.originalPrice) {
-          rowData[`${store}OriginalPrice`] = candidate.originalPrice
-        }
-        const row = headers.map(h => rowData[h] ?? '')
-        await appendRow(row)
+      const store = detectStore(candidate.url)
+      const rowData: Record<string, string | number | boolean> = {
+        ean: store === 'amazon' ? (candidate.ean ?? '').replace(/[^\d]/g, '') : (candidate.ean || ''),
+        name: candidate.title,
+        brand: candidate.brand || '',
+        category: candidate.category,
+        imageUrl: candidate.imageUrl || '',
+        [`${store}Price`]: candidate.price,
+        [`${store}Url`]: candidate.url,
+        [`${store}Stock`]: 'in_stock',
       }
+      if (store === 'amazon' && candidate.asin) {
+        rowData.amazonVariantAsin = candidate.asin
+      }
+      if (candidate.originalPrice) {
+        rowData[`${store}OriginalPrice`] = candidate.originalPrice
+      }
+      const row = headers.map(h => rowData[h] ?? '')
+      await appendRow(row)
     } catch (err) {
       console.error('Error appending to sheet:', err)
     }

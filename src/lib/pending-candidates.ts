@@ -76,6 +76,37 @@ export async function getPendingCandidates(limit = 50): Promise<PendingCandidate
   }))
 }
 
+export async function getCandidateById(id: number): Promise<PendingCandidate | null> {
+  const db = getDb()
+  const result = await db.execute({
+    sql: 'SELECT * FROM pending_candidates WHERE id = ?',
+    args: [id],
+  })
+
+  if (result.rows.length === 0) return null
+  const row = result.rows[0]
+  return {
+    id: row.id as number,
+    asin: row.asin as string,
+    title: row.title as string,
+    price: row.price as number,
+    originalPrice: row.originalPrice as number | null,
+    rating: row.rating as number,
+    reviews: row.reviews as number,
+    url: row.url as string,
+    keyword: row.keyword as string,
+    category: row.category as string,
+    imageUrl: row.imageUrl as string | null,
+    brand: row.brand as string | null,
+    ean: row.ean as string | null,
+    score: row.score as number,
+    source: row.source as string,
+    status: row.status as PendingCandidate['status'],
+    created_at: row.created_at as string,
+    updated_at: row.updated_at as string,
+  }
+}
+
 export async function approveCandidate(id: number): Promise<boolean> {
   const db = getDb()
   const result = await db.execute({

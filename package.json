@@ -21,6 +21,7 @@
     "discover:apply": "npx tsx scripts/discover/apply.ts",
     "discover:auto": "npx tsx scripts/discover/auto.ts",
     "discover:amazon": "npx tsx scripts/discover/amazon-brightdata.ts",
+    "discover:amazon-auto": "npx tsx scripts/discover/auto-amazon.ts",
     "newsletter": "npx tsx scripts/send-newsletter.ts",
     "clean-expired": "npx tsx scripts/clean-expired-deals.ts",
     "match-products": "npx tsx scripts/match-deals-to-products.ts",
