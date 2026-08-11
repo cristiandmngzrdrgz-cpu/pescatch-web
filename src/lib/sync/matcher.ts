@@ -111,7 +111,15 @@ export async function upsertDeal(
 ): Promise<string> {
   const db = getDb()
 
-  const discountPercent = Math.round(((originalPrice - salePrice) / (originalPrice || 1)) * 100)
+  let discountPercent = Math.round(((originalPrice - salePrice) / (originalPrice || 1)) * 100)
+
+  // AliExpress infla el "precio de referencia" (tachado falso). Si el descuento
+  // implicado supera el 70%, no confiar en el originalPrice: publicar a 0%.
+  if (storeId === 'aliexpress' && discountPercent > 70) {
+    originalPrice = salePrice
+    discountPercent = 0
+  }
+
   const store = getStoreInfo(storeId)
   const commission = Math.round(salePrice * (store.commissionRate || 0) * 100) / 100
 
