@@ -61,7 +61,7 @@ async function main() {
     }
 
     const existing = await prod.execute({
-      sql: 'SELECT id FROM pending_candidates WHERE url = ?',
+      sql: 'SELECT * FROM pending_candidates WHERE url = ?',
       args: [url],
     })
 
