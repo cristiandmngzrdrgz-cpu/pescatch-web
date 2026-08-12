@@ -56,13 +56,13 @@
 - [ ] **Alertas de precio por email (usuario)** — Base parcial: flag `deals.priceAlert` + email al admin cuando hay bajadas. Falta: tabla `price_alerts`, endpoint suscripción, modal en ficha, script cron. *(parcial en `refresh-all.ts` + `email.ts`)*
 - [ ] **Newsletter semanal automatizado** — Backend completo; falta `RESEND_API_KEY` en env + cron. Hoy el envío es manual (`npx tsx scripts/send-newsletter.ts`) y no operativo sin API key
 - [ ] Bot de Telegram / canal público
-- [ ] Tests: ampliar cobertura (hoy hay vitest + `src/__tests__/queries.test.ts`, 14 tests)
+- [x] **Tests: ampliar cobertura** — vitest con DB en memoria (`file::memory:`), 98 tests: queries CRUD, API routes (newsletter/contact/vote/comments/deals/posts/admin/sync), candidates, rate-limit, validación zod *(12 Ago 2026)*
 
 ## Fase 5 — Infraestructura (EN CURSO)
 
 - [ ] **Vercel Cron / GH Action** para sync diario — Hoy solo Windows Task Scheduler local (`scripts/setup-scheduler.ps1`: discover/refresh-prices/clean-expired)
 - [ ] **APIs reales de tiendas** — Amazon PA, Decathlon TradeDoubler, AliExpress. Los adapters son stubs (sin API keys configuradas)
-- [ ] Google Sheets range dinámico (reemplazar `A1:R100` hardcodeado)
+- [x] Google Sheets range dinámico — `RANGE = SHEET_NAME` (sin `A1:R100` hardcodeado) + `ensureHeaders` expande grid más allá de la col Z
 - [x] DNS canónico: `pescatch.es` → `www.pescatch.es` (308); `BASE_URL` ya apunta a www
 - [ ] Newsletter cron en Vercel
 
@@ -166,4 +166,5 @@ src/
 - **DB**: `@libsql/client`. Local `data/pescatch.db`; producción Turso (`TURSO_DATABASE_URL`). `db.ts` lee env en tiempo de llamada.
 - **Auth admin**: `ADMIN_SECRET` en `.env` (cookie, 24h). Sin `ADMIN_SECRET` → acceso libre
 - **Seed automático**: `seedDatabase()` en cada query si DB vacía
-- **Verificación**: `npm run build` + `npm run lint` (0 errores, 6 warnings inevitables) + `npm test` (14 tests)
+- **Verificación**: `npm run build` + `npm run lint` (0 errores, 21 warnings) + `npm test` (98 tests)
+- **Tests aislados**: `vitest.config.ts` usa `TURSO_DATABASE_URL=file::memory:` + `setupFiles` limpia tablas transitorias. Nunca tocan `data/pescatch.db`. Cada worker corre con `ADMIN_SECRET=test-admin-secret`.

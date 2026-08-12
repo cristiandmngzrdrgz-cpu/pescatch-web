@@ -96,7 +96,7 @@ PesCatch.es es una web de chollos de material de pesca. El pipeline de datos tie
 ```bash
 npm run build
 npm run lint
-npm test   # vitest (14 tests)
+npm test   # vitest (98 tests, DB en memoria)
 ```
 
 ### Convenciones de código

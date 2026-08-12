@@ -9,7 +9,18 @@ fecha: 2026-07-30
 
 ---
 
-## Lo último que se hizo (2 Ago 2026)
+## Lo último que se hizo (12 Ago 2026)
+
+**Tests ampliados (14 → 98) + deuda técnica + push:**
+- **Tests con DB en memoria**: `vitest.config.ts` usa `TURSO_DATABASE_URL=file::memory:` + `src/__tests__/setup.ts` limpia tablas transitorias entre tests. **Ya no tocan `data/pescatch.db`** (antes los tests escribían en la DB local real).
+- **98 tests en 8 archivos**: `queries.test.ts` (existente), `data-queries.test.ts` (CRUD deals, paginación, búsqueda, brands/categories, multi-store, blog update regression), `misc-lib.test.ts` (pending-candidates, rate-limit, zod), `api-newsletter-contact.test.ts`, `api-vote-comments.test.ts`, `api-deals-posts.test.ts`, `api-admin-sync.test.ts`, `api-admin-login.test.ts`. Cobertura de las 18 API routes (éxito + 400/401/404/429).
+- **`safeEqual` extraído** a `src/lib/auth-utils.ts`; `admin-auth.ts` y `admin/login` ahora leen `ADMIN_SECRET` en tiempo de llamada (consistente con `db.ts`) → testable.
+- **Fix robustez**: `createDeal`/`createPost`/`createProduct` generan id con sufijo aleatorio (`Date.now()` colisionaba en tests rápidos).
+- **Git**: commit `79d5d1e` + push a `origin/master` (incluye los 3 commits previos pendientes: 612a021, fe037ad, 79a95a8). Scripts one-shot `create-kit-post` y `fix-vengance-image` archivados.
+- **ROADMAP.md actualizado**: tests ✅, Google Sheets range dinámico ✅ (ya no hay `A1:R100`), notas técnicas con 98 tests.
+- **Verificado**: `npm test` (98/98), `npm run lint` (0 errores), `npm run build` OK.
+
+### Sesión anterior (2 Ago 2026)
 
 **Revisión completa del proyecto + actualización de ROADMAP/TODO:**
 - **Verificado todo el código** (rutas, admin, SEO, scripts, schema DB, infra) con agente de exploración. Resultado en `ROADMAP.md` (reestructurado con lo real).
@@ -78,9 +89,10 @@ Resumen rápido de cambios:
 scripts/sync.ts → STORE_ADAPTERS, db (sin usar — preexistentes)
 lib/sync/*-adapter.ts (×3) → _ean sin usar (stubs intencionales)
 blog/[slug]/page.tsx → 1 <img> en dangerouslySetInnerHTML (no hay alternativa)
++ varios unused imports preexistentes (product-card, deals/[slug], query-cache, opengraph-image)
 ```
 
-**6 warnings, todos inevitables.** No introducir nuevos. No reintentar "arreglar" estos 6.
+**21 warnings, todos inevitables/preexistentes.** No introducir nuevos. No reintentar "arreglar" estos 21.
 
 ---
 
@@ -104,8 +116,7 @@ blog/[slug]/page.tsx → 1 <img> en dangerouslySetInnerHTML (no hay alternativa)
 
 - **sync.ts**: `STORE_ADAPTERS` y `db` sin usar (pre-existentes, no tocar)
 - **Seed data**: EANs vacíos e imágenes de picsum.photos
-- **A1:R100**: hardcodeado en Google Sheets client — trunca a 18 columnas y 100 filas
-- **Tests**: hay vitest (`npm test`, 14 tests). Cobertura mínima — ampliar con API routes.
+- **Tests**: vitest (`npm test`, **98 tests**, DB en memoria aislada). Falta cobertura de SEO schemas y páginas server.
 - **Sheet con EANs de 12 dígitos**: `Carrete Shimano Stradic FL 2500` y `Carrete Penn Spinfisher VI 5500` (filas F5/F8) fallan validación en cada sync — corregir EAN en el Sheet
 - **Store adapters**: amazon/decathlon/aliexpress son stubs sin API keys reales
 - **Newsletter**: sin envío automatizado (solo `scripts/send-newsletter.ts` manual) y sin `RESEND_API_KEY` configurada → no operativo
@@ -119,9 +130,9 @@ blog/[slug]/page.tsx → 1 <img> en dangerouslySetInnerHTML (no hay alternativa)
 
 1. **Alertas de precio por email (usuario)** — Tabla `price_alerts`, endpoint, modal en ficha, script cron. Base parcial ya existe (`priceAlert` flag + email admin).
 2. **Newsletter semanal automatizado** — Añadir `RESEND_API_KEY` a env + cron (Vercel Cron o Task Scheduler).
-3. **Commitear trabajo pendiente** — Categorías SEO + scripts de enrich/push + archivo de `_archive/`.
-4. **Tests ampliados** — API routes + queries.
-5. **Vercel Cron / GH Action** — Sync diario automático sin depender del PC local.
+3. **Vercel Cron / GH Action** — Sync diario automático sin depender del PC local.
+4. **Tests SEO** — Schemas JSON-LD y páginas server (blog renderer, categorías).
+5. **Contacto**: notificar al admin por email (hoy solo inserta en tabla).
 
 ---
 
@@ -149,8 +160,8 @@ blog/[slug]/page.tsx → 1 <img> en dangerouslySetInnerHTML (no hay alternativa)
 ```bash
 npm run dev              # Dev server (Turbopack, :3000)
 npm run build            # Build + typecheck
-npm run lint             # ESLint (0 errores, 6 warnings)
-npm test                 # vitest (14 tests)
+npm run lint             # ESLint (0 errores, 21 warnings)
+npm test                 # vitest (98 tests, DB en memoria)
 npm run sync             # Google Sheet → DB local
 npm run sync:prod        # Google Sheet → Turso (producción)
 npm run publish:prod     # Dry-run: drafts → published en Turso (--apply ejecuta)
