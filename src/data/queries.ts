@@ -416,7 +416,7 @@ export async function createProduct(data: Record<string, unknown>): Promise<Prod
   const db = getDb()
   await seedDatabase()
 
-  const id = (data.id as string) || `product_${Date.now()}`
+  const id = (data.id as string) || `product_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
   const now = new Date().toISOString()
 
   const str = (v: unknown, fallback = ''): string => (v as string) || fallback
@@ -531,7 +531,7 @@ export async function createDeal(data: Record<string, unknown>): Promise<Deal> {
   const db = getDb()
   await seedDatabase()
 
-  const id = `deal_${Date.now()}`
+  const id = `deal_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
   const now = new Date().toISOString()
 
   const originalPrice = Number(data.originalPrice) || 0

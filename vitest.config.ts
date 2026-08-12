@@ -11,6 +11,11 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    setupFiles: ['src/__tests__/setup.ts'],
+    env: {
+      TURSO_DATABASE_URL: 'file::memory:',
+      ADMIN_SECRET: 'test-admin-secret',
+    },
     testTimeout: 30000,
   },
 })

@@ -102,7 +102,7 @@ export async function createPost(data: Record<string, unknown>): Promise<BlogPos
   const db = getDb()
   await seedDatabase()
 
-  const id = `post_${Date.now()}`
+  const id = `post_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
   const now = new Date().toISOString()
 
   const str = (v: unknown, fallback = ''): string => (v as string) || fallback
