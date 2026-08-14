@@ -10,6 +10,7 @@ const configs: Record<string, RateLimitConfig> = {
   login:      { windowMs: 15 * 60_000,     maxAttempts: 5  },
   newsletter: { windowMs: 60_000,          maxAttempts: 3  },
   contact:    { windowMs: 60 * 60_000,     maxAttempts: 5  },
+  'price-alerts': { windowMs: 60_000,      maxAttempts: 3  },
   // 1 voto por deal por IP cada 10 minutos (clave incluye el dealId)
   votes:      { windowMs: 10 * 60_000,     maxAttempts: 1  },
 }

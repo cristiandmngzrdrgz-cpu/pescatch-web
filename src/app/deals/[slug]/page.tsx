@@ -53,6 +53,7 @@ import { VoteButtons } from '@/components/deals/vote-buttons'
 import { FavoriteButton } from '@/components/deals/favorites'
 import { DealCtaButton } from '@/components/deals/deal-cta-button'
 import { MobileCtaButton } from '@/components/deals/mobile-cta-button'
+import { PriceAlertButton } from '@/components/deals/price-alert-button'
 import { CATEGORIES, STORES } from '@/types'
 import Link from 'next/link'
 
@@ -67,10 +68,13 @@ function isExpiringSoon(expiresAt?: string): { soon: boolean; daysLeft: number }
 
 export default async function DealDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>
+  searchParams: Promise<{ 'alert-cancelled'?: string }>
 }) {
   const { slug } = await params
+  const { 'alert-cancelled': alertCancelled } = await searchParams
   const deal = await getDealBySlug(slug)
 
   if (!deal) notFound()
@@ -376,6 +380,8 @@ export default async function DealDetailPage({
                 <span>Devolución fácil</span>
               </div>
             </div>
+
+            <PriceAlertButton dealId={deal.id} dealSlug={deal.slug} currentPrice={deal.salePrice} alertCancelled={alertCancelled === 'true'} />
 
             <div className="flex gap-2">
               <ShareButton url={`${BASE_URL}/deals/${deal.slug}`} title={deal.title} />

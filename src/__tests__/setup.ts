@@ -19,6 +19,7 @@ beforeEach(async () => {
     'pending_candidates',
     'scraping_health',
     'price_history',
+    'price_alerts',
   ]
   for (const table of tables) {
     try {

@@ -29,6 +29,13 @@ $Tasks = @(
     Hour = 3
     Minute = 0
   }
+  @{
+    Name = "PesCatch-PriceAlerts"
+    Description = "Envía alertas de precio activadas por usuarios"
+    Script = "scripts/send-price-alerts.ts"
+    Hour = 8
+    Minute = 30
+  }
 )
 
 function Install-Task {

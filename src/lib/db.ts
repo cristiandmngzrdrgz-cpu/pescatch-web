@@ -214,6 +214,18 @@ export async function initSchema() {
     )`,
     'CREATE INDEX IF NOT EXISTS idx_pending_candidates_status ON pending_candidates(status)',
     'CREATE INDEX IF NOT EXISTS idx_pending_candidates_score ON pending_candidates(score)',
+    `CREATE TABLE IF NOT EXISTS price_alerts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT NOT NULL,
+      dealId TEXT NOT NULL,
+      targetPrice REAL NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'active',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      triggered_at TEXT,
+      UNIQUE(email, dealId)
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_price_alerts_status ON price_alerts(status)',
+    'CREATE INDEX IF NOT EXISTS idx_price_alerts_email ON price_alerts(email)',
   ])
 }
 
