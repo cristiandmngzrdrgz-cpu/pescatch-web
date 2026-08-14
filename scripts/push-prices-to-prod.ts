@@ -121,6 +121,13 @@ async function main() {
       const bySlug = await prod.execute({ sql: 'SELECT id FROM deals WHERE slug = ?', args: [slug] })
       prodId = bySlug.rows[0]?.id
     }
+    if (!prodId && localRow.productId) {
+      const byProduct = await prod.execute({
+        sql: 'SELECT id FROM deals WHERE productId = ? AND storeId = ?',
+        args: [String(localRow.productId), String(localRow.storeId)],
+      })
+      prodId = byProduct.rows[0]?.id
+    }
     if (!prodId) {
       notFound++
       continue

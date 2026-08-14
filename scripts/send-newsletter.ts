@@ -48,7 +48,7 @@ async function sendNewsletter() {
   let failed = 0
 
   for (const email of emails) {
-    const unsubscribeUrl = `${BASE_URL}/newsletter/unsubscribe?email=${encodeURIComponent(email)}`
+    const unsubscribeUrl = `${BASE_URL}/api/newsletter/unsubscribe?email=${encodeURIComponent(email)}`
     const html = buildNewsletterHtml(
       deals.map(d => ({
         title: d.title,

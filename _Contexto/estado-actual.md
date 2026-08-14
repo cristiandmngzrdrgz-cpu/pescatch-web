@@ -9,7 +9,24 @@ fecha: 2026-07-30
 
 ---
 
-## Lo último que se hizo (12 Ago 2026)
+## Lo último que se hizo (14 Ago 2026)
+
+**6 chollos AliExpress verificados y publicados con precio real + fix push-prices:**
+- **Verificación de precios AE**: el precio del cache/API es "desde" (sin IVA / mín. de variantes), distinto del real. Verificados los 6 candidatos top con navegador (playwright) en `es.aliexpress.com` → precio real usado como `manualPrice` (precedencia en `run-sync.ts` intacta: `manualPrice ?? api.price`).
+- **Publicados en Turso** (precio real, original verificado, descuento ≤70% por cap anti-falso): KastKing Centron Lite **76,99€**, FUJI Jigging **41,79€**, Sougayilang Surf 3 sec **62,69€**, Goture telescópico **61,99€**, BIUTIFU BIGFISH **56,69€**, Sougayilang 1.8m kit **39,59€**. 3 creados nuevos en Turso, 3 actualizados. `sync` + `sync:prod` → total 40 AE `published` en Turso.
+- **Fix `push-prices:prod`** (`scripts/push-prices-to-prod.ts`): ahora empareja por id → slug → **productId+storeId**. Resuelto el "Deals no encontrados en Turso: 1" (la CAPERLAN Seacoast local y la Turso eran el mismo producto con id/slug de deal divergentes). Aplicados 4 cambios de `shippingCost` pendientes (local 2,99€ → Turso).
+- **Candidatos AE restantes** (~89) rechazados (baratijas/genéricos, precio cache "desde" no fiable). Limpiados todos los scripts temporales de la sesión.
+
+**Alertas de precio por email (usuario) + Resend activado:**
+- **Nuevo**: tabla `price_alerts` (`UNIQUE(email, dealId)`, status `active`/`triggered`/`cancelled`), `src/lib/price-alerts.ts` (`createPriceAlert`, `cancelPriceAlert`, `processPriceAlerts` one-shot), `POST /api/price-alerts` (+ GET de estado) y `GET /api/price-alerts/unsubscribe` (redirige a `/deals/<slug>?alert-cancelled=true`).
+- **Nuevo**: `src/components/deals/price-alert-button.tsx` — botón + modal "Avísame si baja de precio" en la ficha (email + precio objetivo opcional; sin objetivo = cualquier bajada). Integrado en `deals/[slug]/page.tsx`.
+- **Nuevo**: `scripts/send-price-alerts.ts` (`npm run send-price-alerts`) + tarea `PesCatch-PriceAlerts` 08:30 en `setup-scheduler.ps1` (tras el refresh de 08:00).
+- **Rate-limit**: tier `price-alerts` (3/min). **Tests**: 14 nuevos en `api-price-alerts.test.ts` → **112 tests**.
+- **Resend configurado**: `RESEND_API_KEY`/`ADMIN_EMAIL`/`EMAIL_FROM=PesCatch <noreply@pescatch.es>` en `.env`, dominio `pescatch.es` verificado. Email de test enviado y recibido ✅. Newsletter y alertas operativos.
+- **Verificado**: `npm test` (112/112), `npm run lint` (0 errores), `npm run build` OK.
+- **Git**: commit `fd99b52` (12 archivos) + push.
+
+### Sesión anterior (12 Ago 2026)
 
 **Tests ampliados (14 → 98) + deuda técnica + push:**
 - **Tests con DB en memoria**: `vitest.config.ts` usa `TURSO_DATABASE_URL=file::memory:` + `src/__tests__/setup.ts` limpia tablas transitorias entre tests. **Ya no tocan `data/pescatch.db`** (antes los tests escribían en la DB local real).
@@ -116,10 +133,10 @@ blog/[slug]/page.tsx → 1 <img> en dangerouslySetInnerHTML (no hay alternativa)
 
 - **sync.ts**: `STORE_ADAPTERS` y `db` sin usar (pre-existentes, no tocar)
 - **Seed data**: EANs vacíos e imágenes de picsum.photos
-- **Tests**: vitest (`npm test`, **98 tests**, DB en memoria aislada). Falta cobertura de SEO schemas y páginas server.
+- **Tests**: vitest (`npm test`, **112 tests**, DB en memoria aislada). Falta cobertura de SEO schemas y páginas server.
 - **Sheet con EANs de 12 dígitos**: `Carrete Shimano Stradic FL 2500` y `Carrete Penn Spinfisher VI 5500` (filas F5/F8) fallan validación en cada sync — corregir EAN en el Sheet
 - **Store adapters**: amazon/decathlon/aliexpress son stubs sin API keys reales
-- **Newsletter**: sin envío automatizado (solo `scripts/send-newsletter.ts` manual) y sin `RESEND_API_KEY` configurada → no operativo
+- **Newsletter**: sin envío automatizado (solo `scripts/send-newsletter.ts` manual). `RESEND_API_KEY` ya configurada (14 Ago); falta el cron (Vercel Cron o Task Scheduler).
 - **Contacto**: sin rate limiting ni notificación al admin
 - **Marcas index**: sin imágenes de marca (solo texto)
 - **DNS sin www**: redirección pendiente → SEO split
@@ -128,11 +145,10 @@ blog/[slug]/page.tsx → 1 <img> en dangerouslySetInnerHTML (no hay alternativa)
 
 ## Próxima sesión — prioridades sugeridas
 
-1. **Alertas de precio por email (usuario)** — Tabla `price_alerts`, endpoint, modal en ficha, script cron. Base parcial ya existe (`priceAlert` flag + email admin).
-2. **Newsletter semanal automatizado** — Añadir `RESEND_API_KEY` a env + cron (Vercel Cron o Task Scheduler).
-3. **Vercel Cron / GH Action** — Sync diario automático sin depender del PC local.
-4. **Tests SEO** — Schemas JSON-LD y páginas server (blog renderer, categorías).
-5. **Contacto**: notificar al admin por email (hoy solo inserta en tabla).
+1. **Newsletter semanal automatizado** — `RESEND_API_KEY` ya configurada (14 Ago). Falta: cron (Task Scheduler semanal o Vercel Cron) + definir contenido/periodicidad.
+2. **Vercel Cron / GH Action** — Sync diario automático sin depender del PC local (hoy Task Scheduler Windows).
+3. **Tests SEO** — Schemas JSON-LD y páginas server (blog renderer, categorías).
+4. **Contacto**: notificar al admin por email (hoy solo inserta en tabla).
 
 ---
 
@@ -161,13 +177,14 @@ blog/[slug]/page.tsx → 1 <img> en dangerouslySetInnerHTML (no hay alternativa)
 npm run dev              # Dev server (Turbopack, :3000)
 npm run build            # Build + typecheck
 npm run lint             # ESLint (0 errores, 21 warnings)
-npm test                 # vitest (98 tests, DB en memoria)
+npm test                 # vitest (112 tests, DB en memoria)
 npm run sync             # Google Sheet → DB local
 npm run sync:prod        # Google Sheet → Turso (producción)
 npm run publish:prod     # Dry-run: drafts → published en Turso (--apply ejecuta)
 npm run discover:auto    # Búsqueda automática → pending_candidates
 npm run refresh-prices   # Actualizar precios desde tiendas
 npm run newsletter       # Enviar newsletter semanal (manual, requiere RESEND_API_KEY)
+npm run send-price-alerts # Enviar alertas de precio activas (scheduler 08:30)
 npm run clean-expired    # Marcar deals expirados
 npm run match-products   # Linkear deals multi-tienda por similitud
 ```

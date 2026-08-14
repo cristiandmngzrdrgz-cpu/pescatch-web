@@ -53,10 +53,10 @@
 
 ## Fase 4 — Engagement (EN CURSO)
 
-- [ ] **Alertas de precio por email (usuario)** — Base parcial: flag `deals.priceAlert` + email al admin cuando hay bajadas. Falta: tabla `price_alerts`, endpoint suscripción, modal en ficha, script cron. *(parcial en `refresh-all.ts` + `email.ts`)*
-- [ ] **Newsletter semanal automatizado** — Backend completo; falta `RESEND_API_KEY` en env + cron. Hoy el envío es manual (`npx tsx scripts/send-newsletter.ts`) y no operativo sin API key
+- [x] **Alertas de precio por email (usuario)** — Tabla `price_alerts`, endpoint suscripción/cancelación, modal en ficha, `processPriceAlerts()` one-shot, script `send-price-alerts` + scheduler 08:30. 14 tests. *(14 Ago 2026, commit `fd99b52`)*
+- [ ] **Newsletter semanal automatizado** — Backend completo y `RESEND_API_KEY` ya configurada; falta el cron (manual hoy: `npx tsx scripts/send-newsletter.ts`)
 - [ ] Bot de Telegram / canal público
-- [x] **Tests: ampliar cobertura** — vitest con DB en memoria (`file::memory:`), 98 tests: queries CRUD, API routes (newsletter/contact/vote/comments/deals/posts/admin/sync), candidates, rate-limit, validación zod *(12 Ago 2026)*
+- [x] **Tests: ampliar cobertura** — vitest con DB en memoria (`file::memory:`), 112 tests: queries CRUD, API routes (newsletter/contact/vote/comments/deals/posts/admin/sync/price-alerts), candidates, rate-limit, validación zod *(14 Ago 2026)*
 
 ## Fase 5 — Infraestructura (EN CURSO)
 
@@ -78,7 +78,8 @@
 ## Agosto 2026 — Monetización + SEO
 
 - **Monetización completada (A/B/D)**: `trackDealClick` en comparador (`price-comparison.tsx`), auto-cálculo de `commission` en `matcher.ts` (INSERT+UPDATE, `salePrice × commissionRate`), `resolveProductIdFromUrl` en `aliexpress-api.ts` (resuelve `s.click` → PID por redirect, usado por `aliexpress-adapter.ts`). Commit `bd45e59`.
-- **Newsletter**: `.env` documentado con pasos Resend (`RESEND_API_KEY`/`ADMIN_EMAIL`/`EMAIL_FROM` descomentables). Falta la key del usuario.
+- **Newsletter**: `.env` documentado con pasos Resend (`RESEND_API_KEY`/`ADMIN_EMAIL`/`EMAIL_FROM` descomentables). **14 Ago 2026**: `RESEND_API_KEY` activada (dominio `pescatch.es` verificado), email de test enviado con éxito. Newsletter y alertas de precio operativos (falta solo el cron de newsletter).
+- **Alertas de precio por email (usuario)** (14 Ago 2026, `fd99b52`): tabla `price_alerts`, `POST /api/price-alerts` + `GET /api/price-alerts/unsubscribe`, modal "Avísame si baja de precio" en la ficha, `processPriceAlerts()` one-shot con `buildPriceAlertHtml`, script `npm run send-price-alerts` + tarea `PesCatch-PriceAlerts` 08:30. 112 tests.
 - **Blog `mejores-senuelos-spinning-2026`**: "Los mejores señuelos de spinning de 2026" — 7 productos con precio verificado (Amazon/Decathlon/AliExpress) enlazados a deals reales de la web.
 - **CTA de compra global en blog**: cada `<!--PRODUCT_IMG:N-->` renderiza bloque con botón "Comprar · precio" (mejor tienda, `?tag=` en Amazon) + "Ver en PesCatch" + alternativas. Aplica a todos los posts.
 - **Páginas SEO nuevas**: `/top-chollos` (mayores descuentos + más votados) y `/chollos-hoy` (publicados hoy), con JSON-LD CollectionPage/Breadcrumb/FAQ, sitemap y enlaces en navbar/footer.
@@ -166,5 +167,5 @@ src/
 - **DB**: `@libsql/client`. Local `data/pescatch.db`; producción Turso (`TURSO_DATABASE_URL`). `db.ts` lee env en tiempo de llamada.
 - **Auth admin**: `ADMIN_SECRET` en `.env` (cookie, 24h). Sin `ADMIN_SECRET` → acceso libre
 - **Seed automático**: `seedDatabase()` en cada query si DB vacía
-- **Verificación**: `npm run build` + `npm run lint` (0 errores, 21 warnings) + `npm test` (98 tests)
+- **Verificación**: `npm run build` + `npm run lint` (0 errores, 20 warnings) + `npm test` (112 tests)
 - **Tests aislados**: `vitest.config.ts` usa `TURSO_DATABASE_URL=file::memory:` + `setupFiles` limpia tablas transitorias. Nunca tocan `data/pescatch.db`. Cada worker corre con `ADMIN_SECRET=test-admin-secret`.

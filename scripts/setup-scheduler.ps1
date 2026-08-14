@@ -36,6 +36,14 @@ $Tasks = @(
     Hour = 8
     Minute = 30
   }
+  @{
+    Name = "PesCatch-Newsletter"
+    Description = "Envía la newsletter semanal de chollos"
+    Script = "scripts/send-newsletter.ts"
+    Hour = 9
+    Minute = 0
+    DayOfWeek = "Monday"
+  }
 )
 
 function Install-Task {
@@ -43,13 +51,18 @@ function Install-Task {
   $cmdArgs = "Set-Location '$ProjectRoot'; & '$NodeExe' '$TsxCli' $($Task.Script)"
   if ($Task.ScriptArgs) { $cmdArgs += " $($Task.ScriptArgs)" }
   $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command ""$cmdArgs"""
-  $Trigger = New-ScheduledTaskTrigger -Daily -At "$($Task.Hour):$($Task.Minute)"
+  if ($Task.DayOfWeek) {
+    $Trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek $Task.DayOfWeek -At "$($Task.Hour):$($Task.Minute)"
+  } else {
+    $Trigger = New-ScheduledTaskTrigger -Daily -At "$($Task.Hour):$($Task.Minute)"
+  }
   $Settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -DontStopIfGoingOnBatteries
   $Principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
 
   Register-ScheduledTask -TaskName $Task.Name -Action $Action -Trigger $Trigger -Settings $Settings -Principal $Principal -Description $Task.Description -Force
 
-  Write-Host "  ✅ Instalada: $($Task.Name) — $($Task.Hour):$($Task.Minute)"
+  $freq = if ($Task.DayOfWeek) { "$($Task.DayOfWeek)" } else { "diaria" }
+  Write-Host "  ✅ Instalada: $($Task.Name) — $freq $($Task.Hour):$($Task.Minute)"
 }
 
 function Remove-Task {
