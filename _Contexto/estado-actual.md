@@ -134,9 +134,10 @@ blog/[slug]/page.tsx → 1 <img> en dangerouslySetInnerHTML (no hay alternativa)
 - **sync.ts**: `STORE_ADAPTERS` y `db` sin usar (pre-existentes, no tocar)
 - **Seed data**: EANs vacíos e imágenes de picsum.photos
 - **Tests**: vitest (`npm test`, **112 tests**, DB en memoria aislada). Falta cobertura de SEO schemas y páginas server.
-- **Sheet con EANs de 12 dígitos**: `Carrete Shimano Stradic FL 2500` y `Carrete Penn Spinfisher VI 5500` (filas F5/F8) fallan validación en cada sync — corregir EAN en el Sheet
 - **Store adapters**: amazon/decathlon/aliexpress son stubs sin API keys reales
 - **Newsletter**: sin envío automatizado (solo `scripts/send-newsletter.ts` manual). `RESEND_API_KEY` ya configurada (14 Ago); falta el cron (Vercel Cron o Task Scheduler).
+- **Scheduler instalado (14 Ago)**: 5 tareas PesCatch en Task Scheduler (CleanExpired 03:00, DiscoverAuto 06:00, RefreshPrices 08:00 `--apply`, PriceAlerts 08:30, Newsletter lun 09:00) — se requiere PowerShell como administrador para re-instalar.
+- **EANs de 12 dígitos**: resueltos — el fix RAW mode mantiene los leading zeros (`Stradic FL 2500` = `0022255230759`, `Penn Spinfisher VI 5500` = `0031324038523`).
 - **Contacto**: sin rate limiting ni notificación al admin
 - **Marcas index**: sin imágenes de marca (solo texto)
 - **DNS sin www**: redirección pendiente → SEO split
@@ -145,7 +146,7 @@ blog/[slug]/page.tsx → 1 <img> en dangerouslySetInnerHTML (no hay alternativa)
 
 ## Próxima sesión — prioridades sugeridas
 
-1. **Newsletter semanal automatizado** — `RESEND_API_KEY` ya configurada (14 Ago). Falta: cron (Task Scheduler semanal o Vercel Cron) + definir contenido/periodicidad.
+1. **Newsletter semanal automatizado** — `RESEND_API_KEY` ya configurada (14 Ago). El Task Scheduler `PesCatch-Newsletter` (lun 09:00) ya está instalado; queda validar el primer envío real y el contenido.
 2. **Vercel Cron / GH Action** — Sync diario automático sin depender del PC local (hoy Task Scheduler Windows).
 3. **Tests SEO** — Schemas JSON-LD y páginas server (blog renderer, categorías).
 4. **Contacto**: notificar al admin por email (hoy solo inserta en tabla).
