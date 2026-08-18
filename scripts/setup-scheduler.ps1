@@ -44,6 +44,14 @@ $Tasks = @(
     Minute = 0
     DayOfWeek = "Monday"
   }
+  @{
+    Name = "PesCatch-Telegram"
+    Description = "Publica los top chollos en el canal de Telegram"
+    Script = "scripts/send-telegram.ts"
+    Hour = 9
+    Minute = 5
+    DayOfWeek = "Monday"
+  }
 )
 
 function Install-Task {

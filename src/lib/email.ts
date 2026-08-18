@@ -98,6 +98,7 @@ export function buildNewsletterHtml(deals: Array<{
           ${dealsHtml}
           <div style="text-align: center; margin-top: 30px;">
             <a href="${BASE_URL}/search" class="btn">Ver todos los chollos</a>
+            <a href="https://t.me/pescatch" class="btn" style="background: linear-gradient(135deg, #229ED9, #1E7CB9); margin-left: 8px;">Canal de Telegram</a>
           </div>
         </div>
         <div class="footer">
