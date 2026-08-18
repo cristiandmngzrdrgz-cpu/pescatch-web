@@ -9,7 +9,17 @@ fecha: 2026-07-30
 
 ---
 
-## Lo último que se hizo (14 Ago 2026)
+## Lo último que se hizo (18 Ago 2026)
+
+**Telegram operativo + refactor blog + tests SEO (160 tests):**
+- **Bot de Telegram funcionando**: `src/lib/telegram.ts` (`buildTelegramMessage` con HTML válido de la Bot API: solo `<b>`, `<i>`, `<a>`, `<code>`, `<s>`; `sendTelegramMessage`) + `scripts/send-telegram.ts` (`npm run send-telegram`, top 10 chollos por `discountPercent`). Link al canal `t.me/pescatch` en footer y newsletter. Tarea `PesCatch-Telegram` (lun 09:05) añadida a `setup-scheduler.ps1`. **Primer envío real publicado en el canal ✅** (config ya en `.env`). Commit `1f773fb`.
+- **Refactor blog**: lógica de render extraída de `blog/[slug]/page.tsx` → `src/lib/blog-renderer.ts` (`extractProducts`, `extractFAQs`, `extractToc`, `mdToHtml`, `bestStoreUrl`, `BADGE_LABELS/COLORS`) + 13 tests (`blog-renderer.test.ts`). Commit `2cb5d09`.
+- **Tests SEO**: `seo.test.ts` con 48 tests de schemas JSON-LD (Product/Breadcrumb/ItemPage/Review/FAQ/BlogPosting/CollectionPage/SearchResults) + `buildMetadata` + `category-content`. Commit `2cb5d09`.
+- **Refresh AliExpress solo API**: eliminado el fallback con navegador Brave en `price-scraper/index.ts` (AliExpress bloquea con captcha "no soy un robot"); la API de afiliados con gate ±15% es la única vía. Commit `167c635`.
+- **Lint**: 0 errores, **20 warnings** (bajó de 21 al quitar el `slugify` sin usar del refactor). **Tests: 160/160** (12 archivos). Build OK.
+- **Git**: 3 commits + push (`1f773fb`, `2cb5d09`, `167c635`).
+
+### Sesión anterior (14 Ago 2026)
 
 **6 chollos AliExpress verificados y publicados con precio real + fix push-prices:**
 - **Verificación de precios AE**: el precio del cache/API es "desde" (sin IVA / mín. de variantes), distinto del real. Verificados los 6 candidatos top con navegador (playwright) en `es.aliexpress.com` → precio real usado como `manualPrice` (precedencia en `run-sync.ts` intacta: `manualPrice ?? api.price`).
@@ -133,7 +143,7 @@ blog/[slug]/page.tsx → 1 <img> en dangerouslySetInnerHTML (no hay alternativa)
 
 - **sync.ts**: `STORE_ADAPTERS` y `db` sin usar (pre-existentes, no tocar)
 - **Seed data**: EANs vacíos e imágenes de picsum.photos
-- **Tests**: vitest (`npm test`, **112 tests**, DB en memoria aislada). Falta cobertura de SEO schemas y páginas server.
+- **Tests**: vitest (`npm test`, **160 tests**, DB en memoria aislada). Cobertura de queries, API routes, rate-limit, zod, schemas SEO, blog renderer y telegram. Faltan tests de páginas server (categorías).
 - **Store adapters**: amazon/decathlon/aliexpress son stubs sin API keys reales
 - **Newsletter**: sin envío automatizado (solo `scripts/send-newsletter.ts` manual). `RESEND_API_KEY` ya configurada (14 Ago); falta el cron (Vercel Cron o Task Scheduler).
 - **Scheduler instalado (14 Ago)**: 5 tareas PesCatch en Task Scheduler (CleanExpired 03:00, DiscoverAuto 06:00, RefreshPrices 08:00 `--apply`, PriceAlerts 08:30, Newsletter lun 09:00) — se requiere PowerShell como administrador para re-instalar.
@@ -146,9 +156,9 @@ blog/[slug]/page.tsx → 1 <img> en dangerouslySetInnerHTML (no hay alternativa)
 
 ## Próxima sesión — prioridades sugeridas
 
-1. **Newsletter semanal automatizado** — `RESEND_API_KEY` ya configurada (14 Ago). El Task Scheduler `PesCatch-Newsletter` (lun 09:00) ya está instalado; queda validar el primer envío real y el contenido.
+1. **Newsletter semanal automatizado** — `RESEND_API_KEY` configurada (14 Ago), tarea `PesCatch-Newsletter` (lun 09:00) instalada; queda validar el primer envío real y el contenido. (Telegram ya está operativo — 18 Ago.)
 2. **Vercel Cron / GH Action** — Sync diario automático sin depender del PC local (hoy Task Scheduler Windows).
-3. **Tests SEO** — Schemas JSON-LD y páginas server (blog renderer, categorías).
+3. **Tests de páginas server** — Categorías, deals/[slug], sitemap.
 4. **Contacto**: notificar al admin por email (hoy solo inserta en tabla).
 
 ---
@@ -178,13 +188,14 @@ blog/[slug]/page.tsx → 1 <img> en dangerouslySetInnerHTML (no hay alternativa)
 npm run dev              # Dev server (Turbopack, :3000)
 npm run build            # Build + typecheck
 npm run lint             # ESLint (0 errores, 21 warnings)
-npm test                 # vitest (112 tests, DB en memoria)
+npm test                 # vitest (160 tests, DB en memoria)
 npm run sync             # Google Sheet → DB local
 npm run sync:prod        # Google Sheet → Turso (producción)
 npm run publish:prod     # Dry-run: drafts → published en Turso (--apply ejecuta)
 npm run discover:auto    # Búsqueda automática → pending_candidates
 npm run refresh-prices   # Actualizar precios desde tiendas
 npm run newsletter       # Enviar newsletter semanal (manual, requiere RESEND_API_KEY)
+npm run send-telegram    # Publicar top chollos en el canal de Telegram (lun 09:05)
 npm run send-price-alerts # Enviar alertas de precio activas (scheduler 08:30)
 npm run clean-expired    # Marcar deals expirados
 npm run match-products   # Linkear deals multi-tienda por similitud

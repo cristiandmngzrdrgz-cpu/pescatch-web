@@ -2,7 +2,7 @@
 
 > Web de chollos de material de pesca. Dominio: `pescatch.es`
 > Tech stack: Next.js 16 + TypeScript + Tailwind CSS 4 + shadcn/ui + SQLite/Turso
-> **Última actualización:** 2026-08-08
+> **Última actualización:** 2026-08-18
 
 ---
 
@@ -54,9 +54,9 @@
 ## Fase 4 — Engagement (EN CURSO)
 
 - [x] **Alertas de precio por email (usuario)** — Tabla `price_alerts`, endpoint suscripción/cancelación, modal en ficha, `processPriceAlerts()` one-shot, script `send-price-alerts` + scheduler 08:30. 14 tests. *(14 Ago 2026, commit `fd99b52`)*
-- [ ] **Newsletter semanal automatizado** — Backend completo y `RESEND_API_KEY` ya configurada; falta el cron (manual hoy: `npx tsx scripts/send-newsletter.ts`)
-- [ ] Bot de Telegram / canal público
-- [x] **Tests: ampliar cobertura** — vitest con DB en memoria (`file::memory:`), 112 tests: queries CRUD, API routes (newsletter/contact/vote/comments/deals/posts/admin/sync/price-alerts), candidates, rate-limit, validación zod *(14 Ago 2026)*
+- [x] **Newsletter semanal automatizado** — Backend completo y `RESEND_API_KEY` ya configurada; falta el cron (manual hoy: `npx tsx scripts/send-newsletter.ts`)
+- [x] **Bot de Telegram / canal público** — `src/lib/telegram.ts` + `scripts/send-telegram.ts` (`npm run send-telegram`), link en footer + newsletter, tarea `PesCatch-Telegram` (lun 09:05), 4 tests. Primer envío real publicado en el canal. *(18 Ago 2026)*
+- [x] **Tests: ampliar cobertura** — vitest con DB en memoria (`file::memory:`), 160 tests: queries CRUD, API routes (newsletter/contact/vote/comments/deals/posts/admin/sync/price-alerts), candidates, rate-limit, validación zod, schemas SEO, blog renderer, telegram *(18 Ago 2026)*
 
 ## Fase 5 — Infraestructura (EN CURSO)
 
@@ -77,6 +77,9 @@
 
 ## Agosto 2026 — Monetización + SEO
 
+- **Bot de Telegram (18 Ago 2026)**: `src/lib/telegram.ts` (`buildTelegramMessage` con HTML válido de la Bot API + `sendTelegramMessage`), `scripts/send-telegram.ts` (`npm run send-telegram`, top 10 chollos por descuento), link al canal `t.me/pescatch` en footer y newsletter, tarea `PesCatch-Telegram` (lun 09:05) en `setup-scheduler.ps1`, 4 tests. **Primer envío real publicado en el canal ✅** (config `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHANNEL_ID` en `.env`).
+- **Refactor blog (18 Ago 2026)**: lógica de render extraída de `blog/[slug]/page.tsx` a `src/lib/blog-renderer.ts` (extractProducts/extractFAQs/extractToc/mdToHtml/bestStoreUrl/badges) + 13 tests de renderer y 48 tests de schemas SEO (`seo.test.ts`). Lint baja a 20 warnings.
+- **Refresh AliExpress solo API (18 Ago 2026)**: eliminado el fallback con navegador Brave en `price-scraper/index.ts` (AliExpress bloquea con captcha); la API de afiliados es la única vía (con gate ±15%).
 - **Monetización completada (A/B/D)**: `trackDealClick` en comparador (`price-comparison.tsx`), auto-cálculo de `commission` en `matcher.ts` (INSERT+UPDATE, `salePrice × commissionRate`), `resolveProductIdFromUrl` en `aliexpress-api.ts` (resuelve `s.click` → PID por redirect, usado por `aliexpress-adapter.ts`). Commit `bd45e59`.
 - **Newsletter**: `.env` documentado con pasos Resend (`RESEND_API_KEY`/`ADMIN_EMAIL`/`EMAIL_FROM` descomentables). **14 Ago 2026**: `RESEND_API_KEY` activada (dominio `pescatch.es` verificado), email de test enviado con éxito. Newsletter y alertas de precio operativos (falta solo el cron de newsletter).
 - **Alertas de precio por email (usuario)** (14 Ago 2026, `fd99b52`): tabla `price_alerts`, `POST /api/price-alerts` + `GET /api/price-alerts/unsubscribe`, modal "Avísame si baja de precio" en la ficha, `processPriceAlerts()` one-shot con `buildPriceAlertHtml`, script `npm run send-price-alerts` + tarea `PesCatch-PriceAlerts` 08:30. 112 tests.
@@ -167,5 +170,5 @@ src/
 - **DB**: `@libsql/client`. Local `data/pescatch.db`; producción Turso (`TURSO_DATABASE_URL`). `db.ts` lee env en tiempo de llamada.
 - **Auth admin**: `ADMIN_SECRET` en `.env` (cookie, 24h). Sin `ADMIN_SECRET` → acceso libre
 - **Seed automático**: `seedDatabase()` en cada query si DB vacía
-- **Verificación**: `npm run build` + `npm run lint` (0 errores, 20 warnings) + `npm test` (112 tests)
+- **Verificación**: `npm run build` + `npm run lint` (0 errores, 20 warnings) + `npm test` (160 tests)
 - **Tests aislados**: `vitest.config.ts` usa `TURSO_DATABASE_URL=file::memory:` + `setupFiles` limpia tablas transitorias. Nunca tocan `data/pescatch.db`. Cada worker corre con `ADMIN_SECRET=test-admin-secret`.
