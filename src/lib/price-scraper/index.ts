@@ -2,13 +2,12 @@ import type { ScrapedPrice, PriceScrapeResult } from './types'
 import { RateLimiter } from './rate-limiter'
 import { scrapeAmazon } from './amazon'
 import { scrapeDecathlon } from './decathlon'
-import { scrapeAliExpress, scrapeAliExpressApi } from './aliexpress'
+import { scrapeAliExpressApi } from './aliexpress'
 import { extractAsin } from '@/lib/amazon-affiliate'
 import { withRetry } from '@/lib/scraping-utils'
 
 const amazonLimiter = new RateLimiter(4000)
 const decathlonLimiter = new RateLimiter(3000)
-const aliexpressLimiter = new RateLimiter(5000)
 
 export async function scrapeStore(
   url: string,
@@ -67,12 +66,13 @@ export async function scrapeStore(
     }
 
     case 'aliexpress': {
-      // Vía 1: API de afiliados (sin navegador ni captcha). Solo disponible si
-      // hay productId resoluble (directo o s.click → redirect). La API da a
-      // veces un precio "desde" (mín. de variantes/sin IVA) distinto del real;
-      // para no corromper precios publicados, se aplica un gate: si el precio
-      // de la API difiere >15% del actual en BD, se descarta (cuenta como
-      // failed y no toca nada).
+      // API de afiliados (sin navegador ni captcha). Es la única vía de refresh:
+      // el fallback con navegador Brave no sirve porque AliExpress bloquea con
+      // captcha "no soy un robot". Solo disponible si hay productId resoluble
+      // (directo o s.click → redirect). La API da a veces un precio "desde"
+      // (mín. de variantes/sin IVA) distinto del real; para no corromper precios
+      // publicados se aplica un gate: si el precio de la API difiere >15% del
+      // actual en BD, se descarta (cuenta como failed y no toca nada).
       const apiResult = await scrapeAliExpressApi(url)
       if (apiResult) {
         const dev = currentPrice
@@ -88,28 +88,7 @@ export async function scrapeStore(
         }
       }
 
-      // Vía 2: navegador Brave (fallback). Si no hay API keys o el pid no se
-      // resuelve, se intenta el scrape real.
-      const result = await withRetry(
-        async () => {
-          await aliexpressLimiter.wait()
-          const r = await scrapeAliExpress(url)
-          if (!r) throw new Error('AliExpress scrape returned no result')
-          return r
-        },
-        {
-          maxRetries: 3,
-          initialDelayMs: 3000,
-          onRetry: (attempt, delay, error) => {
-            console.log(`  🔄 AliExpress retry ${attempt}/3 (${delay}ms): ${error.message}`)
-          },
-        }
-      )
-
-      if (!result.success) {
-        return { success: false, storeId, error: result.error?.message ?? 'Unknown error' }
-      }
-      return { success: true, storeId, price: result.data }
+      return { success: false, storeId, error: 'AliExpress API returned no result' }
     }
 
     default:
