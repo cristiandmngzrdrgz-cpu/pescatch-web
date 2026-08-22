@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { sendEmail, isEmailConfigured, buildWelcomeHtml } from '@/lib/email'
+import { getDeals } from '@/data/queries'
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get('x-forwarded-for') || 'unknown'
@@ -24,6 +26,24 @@ export async function POST(request: NextRequest) {
       sql: 'INSERT INTO subscribers (email) VALUES (?)',
       args: [trimmed],
     })
+
+    // Send welcome email (fire and forget)
+    if (isEmailConfigured()) {
+      getDeals({ sortBy: 'discount' }).then(async (topDeals) => {
+        const welcomeDeals = topDeals.slice(0, 3).map(d => ({
+          title: d.title,
+          salePrice: d.salePrice,
+          originalPrice: d.originalPrice,
+          discountPercent: d.discountPercent,
+          storeName: d.store.name,
+          slug: d.slug,
+          imageUrl: d.imageUrl || undefined,
+        }))
+        const guideUrl = 'https://www.pescatch.es/blog/como-elegir-equipo-pesca'
+        const html = buildWelcomeHtml(welcomeDeals, guideUrl)
+        await sendEmail(trimmed, '🎣 ¡Bienvenido a PesCatch! Top chollos + Guía gratis', html)
+      }).catch(console.error)
+    }
 
     return NextResponse.json({ success: true, message: 'Suscripción exitosa' }, { status: 201 })
   } catch (err: unknown) {

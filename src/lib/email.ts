@@ -177,3 +177,71 @@ export function buildAdminNotificationHtml(title: string, body: string): string 
     </html>
   `
 }
+
+export function buildWelcomeHtml(deals: Array<{
+  title: string
+  salePrice: number
+  originalPrice: number
+  discountPercent: number
+  storeName: string
+  slug: string
+  imageUrl?: string
+}>, guideUrl: string): string {
+  const BASE_URL = 'https://www.pescatch.es'
+  const dealsHtml = deals.slice(0, 3).map(deal => `
+    <div class="deal-card">
+      <p class="deal-title">${deal.title}</p>
+      <div style="display: flex; align-items: center; gap: 8px; margin: 8px 0;">
+        <span class="deal-price">${deal.salePrice.toFixed(2).replace('.', ',')}€</span>
+        <span class="deal-original">${deal.originalPrice.toFixed(2).replace('.', ',')}€</span>
+        <span class="deal-discount">-${deal.discountPercent}%</span>
+      </div>
+      <p style="color: #8BA3C7; font-size: 13px; margin: 4px 0;">${deal.storeName}</p>
+      <a href="${BASE_URL}/deals/${deal.slug}" class="btn" style="margin-top: 8px;">Ver chollo</a>
+    </div>
+  `).join('')
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>${emailStyles()}</head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🎣 ¡Bienvenido a PesCatch!</h1>
+          <p>Los mejores chollos de pesca, directos a tu bandeja de entrada</p>
+        </div>
+        <div class="content">
+          <p style="font-size: 16px; line-height: 1.7; color: #E8F0FE;">
+            Gracias por suscribirte. Cada semana te enviaremos los mejores descuentos en material de pesca 
+            que encontramos en Amazon y AliExpress, verificados por nuestro equipo.
+          </p>
+          
+          <h2 style="color: #E8F0FE; margin-top: 30px; margin-bottom: 20px;">🔥 Top chollos de bienvenida</h2>
+          ${dealsHtml}
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${guideUrl}" class="btn" style="background: linear-gradient(135deg, #FFB800, #FF8C00);">
+              📖 Guía: Cómo elegir tu equipo de pesca
+            </a>
+          </div>
+          
+          <div style="text-align: center; margin: 20px 0; padding: 20px; background: rgba(0,212,255,0.1); border-radius: 12px; border: 1px solid rgba(0,212,255,0.3);">
+            <p style="color: #00D4FF; font-weight: 600; margin: 0 0 10px;">📱 Únete a nuestro canal de Telegram</p>
+            <p style="color: #8BA3C7; font-size: 14px; margin: 0;">Recibe alertas instantáneas de chollos flash</p>
+            <a href="https://t.me/pescatch" class="btn" style="margin-top: 10px; background: linear-gradient(135deg, #229ED9, #1E7CB9);">Entrar al canal</a>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="${BASE_URL}/search" class="btn">Ver todos los chollos</a>
+          </div>
+        </div>
+        <div class="footer">
+          <p>Recibes este email porque te suscribiste a PesCatch.</p>
+          <p><a href="${BASE_URL}/api/newsletter/unsubscribe?email={{email}}">Cancelar suscripción</a></p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}

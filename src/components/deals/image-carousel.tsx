@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from 'react'
 import Image from 'next/image'
-import { ChevronLeft, ChevronRight, Fish } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Fish, CheckCircle2 } from 'lucide-react'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 interface ImageCarouselProps {
@@ -10,9 +10,10 @@ interface ImageCarouselProps {
   title: string
   badge?: ReactNode
   stockBadge?: ReactNode
+  verifiedBadge?: boolean
 }
 
-export function ImageCarousel({ images, title, badge, stockBadge }: ImageCarouselProps) {
+export function ImageCarousel({ images, title, badge, stockBadge, verifiedBadge }: ImageCarouselProps) {
   const validImages = images.filter(Boolean)
   const [activeIndex, setActiveIndex] = useState(0)
 
@@ -44,6 +45,20 @@ export function ImageCarousel({ images, title, badge, stockBadge }: ImageCarouse
 
         {badge && <div className="absolute top-4 left-4">{badge}</div>}
         {stockBadge && <div className="absolute top-4 right-4">{stockBadge}</div>}
+
+        {verifiedBadge && (
+          <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
+            style={{
+              background: 'rgba(38,222,129,0.9)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(38,222,129,0.5)',
+              color: '#0B1120',
+              boxShadow: '0 0 15px rgba(38,222,129,0.3)',
+            }}>
+            <CheckCircle2 className="h-3 w-3" />
+            Precio verificado
+          </div>
+        )}
 
         {validImages.length > 1 && (
           <>

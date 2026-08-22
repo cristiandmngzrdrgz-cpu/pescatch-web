@@ -226,6 +226,19 @@ export async function initSchema() {
     )`,
     'CREATE INDEX IF NOT EXISTS idx_price_alerts_status ON price_alerts(status)',
     'CREATE INDEX IF NOT EXISTS idx_price_alerts_email ON price_alerts(email)',
+    `CREATE TABLE IF NOT EXISTS click_tracking (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      clickId TEXT NOT NULL UNIQUE,
+      dealId TEXT NOT NULL,
+      storeId TEXT NOT NULL,
+      timestamp TEXT NOT NULL DEFAULT (datetime('now')),
+      userAgent TEXT,
+      referrer TEXT,
+      ip TEXT
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_click_tracking_deal ON click_tracking(dealId)',
+    'CREATE INDEX IF NOT EXISTS idx_click_tracking_clickId ON click_tracking(clickId)',
+    'CREATE INDEX IF NOT EXISTS idx_click_tracking_timestamp ON click_tracking(timestamp)',
   ])
 }
 

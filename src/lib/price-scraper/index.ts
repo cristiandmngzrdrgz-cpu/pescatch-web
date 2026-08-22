@@ -120,8 +120,10 @@ export async function updateDealInDb(
   const diff = Math.abs(newPrice - currentPrice) / (currentPrice || 1)
   const hasBigChange = diff > PRICE_SANITY_THRESHOLD
 
+  // Clamp: si el precio sube por encima del original guardado, el descuento no
+  // puede ser negativo. El original pasa a ser el precio nuevo (0% descuento).
   const originalPrice = currentOriginalPrice > 0
-    ? currentOriginalPrice
+    ? Math.max(currentOriginalPrice, newPrice)
     : Math.round(newPrice * 1.3 * 100) / 100
   const discountPercent = Math.round(((originalPrice - newPrice) / (originalPrice || 1)) * 100)
 

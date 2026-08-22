@@ -7,10 +7,17 @@ const RANGE = SHEET_NAME
 
 let _sheets: sheets_v4.Resource$Spreadsheets$Values | null = null
 
+function getCredentials() {
+  if (process.env.GOOGLE_SHEETS_CREDENTIALS) {
+    return JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS)
+  }
+  return path.resolve('.env.google-sheets.json')
+}
+
 async function getClient() {
   if (_sheets) return _sheets
   const auth = new google.auth.GoogleAuth({
-    keyFile: path.resolve('.env.google-sheets.json'),
+    credentials: getCredentials(),
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   })
   const client = google.sheets({ version: 'v4', auth })
@@ -101,7 +108,7 @@ export async function ensureHeaders(headers: string[]) {
 
 async function ensureGridColumns(minColumns: number) {
   const auth = new google.auth.GoogleAuth({
-    keyFile: path.resolve('.env.google-sheets.json'),
+    credentials: getCredentials(),
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   })
   const sheets = google.sheets({ version: 'v4', auth })

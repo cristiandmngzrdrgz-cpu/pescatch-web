@@ -10,7 +10,7 @@ export function extractAsin(urlOrAsin: string): string | null {
   return match ? match[1].toUpperCase() : null
 }
 
-export function buildAmazonUrl(urlOrAsin: string, variantAsin?: string): string {
+export function buildAmazonUrl(urlOrAsin: string, variantAsin?: string, subId?: string): string {
   if (!urlOrAsin) return urlOrAsin
 
   try {
@@ -24,7 +24,9 @@ export function buildAmazonUrl(urlOrAsin: string, variantAsin?: string): string 
       parsed = new URL(`https://www.amazon.es/dp/${urlOrAsin.trim().toUpperCase()}`)
     } else {
       const separator = urlOrAsin.includes('?') ? '&' : '?'
-      return `${urlOrAsin}${separator}tag=${TAG}`
+      const params = new URLSearchParams({ tag: TAG })
+      if (subId) params.set('subId', subId)
+      return `${urlOrAsin}${separator}${params.toString()}`
     }
 
     const isProductUrl = /\/dp\/[A-Z0-9]{10}/i.test(parsed.pathname)
@@ -37,7 +39,7 @@ export function buildAmazonUrl(urlOrAsin: string, variantAsin?: string): string 
 
       // Limpiar parámetros de tracking basura que Amazon añade a veces
       // (ref, linkCode, camp, creative, etc.) — solo conservar th, psc, customId y tag
-      const keep = new Set(['th', 'psc', 'customId', 'tag', 'color', 'size'])
+      const keep = new Set(['th', 'psc', 'customId', 'tag', 'color', 'size', 'subId'])
       for (const key of [...parsed.searchParams.keys()]) {
         if (!keep.has(key)) parsed.searchParams.delete(key)
       }
@@ -45,11 +47,14 @@ export function buildAmazonUrl(urlOrAsin: string, variantAsin?: string): string 
 
     // Siempre sobreescribir el tag con el nuestro
     parsed.searchParams.set('tag', TAG)
+    if (subId) parsed.searchParams.set('subId', subId)
 
     return parsed.toString()
   } catch {
     const separator = urlOrAsin.includes('?') ? '&' : '?'
-    return `${urlOrAsin}${separator}tag=${TAG}`
+    const params = new URLSearchParams({ tag: TAG })
+    if (subId) params.set('subId', subId)
+    return `${urlOrAsin}${separator}${params.toString()}`
   }
 }
 

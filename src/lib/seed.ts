@@ -1,6 +1,7 @@
 import { getDb, initSchema, migrateSchema } from './db'
 import { sampleDeals } from '@/data/deals'
 import { migrateExistingDealsToProducts } from '@/data/queries'
+import { seedExtraPosts } from './seed-posts-extra'
 
 let seeded = false
 
@@ -144,6 +145,7 @@ async function seedPost(slug: string, title: string, excerpt: string, category: 
 }
 
 async function seedBlogPosts() {
+  await seedComoElegirEquipoPost()
   await seedPost(
     'mejores-canas-spinning-2026',
     'Las 5 mejores cañas de spinning de 2026: comparativa y guía de compra',
@@ -300,6 +302,7 @@ async function seedBlogPosts() {
   await seedKitsPost()
   await seedSurfcastingPost()
   await seedCarretesPost()
+  await seedExtraPosts()
 }
 
 async function seedSurfcastingPost() {
@@ -646,4 +649,207 @@ async function seedKitsPost() {
     productsData,
     ['B0BK5XR9QF', 'B0047OQI8I', 'B0092PV8MS', 'B0B4QNRP49', 'B077JM564T'],
   )
+}
+
+async function seedComoElegirEquipoPost() {
+  const slug = 'como-elegir-equipo-pesca'
+  const db = getDb()
+
+  const existing = await db.execute({ sql: 'SELECT id FROM posts WHERE slug = ?', args: [slug] })
+  if (existing.rows.length > 0) return
+
+  const now = new Date().toISOString()
+  const markdownContent = `Empezar a pescar puede ser abrumador. Hay cientos de cañas, carretes, líneas y accesorios, y cada uno te dice que lo suyo es lo mejor. Te lo digo claro: no necesitas el mejor material, necesitas el **adecuado para ti**.
+
+## La regla de oro: define TU pesca antes de comprar
+
+Antes de mirar una sola caña, responde a esto:
+- **¿Dónde vas a pescar?** (río, embalse, mar, playa, roca, kayak)
+- **¿Qué especies buscas?** (lubina, trucha, carpa, black bass, dorada, lo que pille)
+- **¿Qué presupuesto tienes real?** (no el ideal, el que puedes gastar hoy)
+- **¿Cuántas veces al mes vas a salir?** (si es 1-2, no te compres gama alta)
+
+Tu respuesta a esto decide el 80% de la compra. El 20% restante son marcas y modelos.
+
+---
+
+## Caña: la herramienta principal
+
+### Acción y potencia — no te líes con los nombres
+
+| Acción | Qué significa | Para qué sirve |
+|--------|---------------|----------------|
+| **Rápida (Fast)** | Se curva solo la punta | Lances largos, señuelos, clavada seca |
+| **Media (Moderate)** | Se curva hasta la mitad | Versátil, perdona errores, buena para cebo vivo |
+| **Lenta (Slow/Parabolic)** | Se curva casi entera | Lucha suave, carpfishing, peces de boca blanda |
+
+**Potencia** = peso que lanza (ej. 10-30g, 20-60g). Elige según el peso de tus señuelos/cebos + 20% de margen.
+
+### Longitud
+- **2.10 - 2.40m**: embarcación, kayak, ríos estrechos
+- **2.40 - 2.70m**: spinning general, orilla, versátil
+- **2.70 - 3.30m**: surfcasting, lances largos, ríos anchos
+- **3.90 - 4.50m**: surfcasting puro, competición
+
+### Material
+- **Carbono alto módulo (30T-40T+)**: ligero, sensible, caro, frágil a golpes
+- **Carbono medio (24T-30T)**: mejor equilibrio calidad-precio, aguanta más
+- **Compuestos/fibra de vidrio**: indestructibles, pesados, poca sensibilidad — para empezar o roca dura
+
+> **Mi consejo**: Una caña de carbono 24T-30T, acción media-rápida, 2.40-2.70m, potencia 10-30g o 15-40g te cubre el 90% de situaciones en España.
+
+---
+
+## Carrete: el motor
+
+### Tamaño (Shimano/Daiwa)
+| Tamaño | Uso típico |
+|--------|------------|
+| **1000-2500** | Spinning ligero, trucha, black bass, perca |
+| **3000-4000** | Spinning medio, lubina, spinning costa, eging |
+| **5000-6000** | Surfcasting ligero, jigging lento, carpfishing |
+| **8000-10000+** | Surfcasting pesado, gran altura, tropical |
+
+### Ratio de recogida
+- **Alto (6.2:1 - 7.0:1)**: spinning rápido, señuelos que hay que mover deprisa
+- **Medio (5.0:1 - 5.8:1)**: todo terreno, lo más versátil
+- **Bajo (4.1:1 - 4.9:1)**: fuerza, carpfishing, pesca de fondo**
+
+### Freno
+- **Delantero**: más preciso, sellado, estándar en gama media-alta
+- **Trasero**: más cómodo para luchar con el pez, típico en gama de entrada
+
+> **Mi consejo**: Un 3000-4000 con ratio 5.2:1-5.8:1, freno delantero sellado, 5-6 rodamientos. Shimano Nasci, Daiwa Legalis, Mitchell Full Runner — imposible equivocarse.
+
+---
+
+## Línea: el eslabón más débil (y el más importante)
+
+### Trenzado (PE) — para spinning y lances
+- **4 hilos**: más barato, más diámetro, más resistencia a la abrasión
+- **8 hilos**: más redondo, más liso, lances más largos, más caro
+- **Diámetro real**: fíjate en el **diámetro en mm**, no en la "lb" de la caja (inflan números)
+
+**Regla práctica**: PE 0.8-1.2 (aprox 12-20lb) para spinning medio; PE 1.5-2.0 para surfcasting/jigging.
+
+### Fluorocarbono — para bajos de línea
+- Invisible bajo el agua, resistente a la abrasión, se hunde
+- **0.20-0.30mm** para spinning/light
+- **0.35-0.50mm** para surfcasting/pez grande
+
+### Nylon — para rellenar carrete o pesca a fondo
+- Elástico, barato, buena amortiguación en la clavada
+- Úsalo de backing (base) bajo el trenzado o para montajes de fondo
+
+---
+
+## Señuelos y cebos: empieza simple
+
+No compres 20 señuelos. Compra **3-4 que funcionen** y aprende a moverlos.
+
+| Especie | Señuelos infalibles |
+|---------|---------------------|
+| **Lubina/Spinning mar** | Paseante 9-12cm (Bone, Ima Sasuke), Vinilo 3-4" (Shad, Keitech), Jig 10-20g |
+| **Black bass** | Vinilo Texas/Rig 4-5", Crankbait squarebill, Spinnerbait, Topwater popper |
+| **Trucha** | Cuchara ondulante 3-5g, Minnow 5-7cm, Vinilo 2-3" |
+| **Carpfishing** | Boilies 15-20mm, Maíz, Pellets, Tigernuts |
+| **Surfcasting** | Gusano/coreano, Tita, Americana, Cangrejo, Cebos duros (mejillón, sardina) |
+
+---
+
+## Accesorios que SÍ necesitas (y los que no)
+
+### Imprescindibles
+- **Alicates de pesca** (corta anzuelos, quita anzuelos, corta línea) — 15-25€
+- **Tijeras de trenzado** (cortan limpio, no desflecán) — 8-15€
+- **Cinta métrica / regla** (para tallas legales) — 5€
+- **Gafas polarizadas** (ves el fondo, proteges ojos) — 30-80€
+- **Bolsa/estuche seco** (móvil, llaves, carné) — 15-30€
+
+### Según tu pesca
+- **Portacañas** (playa/roca) — 20-50€
+- **Cubo plegable + aireador** (cebo vivo) — 15-25€
+- **Frontal LED** (pesca nocturna) — 20-40€
+- **Guantes de filetear / manipular pez** — 10-20€
+
+### Prescindibles al principio
+- Detectores de picada electrónicos (carpfishing)
+- Sonda portátil (si pescas de orilla)
+- Maletín de señuelos gigante
+- Ropa técnica de marca (una camiseta que se seque rápido vale)
+
+---
+
+## Mi estrategia si empiezo hoy con 300€
+
+| Concepto | Modelo ejemplo | Precio aprox |
+|----------|----------------|--------------|
+| Caña spinning 2.40m 10-30g | Daiwa Legalis Seabass / Ninja Spinning | 55-75€ |
+| Carrete 3000 freno delantero | Shimano Nasci 3000 / Daiwa Legalis 3000 | 70-90€ |
+| Trenzado PE 1.0 (150m) | Daiwa J-Braid X8 / Shimano Kairiki | 20-30€ |
+| Fluorocarbono 0.25mm (50m) | Seaguar / Berkley Vanish | 15-20€ |
+| Señuelos (3-4 uds) | Paseante, vinilo, jig, crankbait | 25-35€ |
+| Alicates + tijeras + gafas polarizadas | Genéricos decentes | 40-60€ |
+| **TOTAL** | | **~225-310€** |
+
+Te sobra para cebo, combustible y una cerveza tras la jornada.
+
+---
+
+## Dónde comprar sin que te timen
+
+1. **Decathlon** (marcas Caperlan, Daiwa, Shimano entrada): mejor garantía y devolución, precios ajustados
+2. **Tiendas especializadas online** (PescaFishing, Waveinn, BassPro, tiendas locales): asesoran, tienen stock real
+3. **Amazon**: solo si sabes EXACTAMENTE el modelo (busca el código EAN/ASIN), revisa vendedor
+4. **Segunda mano** (Wallapop, Milanuncios, foros): cañas y carretes seminuevos a 40-60% — revisa en mano
+
+> ⚠️ **Evita**: "packs regalo" de supermercado, marcas blancas sin soporte, ofertas "demasiado buenas" en redes sociales.
+
+---
+
+## Checklist antes de salir
+
+- [ ] Licencia de pesca en vigor (obligatoria en España, varía por CCAA)
+- [ ] Conoces tallas mínimas y vedas de tu zona
+- [ ] Nudo de unión trenzado-fluorocarbono dominado (FG, Alberto, Double Uni)
+- [ ] Nudo de anzuelo/Señuelo dominado (Palomar, Clinch mejorado, Loop)
+- [ ] Botiquín pequeño + crema solar + agua
+- [ ] Dices a alguien dónde vas y cuándo vuelves
+
+---
+
+## Conclusión: el pez no sabe lo que cuesta tu caña
+
+He pescado lubinas de 3kg con una caña de 60€ y un carrete de 80€. He visto a gente con 1000€ en material volver a casa en blanco.
+
+El material te da **comodidad, durabilidad y confianza**. La **técnica, el conocimiento del spot y la constancia** pescan los peces.
+
+Empieza simple. Aprende a leer el agua. Disfruta el proceso. El material bueno llegará solo cuando sepas por qué lo necesitas.
+
+---
+
+¿Tienes dudas sobre tu caso concreto? Déjame un comentario o escríbeme al canal de Telegram [t.me/pescatch](https://t.me/pescatch) y te echo una mano.
+`
+
+  const fullContent = markdownContent + `\n\n<!-- PRODUCTS_DATA: [] -->`
+
+  await db.execute({
+    sql: `INSERT OR IGNORE INTO posts (id, title, slug, excerpt, content, featuredImage, author, category, tags, relatedAsins, hidden, status, publishedAt, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      `post_${Date.now()}_${slug}`,
+      'Cómo elegir tu equipo de pesca: guía honesta para no tirar el dinero',
+      slug,
+      'Empezar a pescar no requiere gastar una fortuna. Te explico qué necesitas realmente según DÓNDE y QUÉ pescas, con rangos de precio reales y modelos concretos que funcionan. Sin tecnicismos vacíos, como se lo diría a un amigo.',
+      fullContent,
+      '',
+      'PesCatch',
+      'Guías',
+      JSON.stringify(['equipo pesca', 'principiantes', 'guia compra', 'cañas', 'carretes', 'señuelos']),
+      JSON.stringify([]),
+      0, 'published', now, now, now,
+    ],
+  })
+
+  console.log(`✅ Blog post seeded: ${slug}`)
 }

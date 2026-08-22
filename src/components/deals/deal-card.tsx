@@ -4,11 +4,29 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { formatPrice } from '@/lib/utils'
 import { buildAmazonUrl } from '@/lib/amazon-affiliate'
-import { Clock, Store, Truck, ChevronUp, Fish, Star, ShoppingCart } from 'lucide-react'
+import { trackDealClick } from '@/lib/analytics'
+import { Clock, Store, Truck, ChevronUp, Fish, Star, ShoppingCart, ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { CATEGORIES, STORES } from '@/types'
 import type { Deal } from '@/types'
 import { useState } from 'react'
+
+function generateClickId(): string {
+  return `click_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+}
+
+async function trackClickLocal(clickId: string, dealId: string, storeId: string) {
+  try {
+    await fetch('/api/track-click', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clickId, dealId, storeId }),
+      keepalive: true,
+    })
+  } catch {
+    // Silently fail
+  }
+}
 
 interface DealCardProps {
   deal: Deal
@@ -28,6 +46,18 @@ export function DealCard({ deal, bestPriceStore, storeCount }: DealCardProps) {
   const hasImage = Boolean(deal.imageUrl) && !imgError
   const storeMeta = STORES.find(s => s.id === deal.store.id || s.name === deal.store.name)
   const label = storeMeta?.name || storeLabel[deal.store.id] || deal.store.name
+
+  const clickId = generateClickId()
+  const baseHref = deal.store.id === 'amazon' ? buildAmazonUrl(deal.affiliateUrl) : deal.affiliateUrl
+  const trackedHref = deal.store.id === 'amazon' && !baseHref.includes('subId=')
+    ? `${baseHref}${baseHref.includes('?') ? '&' : '?'}subId=${clickId}`
+    : baseHref
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    trackDealClick(deal.id, deal.store.name, deal.category)
+    trackClickLocal(clickId, deal.id, deal.store.id)
+  }
 
   return (
     <article
@@ -58,6 +88,19 @@ export function DealCard({ deal, bestPriceStore, storeCount }: DealCardProps) {
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
             style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.2), transparent 40%)' }} />
           <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
+            {/* Verified badge - show for AliExpress deals (manually verified prices) */}
+            {deal.store.id === 'aliexpress' && (
+              <span className="inline-flex items-center gap-1 text-[0.6rem] font-bold px-2 py-1 rounded-full"
+                style={{
+                  background: 'rgba(38,222,129,0.15)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(38,222,129,0.4)',
+                  color: '#26DE81',
+                }}>
+                <CheckCircle2 className="h-2.5 w-2.5" />
+                Verificado
+              </span>
+            )}
             {showBestPrice && isBestPrice && (
               <span className="inline-flex items-center gap-1 text-[0.6rem] font-bold px-2 py-1 rounded-full"
                 style={{
@@ -119,7 +162,7 @@ export function DealCard({ deal, bestPriceStore, storeCount }: DealCardProps) {
           </div>
           <div className="flex items-center gap-1 text-xs mb-2" style={{ color: '#4A6080' }}>
             <a
-              href={deal.store.id === 'amazon' ? buildAmazonUrl(deal.affiliateUrl) : deal.affiliateUrl}
+              href={baseHref}
               target="_blank"
               rel="nofollow sponsored"
               onClick={(e) => e.stopPropagation()}
@@ -172,18 +215,24 @@ export function DealCard({ deal, bestPriceStore, storeCount }: DealCardProps) {
       {/* Direct buy CTA */}
       <div className="px-5 pb-5 pt-0">
         <a
-          href={deal.store.id === 'amazon' ? buildAmazonUrl(deal.affiliateUrl) : deal.affiliateUrl}
+          href={trackedHref}
           target="_blank"
           rel="nofollow sponsored"
-          onClick={(e) => e.stopPropagation()}
-          className="flex items-center justify-center gap-2 w-full h-11 font-bold text-sm rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-95"
+          onClick={handleClick}
+          className="flex items-center justify-center gap-2 w-full h-12 font-bold text-sm rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-95 group"
           style={{
             background: 'linear-gradient(135deg, #00D4FF, #0099CC)',
             color: '#0B1120',
-            boxShadow: '0 2px 12px rgba(0,212,255,0.3)',
+            boxShadow: '0 4px 20px rgba(0,212,255,0.4), 0 0 40px rgba(0,212,255,0.15)',
           }}>
-          <ShoppingCart className="h-4 w-4" />
-          Comprar en {label} — {formatPrice(deal.salePrice)}
+          <ShoppingCart className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+          <span className="flex-1 text-left">
+            Ver oferta en {label}
+          </span>
+          <span className="font-extrabold text-lg bg-black/10 px-3 py-1 rounded-full">
+            {formatPrice(deal.salePrice)}
+          </span>
+          <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
         </a>
         <div className="mt-2 flex items-center justify-between text-xs" style={{ color: '#4A6080' }}>
           <div className="flex items-center gap-1">

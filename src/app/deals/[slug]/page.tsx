@@ -170,6 +170,7 @@ export default async function DealDetailPage({
                 </Badge>
               ) : undefined
             }
+            verifiedBadge={deal.store.id === 'aliexpress'}
             stockBadge={
               deal.stockStatus === 'limited' ? (
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full"
@@ -356,6 +357,7 @@ export default async function DealDetailPage({
             <DealCtaButton
               href={affiliateUrl}
               storeName={storeLabel}
+              storeId={deal.store.id}
               price={formatPrice(deal.salePrice)}
               dealId={deal.id}
               category={deal.category}
