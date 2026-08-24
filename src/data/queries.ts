@@ -5,9 +5,11 @@ import { normalizeCategory, normalizeSubcategory } from '@/lib/normalize-categor
 import type { InValue } from '@libsql/client'
 import { cache } from 'react'
 
-// ─── Tiendas deshabilitadas (temporal) ────────────────────────────────────────
-// Decathlon queda oculto de las queries públicas hasta que se consiga su afiliado.
-// Se reactiva vaciando el array (los datos permanecen en la BD).
+// ─── Tiendas deshabilitadas ──────────────────────────────────────────────────
+// Decathlon fuera del proyecto: sin afiliado, no monetiza. Purga completa de
+// datos aplicada (24 Ago 2026, backups en data/archive-decathlon-*.json).
+// El filtro es defensa pasiva: si una fila Decathlon volviera a colarse en la
+// BD (sync/import), no se mostraría en ninguna query pública.
 export const DISABLED_STORES: string[] = ['decathlon']
 
 export function storeFilterClause(includeHidden: boolean): string {

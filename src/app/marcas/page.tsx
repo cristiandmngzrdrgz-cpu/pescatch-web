@@ -1,5 +1,6 @@
 import { getDb } from '@/lib/db'
 import { seedDatabase } from '@/lib/seed'
+import { DISABLED_STORES } from '@/data/queries'
 import Link from 'next/link'
 import { Fish } from 'lucide-react'
 import type { Metadata } from 'next'
@@ -42,16 +43,19 @@ export default async function MarcasPage() {
   const db = getDb()
   await seedDatabase()
 
-  const result = await db.execute(
-    `SELECT brand, COUNT(*) as count, MIN(salePrice) as min_price, MAX(salePrice) as max_price,
+  const storePlaceholders = DISABLED_STORES.map(() => '?').join(',')
+  const result = await db.execute({
+    sql: `SELECT brand, COUNT(*) as count, MIN(salePrice) as min_price, MAX(salePrice) as max_price,
             MAX(discountPercent) as max_discount,
             GROUP_CONCAT(DISTINCT storeName) as stores
      FROM deals
      WHERE status = 'published' AND brand != ''
        AND (expiresAt IS NULL OR expiresAt > datetime('now'))
+       AND storeId NOT IN (${storePlaceholders})
      GROUP BY LOWER(brand)
-     ORDER BY count DESC, brand ASC`
-  )
+     ORDER BY count DESC, brand ASC`,
+    args: DISABLED_STORES,
+  })
 
   const brands: BrandRow[] = result.rows.map(r => ({
     brand: r.brand as string,

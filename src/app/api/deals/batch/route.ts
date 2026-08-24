@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { seedDatabase } from '@/lib/seed'
+import { DISABLED_STORES } from '@/data/queries'
 import type { Deal, Store } from '@/types'
 
 function safeJsonParse<T>(raw: string, fallback: T): T {
@@ -72,9 +73,10 @@ export async function POST(request: NextRequest) {
   const db = getDb()
 
   const placeholders = ids.map(() => '?').join(',')
+  const storePlaceholders = DISABLED_STORES.map(() => '?').join(',')
   const result = await db.execute({
-    sql: `SELECT * FROM deals WHERE id IN (${placeholders}) AND status = 'published'`,
-    args: ids,
+    sql: `SELECT * FROM deals WHERE id IN (${placeholders}) AND status = 'published' AND storeId NOT IN (${storePlaceholders})`,
+    args: [...ids, ...DISABLED_STORES],
   })
 
   const deals = result.rows.map(row => mapRowToDeal(row as Record<string, unknown>))
