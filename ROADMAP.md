@@ -2,7 +2,7 @@
 
 > Web de chollos de material de pesca. Dominio: `pescatch.es`
 > Tech stack: Next.js 16 + TypeScript + Tailwind CSS 4 + shadcn/ui + SQLite/Turso
-> **Última actualización:** 2026-08-18
+> **Última actualización:** 2026-08-24
 
 ---
 
@@ -56,15 +56,14 @@
 - [x] **Alertas de precio por email (usuario)** — Tabla `price_alerts`, endpoint suscripción/cancelación, modal en ficha, `processPriceAlerts()` one-shot, script `send-price-alerts` + scheduler 08:30. 14 tests. *(14 Ago 2026, commit `fd99b52`)*
 - [x] **Newsletter semanal automatizado** — Backend completo y `RESEND_API_KEY` ya configurada; falta el cron (manual hoy: `npx tsx scripts/send-newsletter.ts`)
 - [x] **Bot de Telegram / canal público** — `src/lib/telegram.ts` + `scripts/send-telegram.ts` (`npm run send-telegram`), link en footer + newsletter, tarea `PesCatch-Telegram` (lun 09:05), 4 tests. Primer envío real publicado en el canal. *(18 Ago 2026)*
-- [x] **Tests: ampliar cobertura** — vitest con DB en memoria (`file::memory:`), 160 tests: queries CRUD, API routes (newsletter/contact/vote/comments/deals/posts/admin/sync/price-alerts), candidates, rate-limit, validación zod, schemas SEO, blog renderer, telegram *(18 Ago 2026)*
+- [x] **Tests: ampliar cobertura** — vitest con DB en memoria (`file::memory:`), 177 tests: queries CRUD, API routes (newsletter/contact/vote/comments/deals/posts/admin/sync/price-alerts/**cron**), candidates, rate-limit, validación zod, schemas SEO, blog renderer, telegram *(24 Ago 2026)*
 
-## Fase 5 — Infraestructura (EN CURSO)
+## Fase 5 — Infraestructura (COMPLETADO 24 Ago 2026)
 
-- [ ] **Vercel Cron / GH Action** para sync diario — Hoy solo Windows Task Scheduler local (`scripts/setup-scheduler.ps1`: discover/refresh-prices/clean-expired)
-- [ ] **APIs reales de tiendas** — Amazon PA, Decathlon TradeDoubler, AliExpress. Los adapters son stubs (sin API keys configuradas)
+- [x] **Crons en producción** — 5 crons diarios en `vercel.json` (sync/clean-expired/price-alerts/newsletter/telegram, horas UTC, auth Bearer CRON_SECRET) + GitHub Action horaria `.github/workflows/cron-refresh-prices.yml` para el refresh por chunks (~20 deals/invocación, cursor en tabla `cron_state`). Vercel Hobby solo permite frecuencia diaria. Env vars de producción completas (CRON_SECRET, GOOGLE_SHEETS_CREDENTIALS, RESEND_*, TELEGRAM_*). *(24 Ago 2026)*
+- [x] **APIs reales de tiendas** — AliExpress vía API de afiliados (TOP, firma MD5), Amazon fetch directo con `?tag=`. Decathlon eliminado del proyecto (sin afiliado; purga de datos 24 Ago 2026).
 - [x] Google Sheets range dinámico — `RANGE = SHEET_NAME` (sin `A1:R100` hardcodeado) + `ensureHeaders` expande grid más allá de la col Z
 - [x] DNS canónico: `pescatch.es` → `www.pescatch.es` (308); `BASE_URL` ya apunta a www
-- [ ] Newsletter cron en Vercel
 
 ---
 

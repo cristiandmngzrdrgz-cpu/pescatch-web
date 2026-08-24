@@ -9,7 +9,20 @@ fecha: 2026-07-30
 
 ---
 
-## Lo último que se hizo (18 Ago 2026)
+## Lo último que se hizo (24 Ago 2026)
+
+**Purga Decathlon + crons en producción (Vercel Cron + GH Action), 177 tests:**
+- **Decathlon ELIMINADO del proyecto**: sin afiliado no monetiza. Purga de 80 deals locales y 79 de Turso (+65 productos huérfanos por DB, price_history incluida) con `scripts/_archive/purge-decathlon.ts`. Backups: `data/backups/pescatch-2026-08-24.db` + `data/archive-decathlon-{local,turso}.json`. `DISABLED_STORES` queda como defensa pasiva; añadido el filtro que faltaba en `/marcas`, `/api/deals/batch` y los crons newsletter/telegram (**fuga real: salían chollos Decathlon en Turso con 33 deals published sin filtrar**).
+- **Crons en producción**: 5 crons diarios en `vercel.json` (sync 06:00, clean-expired 03:00, price-alerts 08:30, newsletter lun 09:00, telegram lun 09:05 — horas UTC). Las rutas `/api/cron/*` aceptan GET (lo que dispara Vercel Cron) + POST y exportan `maxDuration=300`. Vercel inyecta Bearer CRON_SECRET solo.
+- **Refresh horario vía GitHub Action** (`.github/workflows/cron-refresh-prices.yml`): Vercel Hobby solo permite crons diarios. Cada hora procesa ~20 deals con cursor persistido en la nueva tabla `cron_state` (`src/lib/cron-state.ts`) → ciclo completo diario contra Turso directo. `refreshAllPrices({ limit })` nuevo parámetro. **Pendiente**: añadir secret `CRON_SECRET` al repo de GitHub (Settings → Secrets → Actions).
+- **Playwright 100% lazy en `src/`** (`scraping-utils/browser.ts`, `price-scraper/brave.ts`, `price-scraper/decathlon.ts`): el import estático reventaba el serverless con "Cannot find module playwright-core/browsers.json".
+- **Env vars de producción completas**: CRON_SECRET, GOOGLE_SHEETS_CREDENTIALS (JSON compactado), RESEND_API_KEY, ADMIN_EMAIL, EMAIL_FROM, TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID añadidas a Vercel.
+- **Validado en producción**: refresh-prices 2 chunks (13+17 updated, cursor avanza), clean-expired y price-alerts 200 OK.
+- **Mantenimiento lunes**: clean-expired (0 expirados) + `refresh-prices:prod --apply` (118 updated, 14 failed Amazon, 0 removed) propagado a Turso.
+- Backlog de candidatos ya estaba aplicado (Turso a 0 pending, 34 deals creados el 23/08). Commits: `7b4384f`, `afe3d4a`, `be89493`, `f5c2705`, `e17fd50`, `f2cc5d9`.
+- **Tests: 177/177** (+17 en `api-cron.test.ts`). Lint 0 errores.
+
+### Sesión anterior (18 Ago 2026)
 
 **Telegram operativo + refactor blog + tests SEO (160 tests):**
 - **Bot de Telegram funcionando**: `src/lib/telegram.ts` (`buildTelegramMessage` con HTML válido de la Bot API: solo `<b>`, `<i>`, `<a>`, `<code>`, `<s>`; `sendTelegramMessage`) + `scripts/send-telegram.ts` (`npm run send-telegram`, top 10 chollos por `discountPercent`). Link al canal `t.me/pescatch` en footer y newsletter. Tarea `PesCatch-Telegram` (lun 09:05) añadida a `setup-scheduler.ps1`. **Primer envío real publicado en el canal ✅** (config ya en `.env`). Commit `1f773fb`.
@@ -156,10 +169,11 @@ blog/[slug]/page.tsx → 1 <img> en dangerouslySetInnerHTML (no hay alternativa)
 
 ## Próxima sesión — prioridades sugeridas
 
-1. **Newsletter semanal automatizado** — `RESEND_API_KEY` configurada (14 Ago), tarea `PesCatch-Newsletter` (lun 09:00) instalada; queda validar el primer envío real y el contenido. (Telegram ya está operativo — 18 Ago.)
-2. **Vercel Cron / GH Action** — Sync diario automático sin depender del PC local (hoy Task Scheduler Windows).
-3. **Tests de páginas server** — Categorías, deals/[slug], sitemap.
-4. **Contacto**: notificar al admin por email (hoy solo inserta en tabla).
+1. **Añadir secret `CRON_SECRET` al repo de GitHub** — sin él, la Action `cron-refresh-prices` fallará (Settings → Secrets and variables → Actions → New repository secret; valor = el de `.env`).
+2. **Validar lunes 31 Ago los envíos desde Vercel** (newsletter + telegram) y, si van bien, desactivar las tareas locales duplicadas: `Disable-ScheduledTask -TaskName PesCatch-Newsletter,PesCatch-Telegram`.
+3. **Limpiar los 166 pending_candidates locales** — Turso ya está a 0; el espejo local se quedó atrás (son copias de aprobados/rechazados de rondas anteriores + posibles nuevos del discover de las 06:00).
+4. **Tests de páginas server** — Categorías, deals/[slug], sitemap.
+5. **Contacto**: notificar al admin por email (hoy solo inserta en tabla).
 
 ---
 
