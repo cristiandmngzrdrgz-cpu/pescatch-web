@@ -101,13 +101,13 @@ async function discoverAuto() {
         url: p.url,
         keyword: 'aliexpress',
         category: p.category,
-        imageUrl: null,
+        imageUrl: p.imageUrl ?? null,
         brand: p.brand,
         ean: null,
         score: scoreCandidate({
           asin: '', title: p.title, price: p.price, originalPrice: p.originalPrice,
           rating: p.rating, reviews: p.reviews, url: p.url, keyword: 'aliexpress',
-          category: p.category, imageUrl: null, brand: p.brand, ean: null,
+          category: p.category, imageUrl: p.imageUrl ?? null, brand: p.brand, ean: null,
         }),
         source: 'AliExpress directo',
       })

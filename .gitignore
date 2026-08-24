@@ -80,6 +80,13 @@ next-env.d.ts
 /scripts/discover/candidatos-ae-*.json
 /scripts/discover/verified-ae-prices.json
 /scripts/discover/ae-images.json
+/scripts/discover/backlog-*.json
+/scripts/discover/decisiones-hoy.json
+/scripts/discover/ae-price-check-*.json
+
+# logs de trabajo
+/*.log
+/scripts/**/*.log
 
 .vercel
 .env*

@@ -7,17 +7,17 @@ const RANGE = SHEET_NAME
 
 let _sheets: sheets_v4.Resource$Spreadsheets$Values | null = null
 
-function getCredentials() {
+function getAuthOptions() {
   if (process.env.GOOGLE_SHEETS_CREDENTIALS) {
-    return JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS)
+    return { credentials: JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS) }
   }
-  return path.resolve('.env.google-sheets.json')
+  return { keyFilename: path.resolve('.env.google-sheets.json') }
 }
 
 async function getClient() {
   if (_sheets) return _sheets
   const auth = new google.auth.GoogleAuth({
-    credentials: getCredentials(),
+    ...getAuthOptions(),
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   })
   const client = google.sheets({ version: 'v4', auth })
@@ -77,6 +77,36 @@ export async function appendRow(values: (string | number | boolean)[]) {
   })
 }
 
+/**
+ * Elimina filas de datos por índice 0-based (fila de hoja = índice + 2, cabecera incluida).
+ * Borra de abajo hacia arriba para que los índices no se desplacen.
+ */
+export async function deleteDataRows(dataIndices: number[]) {
+  const auth = new google.auth.GoogleAuth({
+    ...getAuthOptions(),
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  })
+  const sheets = google.sheets({ version: 'v4', auth })
+  const sorted = [...dataIndices].sort((a, b) => b - a)
+  for (const idx of sorted) {
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: SHEET_ID,
+      requestBody: {
+        requests: [{
+          deleteDimension: {
+            range: {
+              sheetId: 0,
+              dimension: 'ROWS',
+              startIndex: idx + 1, // +1 por la fila de cabecera
+              endIndex: idx + 2,
+            },
+          },
+        }],
+      },
+    })
+  }
+}
+
 export async function ensureHeaders(headers: string[]) {
   let existing: string[]
   try {
@@ -108,7 +138,7 @@ export async function ensureHeaders(headers: string[]) {
 
 async function ensureGridColumns(minColumns: number) {
   const auth = new google.auth.GoogleAuth({
-    credentials: getCredentials(),
+    ...getAuthOptions(),
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   })
   const sheets = google.sheets({ version: 'v4', auth })
