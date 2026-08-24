@@ -66,7 +66,7 @@ async function main() {
         apiPrice,
         apiOriginal: d?.originalPrice ?? null,
         diffPct: diffPct === null ? null : Math.round(diffPct * 10) / 10,
-        verdict: !apiPrice ? 'SIN-DATOS-API' : diffPct > 15 ? 'CHECK' : 'OK',
+        verdict: !apiPrice || diffPct === null ? 'SIN-DATOS-API' : diffPct > 15 ? 'CHECK' : 'OK',
       })
     }
     console.log(`  batch ${i / BATCH + 1}: ${Math.min(batch.length, BATCH)} consultados`)
