@@ -1,6 +1,10 @@
-import { chromium, type BrowserContext, type Page } from 'playwright'
+import type { BrowserContext, Page } from 'playwright'
 import * as path from 'path'
 import * as fs from 'fs'
+
+// playwright se importa dinámicamente dentro de launchBraveContext: solo existe
+// en local (Brave instalado). Un import estático rompe el bundle serverless de
+// Vercel aunque las funciones nunca lleguen a ejecutarse allí.
 
 const BRAVE_PATH = 'C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe'
 
@@ -20,6 +24,7 @@ export async function launchBraveContext(
   profileDir: string,
   options?: { headless?: boolean }
 ): Promise<BrowserContext> {
+  const { chromium } = await import('playwright')
   const userDataDir = path.resolve('temp', profileDir)
 
   if (!fs.existsSync(userDataDir)) {

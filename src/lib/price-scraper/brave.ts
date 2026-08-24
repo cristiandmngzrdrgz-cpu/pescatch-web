@@ -1,6 +1,8 @@
-import { chromium, type Browser, type Page } from 'playwright'
+import type { Browser, Page } from 'playwright'
 import { existsSync } from 'fs'
 
+// playwright se importa dinámicamente en getBraveBrowser: fallback solo local
+// (Brave instalado). El import estático rompería el bundle serverless.
 const BRAVE_PATH = 'C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe'
 
 let _browser: Browser | null = null
@@ -8,6 +10,7 @@ let _browser: Browser | null = null
 export async function getBraveBrowser(headless = false): Promise<Browser> {
   if (_browser && _browser.isConnected()) return _browser
 
+  const { chromium } = await import('playwright')
   _browser = await chromium.launch({
     executablePath: BRAVE_PATH,
     headless,
