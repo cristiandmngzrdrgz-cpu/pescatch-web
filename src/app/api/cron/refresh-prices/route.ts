@@ -2,28 +2,32 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyCronAuth } from '../auth'
 import { refreshAllPrices } from '@/lib/price-scraper/refresh-all'
 import { migrateSchema } from '@/lib/db'
-import * as fs from 'fs'
-import * as path from 'path'
 
-export async function POST(request: NextRequest) {
+// Vercel Cron invoca con GET + Authorization: Bearer CRON_SECRET.
+// El refresh va por chunks (~20 deals/invocación) para no reventar el timeout
+// de la función: el cursor vive en la tabla cron_state. ?limit=N ajusta el chunk,
+// ?limit=all fuerza un ciclo completo (no cabe en el timeout de Vercel).
+export const maxDuration = 300
+
+const DEFAULT_CHUNK = 20
+
+async function handle(request: NextRequest) {
   const authError = verifyCronAuth(request)
   if (authError) return authError
 
   try {
     await migrateSchema()
-    const result = await refreshAllPrices()
 
-    if (result.removedIds.length > 0) {
-      const file = path.resolve(process.cwd(), 'data', 'removed-deals.json')
-      const existing = fs.existsSync(file)
-        ? (JSON.parse(fs.readFileSync(file, 'utf8')) as string[])
-        : []
-      const merged = [...new Set([...existing, ...result.removedIds])]
-      fs.writeFileSync(file, JSON.stringify(merged, null, 2))
-    }
+    const limitParam = request.nextUrl.searchParams.get('limit')
+    let limit: number | undefined = DEFAULT_CHUNK
+    if (limitParam === 'all') limit = undefined
+    else if (limitParam && Number.isFinite(Number(limitParam))) limit = Math.max(1, Number(limitParam))
+
+    const result = await refreshAllPrices({ limit })
 
     return NextResponse.json({
       success: true,
+      chunk: limit ?? 'full',
       updated: result.updated,
       skipped: result.skipped,
       failed: result.failed,
@@ -35,4 +39,12 @@ export async function POST(request: NextRequest) {
     const message = err instanceof Error ? err.message : 'Error desconocido'
     return NextResponse.json({ error: `Error en refresh-prices: ${message}` }, { status: 500 })
   }
+}
+
+export async function GET(request: NextRequest) {
+  return handle(request)
+}
+
+export async function POST(request: NextRequest) {
+  return handle(request)
 }

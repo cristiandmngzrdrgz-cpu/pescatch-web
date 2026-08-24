@@ -1,11 +1,14 @@
 import type { ScrapedPrice } from './types'
 import { getNextUserAgent } from './user-agents'
 import { parseSpanishPrice, braveAvailable, getBravePath } from '@/lib/scraping-utils'
-import { chromium } from 'playwright'
 import * as path from 'path'
 import * as fs from 'fs'
 import { unavailablePrice, isDecathlonNotFoundPage } from './not-available'
 
+// playwright se importa dinámicamente dentro de tryBrave: es un fallback solo
+// disponible en local (Brave instalado). Un import estático rompería el bundle
+// serverless de Vercel, donde este scraper nunca llega a usarse (el refresh
+// excluye Decathlon y no hay Brave en el runtime).
 const USER_DATA_DIR = path.resolve('temp', 'brave-decathlon-refresh')
 
 export async function scrapeDecathlon(url: string): Promise<ScrapedPrice | null> {
@@ -72,6 +75,7 @@ async function tryFetch(url: string): Promise<ScrapedPrice | null> {
 async function tryBrave(url: string): Promise<ScrapedPrice | null> {
   let context
   try {
+    const { chromium } = await import('playwright')
     if (!fs.existsSync(USER_DATA_DIR)) {
       fs.mkdirSync(USER_DATA_DIR, { recursive: true })
     }

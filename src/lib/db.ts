@@ -239,6 +239,11 @@ export async function initSchema() {
     'CREATE INDEX IF NOT EXISTS idx_click_tracking_deal ON click_tracking(dealId)',
     'CREATE INDEX IF NOT EXISTS idx_click_tracking_clickId ON click_tracking(clickId)',
     'CREATE INDEX IF NOT EXISTS idx_click_tracking_timestamp ON click_tracking(timestamp)',
+    `CREATE TABLE IF NOT EXISTS cron_state (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL DEFAULT '',
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )`,
   ])
 }
 
@@ -338,6 +343,12 @@ export async function migrateSchema() {
     await db.execute("ALTER TABLE comments ADD COLUMN status TEXT DEFAULT 'published'")
     await db.execute("UPDATE comments SET status = 'published' WHERE status IS NULL")
   }
+
+  await db.execute(`CREATE TABLE IF NOT EXISTS cron_state (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL DEFAULT '',
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`)
 
   await normalizeCategoryColumns()
 }

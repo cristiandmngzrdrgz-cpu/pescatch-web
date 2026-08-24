@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyCronAuth } from '../auth'
 import { getDb } from '@/lib/db'
 import { seedDatabase } from '@/lib/seed'
+import { DISABLED_STORES } from '@/data/queries'
 import { sendEmail, isEmailConfigured, buildNewsletterHtml } from '@/lib/email'
 
 const BASE_URL = 'https://www.pescatch.es'
 
-export async function POST(request: NextRequest) {
+// Vercel Cron invoca con GET + Authorization: Bearer CRON_SECRET.
+export const maxDuration = 300
+
+async function handle(request: NextRequest) {
   const authError = verifyCronAuth(request)
   if (authError) return authError
 
@@ -18,12 +22,15 @@ export async function POST(request: NextRequest) {
     await seedDatabase()
     const db = getDb()
 
+    const storePlaceholders = DISABLED_STORES.map(() => '?').join(',')
     const result = await db.execute({
       sql: `SELECT d.title, d.salePrice, d.originalPrice, d.discountPercent, d.storeName, d.slug, d.imageUrl
             FROM deals d
             WHERE d.status = 'published' AND d.discountPercent > 0
+              AND d.storeId NOT IN (${storePlaceholders})
             ORDER BY d.discountPercent DESC
             LIMIT 10`,
+      args: DISABLED_STORES,
     })
 
     const deals = result.rows as unknown as Array<{
@@ -74,4 +81,12 @@ export async function POST(request: NextRequest) {
     const message = err instanceof Error ? err.message : 'Error desconocido'
     return NextResponse.json({ error: `Error en newsletter: ${message}` }, { status: 500 })
   }
+}
+
+export async function GET(request: NextRequest) {
+  return handle(request)
+}
+
+export async function POST(request: NextRequest) {
+  return handle(request)
 }

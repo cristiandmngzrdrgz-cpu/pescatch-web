@@ -1,9 +1,17 @@
 ﻿import { getDb } from '@/lib/db'
+import type { InValue } from '@libsql/client'
 import { scrapeStore, updateDealInDb } from './index'
 import { buildAmazonUrl, extractAsin } from '@/lib/amazon-affiliate'
 import { logScrapingHealth } from '@/lib/scraping-health'
 import { sendAdminNotification, isEmailConfigured, buildAdminNotificationHtml } from '@/lib/email'
 import { deleteDeal } from '@/data/queries'
+import { getCronState, setCronState } from '@/lib/cron-state'
+
+const REFRESH_CURSOR_KEY = 'refresh_prices_cursor'
+
+// Condiciones compartidas entre la consulta del chunk y el chequeo "¿quedan más?".
+const ELIGIBLE_DEALS_WHERE = `status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now')) AND affiliateUrl != ''
+     AND storeId != 'decathlon'`
 
 interface DealRow {
   id: string
@@ -23,17 +31,47 @@ interface RefreshResult {
   alerts: number
 }
 
-export async function refreshAllPrices(): Promise<RefreshResult> {
-  const db = getDb()
+export interface RefreshOptions {
+  // Tamaño de chunk para ejecución por lotes (cron Vercel). Sin limit = ciclo completo.
+  limit?: number
+  // Fuerza el reinicio del cursor antes de procesar.
+  resetCursor?: boolean
+}
 
-  const result = await db.execute(
-    `SELECT id, title, storeId, affiliateUrl, salePrice,
+export async function refreshAllPrices(options: RefreshOptions = {}): Promise<RefreshResult> {
+  const db = getDb()
+  const { limit, resetCursor } = options
+
+  let afterId = ''
+  if (limit) {
+    if (resetCursor) {
+      await setCronState(REFRESH_CURSOR_KEY, '')
+      afterId = ''
+    } else {
+      afterId = await getCronState(REFRESH_CURSOR_KEY)
+    }
+  }
+
+  const clauses: InValue[] = []
+  let cursorClause = ''
+  if (afterId) {
+    cursorClause = ' AND id > ?'
+    clauses.push(afterId)
+  }
+  let limitClause = ''
+  if (limit) {
+    limitClause = ' LIMIT ?'
+    clauses.push(limit)
+  }
+
+  const result = await db.execute({
+    sql: `SELECT id, title, storeId, affiliateUrl, salePrice,
      COALESCE(variantAsin, '') as variantAsin
      FROM deals
-     WHERE status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now')) AND affiliateUrl != ''
-     AND storeId != 'decathlon'
-     ORDER BY storeId, title`
-  )
+     WHERE ${ELIGIBLE_DEALS_WHERE}${cursorClause}
+     ORDER BY id${limitClause}`,
+    args: clauses,
+  })
 
   const deals = result.rows as unknown as DealRow[]
   let updated = 0
@@ -136,6 +174,18 @@ export async function refreshAllPrices(): Promise<RefreshResult> {
     await db.execute({
       sql: 'UPDATE deals SET priceAlert = 0 WHERE priceAlert = 1',
     })
+  }
+
+  if (limit && deals.length > 0) {
+    // Persiste el cursor del ciclo chunked. Fin de ciclo = no quedan deals
+    // elegibles más allá del último procesado (comprobación explícita: si el
+    // chunk encaja exacto con el total, length === limit y aun así termina).
+    const lastId = String(deals[deals.length - 1].id)
+    const more = await db.execute({
+      sql: `SELECT COUNT(*) as n FROM deals WHERE ${ELIGIBLE_DEALS_WHERE} AND id > ?`,
+      args: [lastId],
+    })
+    await setCronState(REFRESH_CURSOR_KEY, Number(more.rows[0].n) > 0 ? lastId : '')
   }
 
   return { updated, skipped, failed, removed, removedIds, alerts }

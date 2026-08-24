@@ -20,6 +20,7 @@ beforeEach(async () => {
     'scraping_health',
     'price_history',
     'price_alerts',
+    'cron_state',
   ]
   for (const table of tables) {
     try {
