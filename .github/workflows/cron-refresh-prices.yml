@@ -1,0 +1,29 @@
+# Refresh de precios por chunks: cada hora procesa ~20 deals (cursor en la tabla
+# cron_state de Turso), así el ciclo completo cubre todo el catálogo a diario.
+# Vercel Cron en plan Hobby solo permite frecuencia diaria → este endpoint se
+# dispara desde aquí. Requiere el secret CRON_SECRET en el repo.
+name: cron-refresh-prices
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: cron-refresh-prices
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Llamar /api/cron/refresh-prices
+        run: |
+          code=$(curl -s -o response.json -w "%{http_code}" \
+            -X GET "https://www.pescatch.es/api/cron/refresh-prices" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            --max-time 330)
+          echo "HTTP $code"
+          cat response.json
+          exit $([ "$code" = "200" ] && echo 0 || echo 1)
