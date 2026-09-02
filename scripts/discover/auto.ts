@@ -22,7 +22,8 @@ const POPULAR_BRANDS = [
 function scoreCandidate(c: AmazonCandidate): number {
   let score = 0
 
-  score += Math.round(c.rating * 6)
+  const ratingNorm = c.rating > 5 ? c.rating / 20 : c.rating
+  score += Math.round(ratingNorm * 6)
 
   const reviewScore = Math.min(25, Math.round(Math.log10(c.reviews + 1) * 8))
   score += reviewScore

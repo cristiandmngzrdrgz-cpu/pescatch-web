@@ -55,6 +55,27 @@ export default function PrivacyPage() {
         </section>
 
         <section>
+          <h2 className="text-xl font-bold mb-3" style={{ color: '#E8F0FE' }}>5b. Publicidad (Google AdSense)</h2>
+          <p className="text-sm leading-relaxed">
+            Cuando se activa, PesCatch muestra anuncios de Google AdSense. Google utiliza cookies
+            (incluida DoubleClick) para personalizar anuncios según tu navegación, medir rendimiento y
+            evitar fraude. Puedes gestionar la personalización en{' '}
+            <a href="https://adssettings.google.com" target="_blank" rel="noopener noreferrer" className="font-medium hover:underline" style={{ color: '#00D4FF' }}>
+              adssettings.google.com
+            </a>{' '}
+            y consultar cómo usa Google los datos en{' '}
+            <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener noreferrer" className="font-medium hover:underline" style={{ color: '#00D4FF' }}>
+              policies.google.com/technologies/ads
+            </a>
+            . Si rechazas el consentimiento, verás anuncios no personalizados. Publicamos{' '}
+            <a href="/ads.txt" className="font-medium hover:underline" style={{ color: '#00D4FF' }}>
+              ads.txt
+            </a>{' '}
+            con nuestros vendedores autorizados.
+          </p>
+        </section>
+
+        <section>
           <h2 className="text-xl font-bold mb-3" style={{ color: '#E8F0FE' }}>6. Cookies</h2>
           <p className="text-sm leading-relaxed">
             Utilizamos cookies propias y de terceros. Para más información, consulta nuestra{' '}

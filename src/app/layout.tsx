@@ -5,6 +5,8 @@ import './globals.css'
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
 import { Providers } from '@/components/providers'
+import { CookieConsent } from '@/components/ads/CookieConsent'
+import Script from 'next/script'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -89,12 +91,29 @@ export default function RootLayout({
         <link rel="preconnect" href="https://ae01.alicdn.com" />
         <link rel="dns-prefetch" href="https://m.media-amazon.com" />
         <link rel="dns-prefetch" href="https://ae01.alicdn.com" />
+        {/* Consent Mode v2 default: denied hasta que el usuario acepte en el banner */}
+        <Script
+          id="consent-default"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500});`,
+          }}
+        />
+        {process.env.NEXT_PUBLIC_ADSENSE_CLIENT ? (
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        ) : null}
       </head>
       <body className="min-h-full flex flex-col" style={{ background: 'var(--background)', color: '#E8F0FE' }}>
         <Providers>
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />
+          <CookieConsent />
         </Providers>
         <Analytics />
       </body>

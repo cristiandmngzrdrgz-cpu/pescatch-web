@@ -54,6 +54,7 @@ import { FavoriteButton } from '@/components/deals/favorites'
 import { DealCtaButton } from '@/components/deals/deal-cta-button'
 import { MobileCtaButton } from '@/components/deals/mobile-cta-button'
 import { PriceAlertButton } from '@/components/deals/price-alert-button'
+import { AdBanner } from '@/components/ads/AdBanner'
 import { CATEGORIES, STORES } from '@/types'
 import Link from 'next/link'
 
@@ -390,6 +391,9 @@ export default async function DealDetailPage({
               <FavoriteButton dealId={deal.id} />
             </div>
           </div>
+
+          {/* Ad: Deal sidebar (rectangle, no intrusivo bajo CTA) */}
+          <AdBanner slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_DEAL} format="rectangle" />
 
           {/* Votes */}
           <div className="rounded-2xl p-5 transition-all duration-200 hover:shadow-[0_0_15px_rgba(0,212,255,0.08)]"

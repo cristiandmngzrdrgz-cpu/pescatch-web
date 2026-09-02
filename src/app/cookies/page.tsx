@@ -37,6 +37,19 @@ export default function CookiesPage() {
               <p className="text-sm">Utilizamos herramientas de analítica respetuosas con la privacidad
                 (Plausible, Fathom o similar) que no utilizan cookies de rastreo y cumplen con el RGPD.</p>
             </div>
+
+            <div className="rounded-xl p-4" style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
+              <h3 className="font-semibold text-sm mb-1" style={{ color: '#00D4FF' }}>Cookies de publicidad (Google AdSense)</h3>
+              <p className="text-sm">
+                Cuando se activa, Google AdSense instala cookies (DoubleClick, _gads) para personalizar anuncios,
+                medir impresiones y prevenir fraude. Con tu consentimiento, la personalización está activada;
+                si lo rechazas, verás anuncios no personalizados (Consent Mode v2). Gestiona tus preferencias en{' '}
+                <a href="https://adssettings.google.com" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#00D4FF' }}>
+                  adssettings.google.com
+                </a>
+                . Puedes cambiar tu elección borrando <code>cookie_consent</code> en localStorage o desde el banner inferior.
+              </p>
+            </div>
           </div>
         </section>
 

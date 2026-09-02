@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Fish } from 'lucide-react'
 import { NewsletterForm } from './newsletter-form'
+import { ManageCookiesButton } from './manage-cookies-button'
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
@@ -76,6 +77,9 @@ export function Footer() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <ManageCookiesButton />
+              </li>
             </ul>
           </div>
         </div>

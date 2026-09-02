@@ -1,6 +1,7 @@
 import { getDeals, getFeaturedDeals, getDealCountsByCategory } from '@/data/queries'
 import { getPosts } from '@/data/blog-queries'
 import { ProductCard } from '@/components/deals/product-card'
+import { AdBanner } from '@/components/ads/AdBanner'
 import { groupDealsByProduct } from '@/lib/group-deals'
 import { formatPrice } from '@/lib/utils'
 import Image from 'next/image'
@@ -333,6 +334,13 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      {/* Ad: Home - entre Destacados y Categorias (no intrusivo, horizontal) */}
+      <section className="py-6" style={{ background: '#0B1120' }}>
+        <div className="mx-auto max-w-7xl px-4">
+          <AdBanner slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME} format="horizontal" className="max-w-4xl mx-auto" />
+        </div>
+      </section>
 
       {/* Categories */}
       <section className="py-16 md:py-20 relative overflow-hidden" style={{ background: '#0B1120' }}>
