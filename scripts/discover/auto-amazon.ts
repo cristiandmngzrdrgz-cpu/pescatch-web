@@ -28,12 +28,13 @@ function isCuratedStrict(c: AmazonCandidate): boolean {
   const hasPremium = PREMIUM_BRANDS.some(p => b.includes(p))
   if (!hasPremium) return false
   const ratingNorm = c.rating > 5 ? c.rating / 20 : c.rating
-  if (ratingNorm < 4.4) return false
-  if (c.reviews < 100) return false
-  if (c.price < 15 || c.price > 450) return false
-  if (c.originalPrice == null) return false
-  const discount = ((c.originalPrice - c.price) / c.originalPrice) * 100
-  if (discount < 12) return false
+  if (ratingNorm < 4.2) return false
+  if (c.reviews < 30) return false
+  if (c.price < 12 || c.price > 450) return false
+  if (c.originalPrice != null) {
+    const discount = ((c.originalPrice - c.price) / c.originalPrice) * 100
+    if (discount < 8) return false
+  }
   return true
 }
 
