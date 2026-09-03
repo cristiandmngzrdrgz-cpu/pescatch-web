@@ -32,6 +32,8 @@ export const POPULAR_BRANDS = [
   'ryobi', 'yuki', 'lineaeffe',
 ]
 
+export const PREMIUM_BRANDS = ['shimano', 'daiwa', 'okuma']
+
 export const FISHING_BRANDS = [
   ...POPULAR_BRANDS,
   'berkley', 'grauvell', 'bassdash', 'sougayilang', 'truscend',

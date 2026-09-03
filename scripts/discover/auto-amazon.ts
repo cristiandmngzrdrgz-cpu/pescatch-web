@@ -21,9 +21,26 @@ const POPULAR_BRANDS = [
   'ryobi', 'yuki', 'lineaeffe',
 ]
 
+const PREMIUM_BRANDS = ['shimano', 'daiwa', 'okuma']
+
+function isCuratedStrict(c: AmazonCandidate): boolean {
+  const b = c.brand?.toLowerCase() ?? ''
+  const hasPremium = PREMIUM_BRANDS.some(p => b.includes(p))
+  if (!hasPremium) return false
+  const ratingNorm = c.rating > 5 ? c.rating / 20 : c.rating
+  if (ratingNorm < 4.4) return false
+  if (c.reviews < 100) return false
+  if (c.price < 15 || c.price > 450) return false
+  if (c.originalPrice == null) return false
+  const discount = ((c.originalPrice - c.price) / c.originalPrice) * 100
+  if (discount < 12) return false
+  return true
+}
+
 function scoreCandidate(c: AmazonCandidate): number {
   let score = 0
-  score += Math.round(c.rating * 6)
+  const ratingNorm = c.rating > 5 ? c.rating / 20 : c.rating
+  score += Math.round(ratingNorm * 6)
   const reviewScore = Math.min(25, Math.round(Math.log10(c.reviews + 1) * 8))
   score += reviewScore
   if (c.originalPrice && c.originalPrice > c.price) {
@@ -87,7 +104,12 @@ async function discoverAmazonOnly() {
     return
   }
 
-  const ranked = allCandidates.sort((a, b) => b.score - a.score).slice(0, 50)
+  const curated = allCandidates.filter(isCuratedStrict)
+  const pool = curated.length >= 3 ? curated : allCandidates
+  if (curated.length >= 3) console.log(`\n✓ Filtro estricto premium: ${curated.length} candidatos (Shimano/Daiwa/Okuma)`)
+  else console.log(`\n⚠️ Filtro estricto solo ${curated.length} (<3), usando pool completo (${allCandidates.length})`)
+
+  const ranked = pool.sort((a, b) => b.score - a.score).slice(0, 50)
 
   console.log(`\n📦 Guardando ${ranked.length} candidatos en pending_candidates...`)
 
