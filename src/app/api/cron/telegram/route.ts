@@ -4,9 +4,13 @@ import { getDb } from '@/lib/db'
 import { seedDatabase } from '@/lib/seed'
 import { DISABLED_STORES } from '@/data/queries'
 import { isTelegramConfigured, buildTelegramMessage, sendTelegramMessage } from '@/lib/telegram'
+import { getCronState, setCronState } from '@/lib/cron-state'
 
 // Vercel Cron invoca con GET + Authorization: Bearer CRON_SECRET.
 export const maxDuration = 300
+
+const TELEGRAM_KEY = 'last_telegram_sent'
+const TELEGRAM_WINDOW_MS = 20 * 60 * 60 * 1000 // 20h (<24h para permitir reintento al día siguiente si falla el cron)
 
 async function handle(request: NextRequest) {
   const authError = verifyCronAuth(request)
@@ -18,6 +22,20 @@ async function handle(request: NextRequest) {
 
   try {
     await seedDatabase()
+
+    const url = new URL(request.url)
+    const force = url.searchParams.get('force') === '1'
+
+    if (!force) {
+      const last = await getCronState(TELEGRAM_KEY)
+      if (last) {
+        const lastMs = Date.parse(last)
+        if (!Number.isNaN(lastMs) && Date.now() - lastMs < TELEGRAM_WINDOW_MS) {
+          return NextResponse.json({ success: true, sent: false, reason: 'idempotent', lastSent: last })
+        }
+      }
+    }
+
     const db = getDb()
 
     const storePlaceholders = DISABLED_STORES.map(() => '?').join(',')
@@ -46,6 +64,10 @@ async function handle(request: NextRequest) {
 
     const message = buildTelegramMessage(deals)
     const res = await sendTelegramMessage(message)
+
+    if (res.ok) {
+      await setCronState(TELEGRAM_KEY, new Date().toISOString())
+    }
 
     return NextResponse.json({ success: true, sent: res.ok, dealsCount: deals.length, error: res.error })
   } catch (err: unknown) {
