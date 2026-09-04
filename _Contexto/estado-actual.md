@@ -9,7 +9,34 @@ fecha: 2026-07-30
 
 ---
 
-## Lo último que se hizo (24 Ago 2026)
+## Lo último que se hizo (04 Sep 2026)
+
+**Mantenimiento semanal completo + backlog liquidado + fix scoring:**
+- **Local DB**: 176 deals (139 published: 72 AE + 67 Amazon, 37 draft), `pending_candidates` 0 pending (13 approved / 783 rejected) tras auditar los **53 pending** de `discover-auto.log` (04 Sep: 439 Amazon + 1248 AE → 50 candidatos). Audit `temp/audit-pending.ts`: todos AE con `rating 100 → 5.0 (0 reviews)` fake, Sougayilang genéricos, perillas/cabezal corte junk, duplicados x2-x4. Script `temp/clean-pending.ts --apply`: **51 rechazados**, `#1337` braided line duplicada de deal existente → rechazada, `#1333` kit 213 piezas ya approved en Turso → espejado a approved local. Backlog local liquidado.
+- **Turso**: 191 deals (146 published / 45 draft), `pending_candidates` 0 pending (136 approved / 270 rejected), `subscribers` 0, `price_alerts` 0, `cron_state` `deal_1787506542941_7f0w` (04 Sep 06:36). `sync_log` local 03 Sep 11:55 (283 filas, 2 slug UNIQUE errores preexistentes Sienna/Stradic) y Turso 04 Sep 06:10 (283 filas, 0 creados 281 actualizados) — cron `sync` operativo.
+- **Fix `scoreCandidate` (`scripts/discover/auto.ts:39-61`)**: 0 reviews ya no puntúa rating, <10 reviews half, descuento >80% cap 10pts. Evita que futuros discover generen scores 85 con fake AE 93% dto.
+- **Verificación**: `clean-expired` 0 expirados ✓, `lint` 22 warnings (0 errores), `test` 175/177 (2 flaky timeout `api-cron`/`api-admin-sync` solo en full run, pasan aislados), `build` OK (92s compile + 29s TS, Turbopack). `TODO.md` y `ROADMAP.md` actualizados.
+- **Pendiente**: slugs `Sienna FG 4000` y `Stradic FL 2500` UNIQUE fail en cada sync; no bloqueante pero revisar Sheet.
+
+## Sesión anterior (31 Ago 2026)
+
+**Validación lunes 31 Ago + mantenimiento semanal + limpieza local de 300 candidatos:**
+- **GH Action `cron-refresh-prices` ✅ operativa**: 20 últimas runs `success` HTTP 200. 31 Ago: `03:17` 7/13 (updated/failed), `10:08` 0/20 (100% failed en ese chunk de Amazon bloqueado), `12:06` manual 2/3 con `limit=5`. Cursor `cron_state` avanza (`deal_1786386286497_eas5` 10:08 → `deal_1786386291554_9cdn` 12:06). El 10:08 con 20 failed es normal: fetch directo Amazon bloqueado por IP, no borra deals (solo `failed`, no `removed`).
+- **Crons Vercel 31 Ago verificados vía curl con Bearer**: `clean-expired` 0 expirados, `price-alerts` 0 sent (0 triggered), `newsletter` 0 sent / 10 deals (0 suscriptores en Turso), `telegram` `sent:true` 10 deals — **OJO: el curl de validación a telegram provocó un 2º envío a `t.me/pescatch` hoy** (la ruta `api/cron/telegram` no es idempotente, envía cada vez). Vercel logs no muestran crons internos pero los endpoints responden 200.
+- **Turso**: 179 deals (134 published), `pending_candidates` 0 pending (119 approved / 270 rejected), `subscribers` 0, `cron_state` OK. Local: 132 published, `pending_candidates` 300 pending detectados → limpiados a **78 pending** (deduplicación por título `keep min(id)` = 210 rechazados + 12 spam `Maletas SHOWKOO`/`Álbum diario`). Turso sigue limpio (0 pending) — **no se hizo push** de los 78 restantes (mayoría Sougayilang/FISH KING/accesorios 2-12€, 1 planta acuario spam). Quedan en local para revisión `prep-backlog-review`.
+- **Mantenimiento**: `clean-expired` local 0 expirados ✓. No se ejecutó `refresh-prices:prod --apply` completo (15-40 min, lo cubre GH Action horaria). `.env.vercel` restaurado tras `vercel env pull` (se perdían `TURSO_*`, re-añadidos desde `.env.local`).
+- **Tests**: `api-cron` 17/17 ✓, `api-admin-sync` 6/6 ✓, full suite 175/177 (2 flaky timeout solo en full run, pasan aislados). `lint` 0 errores, 21 warnings preexistentes. → **04 Sep verificado idéntico** (22 warnings, 175/177).
+
+## Sesión anterior (25 Ago 2026)
+
+**Fix refresh horario + limpieza candidatos locales:**
+- **CRON_SECRET arreglado en GitHub Action** (`cron-refresh-prices`): llevaba fallando TODAS las runs desde el 24 Ago 22:12 UTC (~13 fallos consecutivos, 401 "Invalid token"). Causa raíz: al subir el secret con `$val | gh secret set --body -`, PowerShell añade un CRLF final al valor → el token no coincidía. Fix: subir con `--body` como argumento (sin pipe). Run manual validada: **HTTP 200** y cursor `cron_state` avanzó (`24 Ago 12:56` → `25 Ago 11:21`). El valor correcto era el de `.env` local (= el de Vercel; el pull de CLI devolvía `""` por estar cifrado).
+- **Hallazgo importante: NO hay tareas programadas `PesCatch-*` en Task Scheduler** — la máquina no tiene ninguna (ni RefreshPrices 08:00 ni DiscoverAuto 06:00). Consecuencias: (a) lunes 24 no hubo doble envío newsletter/telegram (solo dispararon los crons de Vercel ✅), (b) la GH Action es ahora el ÚNICO refresco automático de precios → ya operativo.
+- **Crons de Vercel verificados hoy**: sync corrió 06:55 UTC (272 filas, 44 creados, 228 actualizados) ✓.
+- **Limpieza `pending_candidates` local**: 560 filas borradas (125 approved / 166 pending / 269 rejected, todas ≤ 23 ago, ya resueltas en Turso). Backup previo: `data/backups/pending-candidates-2026-08-25.json`. Turso sigue siendo la fuente de verdad del panel `/admin/candidates`.
+- Snapshot `.env.vercel-prod` regenerado (`vercel env pull --environment production`) para auditoría.
+
+## Sesión anterior (24 Ago 2026)
 
 **Purga Decathlon + crons en producción (Vercel Cron + GH Action), 177 tests:**
 - **Decathlon ELIMINADO del proyecto**: sin afiliado no monetiza. Purga de 80 deals locales y 79 de Turso (+65 productos huérfanos por DB, price_history incluida) con `scripts/_archive/purge-decathlon.ts`. Backups: `data/backups/pescatch-2026-08-24.db` + `data/archive-decathlon-{local,turso}.json`. `DISABLED_STORES` queda como defensa pasiva; añadido el filtro que faltaba en `/marcas`, `/api/deals/batch` y los crons newsletter/telegram (**fuga real: salían chollos Decathlon en Turso con 33 deals published sin filtrar**).
@@ -169,11 +196,14 @@ blog/[slug]/page.tsx → 1 <img> en dangerouslySetInnerHTML (no hay alternativa)
 
 ## Próxima sesión — prioridades sugeridas
 
-1. **Añadir secret `CRON_SECRET` al repo de GitHub** — sin él, la Action `cron-refresh-prices` fallará (Settings → Secrets and variables → Actions → New repository secret; valor = el de `.env`).
-2. **Validar lunes 31 Ago los envíos desde Vercel** (newsletter + telegram) y, si van bien, desactivar las tareas locales duplicadas: `Disable-ScheduledTask -TaskName PesCatch-Newsletter,PesCatch-Telegram`.
-3. **Limpiar los 166 pending_candidates locales** — Turso ya está a 0; el espejo local se quedó atrás (son copias de aprobados/rechazados de rondas anteriores + posibles nuevos del discover de las 06:00).
-4. **Tests de páginas server** — Categorías, deals/[slug], sitemap.
-5. **Contacto**: notificar al admin por email (hoy solo inserta en tabla).
+1. ~~Añadir secret `CRON_SECRET` al repo de GitHub~~ ✅ **HECHO 25 Ago** (fix CRLF del pipe).
+2. ~~Validar lunes 31 Ago los envíos desde Vercel~~ ✅ **HECHO 31 Ago** (clean/price-alerts/newsletter OK; telegram con duplicado por validación manual — añadir idempotencia si molesta).
+3. ~~Limpiar los 166 pending_candidates locales~~ ✅ **HECHO 25 Ago** (560 borradas). **31 Ago**: nuevos 300 pending locales deduplicados a 78 (quedan en local, Turso 0 pending — no pushear hasta revisión).
+4. **Hacer idempotente `api/cron/telegram`** — evitar doble envío si se valida manual el lunes (hoy se duplicó a las 12:06). Opción: guardar `last_telegram_sent` en `cron_state` y no reenviar si <24h.
+5. Tests de páginas server — Categorías, deals/[slug], sitemap.
+6. Contacto: notificar al admin por email (hoy solo inserta en tabla).
+7. Vigilar el refresh horario: chunk 10:08 con 20/20 failed confirma bloqueo Amazon fetch directo. Si tras 24h el % failed >60%, valorar BrightData para Amazon.
+8. Revisar los 78 pending locales restantes (Sougayilang/FISH KING) — decidir push o rechazo masivo via `reject-backlog-dups` tras generar `backlog-revision.json`.
 
 ---
 

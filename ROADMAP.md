@@ -2,7 +2,7 @@
 
 > Web de chollos de material de pesca. Dominio: `pescatch.es`
 > Tech stack: Next.js 16 + TypeScript + Tailwind CSS 4 + shadcn/ui + SQLite/Turso
-> **Última actualización:** 2026-08-24
+> **Última actualización:** 2026-09-04
 
 ---
 
@@ -85,6 +85,12 @@
 - **Blog `mejores-senuelos-spinning-2026`**: "Los mejores señuelos de spinning de 2026" — 7 productos con precio verificado (Amazon/Decathlon/AliExpress) enlazados a deals reales de la web.
 - **CTA de compra global en blog**: cada `<!--PRODUCT_IMG:N-->` renderiza bloque con botón "Comprar · precio" (mejor tienda, `?tag=` en Amazon) + "Ver en PesCatch" + alternativas. Aplica a todos los posts.
 - **Páginas SEO nuevas**: `/top-chollos` (mayores descuentos + más votados) y `/chollos-hoy` (publicados hoy), con JSON-LD CollectionPage/Breadcrumb/FAQ, sitemap y enlaces en navbar/footer.
+
+## Septiembre 2026 — Mantenimiento + fix discover
+
+- **Backlog 04 Sep 2026**: 53 `pending_candidates` locales auditados → 51 rechazados (0 reviews / fake rating 100→5.0 con 0 reviews, Sougayilang genéricos, perillas/cabezal corte junk, duplicados x2-x4), 1 duplicado de deal existente, 1 aprobado espejado. Local: 0 pending (783 rejected, 13 approved). Turso 0 pending. Backlog liquidado.
+- **Fix `scoreCandidate` (04 Sep, `auto.ts`)**: `rating 0 reviews` ya no puntúa (fake AE 5.0/0), `reviews<10` half-rating, descuento >80% cap 10pts (evita inflado 94% de AE). Evita que futuros `discover:auto` generen 50 junk con score 85.
+- **Verificación 04 Sep**: `clean-expired` 0 expirados, `build` OK, `lint` 22 warnings, `test` 175/177 (2 flaky timeout preexistentes), `sync_log` Turso 04 Sep 06:10 OK (283 filas, 0 creados, 281 actualizados).
 
 ---
 

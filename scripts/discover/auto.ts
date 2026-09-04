@@ -39,15 +39,24 @@ function isCuratedStrict(c: AmazonCandidate): boolean {
 function scoreCandidate(c: AmazonCandidate): number {
   let score = 0
 
+  // 0 reviews → rating no fiable, no aporta puntos (evita AliExpress fake 100/0)
   const ratingNorm = c.rating > 5 ? c.rating / 20 : c.rating
-  score += Math.round(ratingNorm * 6)
+  if (c.reviews === 0) {
+    // sin reviews el rating es ruido
+  } else if (c.reviews < 10) {
+    score += Math.round(ratingNorm * 3)
+  } else {
+    score += Math.round(ratingNorm * 6)
+  }
 
   const reviewScore = Math.min(25, Math.round(Math.log10(c.reviews + 1) * 8))
   score += reviewScore
 
   if (c.originalPrice && c.originalPrice > c.price) {
     const discount = ((c.originalPrice - c.price) / c.originalPrice) * 100
-    score += Math.min(25, Math.round(discount * 1.5))
+    // descuentos >80% son fake inflados de AliExpress, cap a 10 pts
+    if (discount > 80) score += 10
+    else score += Math.min(25, Math.round(discount * 1.5))
   }
 
   if (c.brand) {

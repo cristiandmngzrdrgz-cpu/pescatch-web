@@ -1,7 +1,7 @@
 # TODO — Mejora del pipeline de datos
 
-**Última actualización:** 2026-08-02
-**Estado actual:** ✅ 7/7 tareas completadas (Fases 1-4) + revisión general del proyecto
+**Última actualización:** 2026-09-04
+**Estado actual:** ✅ 9/9 tareas completadas (Fases 1-4 + Infra) + mantenimiento semanal
 
 > Nota: este archivo cubre el pipeline de datos. El ROADMAP.md cubre todo el proyecto (marketing, SEO, infraestructura).
 
@@ -82,11 +82,16 @@ PesCatch.es es una web de chollos de material de pesca. El pipeline de datos tie
 
 ## Pendientes / mejoras para el pipeline
 
-- [ ] **Refresh-prices**: conectar API reales (hoy stubs) o al menos más fuentes BrightData
-- [ ] **Sync automático en la nube**: Vercel Cron / GH Action (hoy solo Task Scheduler Windows local)
-- [ ] **Alertas de precio usuario**: tabla `price_alerts`, endpoint, modal en ficha
-- [ ] **A1:R100 hardcodeado** en Google Sheets client → rango dinámico
-- [ ] **EANs de 12 dígitos en el Sheet** (Stradic FL 2500, Penn Spinfisher VI 5500, filas F5/F8) — corregir en el Sheet
+- [x] **Refresh-prices**: API AliExpress operativa + Amazon fetch directo (GH Action horaria)
+- [x] **Sync automático en la nube**: 5 Vercel Crons + GH Action `cron-refresh-prices`
+- [x] **Alertas de precio usuario**: tabla `price_alerts` + modal + cron 08:30
+- [x] **A1:R100 hardcodeado** → `RANGE = SHEET_NAME` + `ensureHeaders` expande más allá de Z
+- [x] **EANs de 12 dígitos** resueltos vía RAW mode (`0022255230759`, `0031324038523`)
+
+### Nuevos pendientes (04 Sep 2026)
+- [x] **Scoring 0 reviews**: fake rating 100/0 ya no puntúa (fix `scoreCandidate` 04 Sep)
+- [ ] **Backlog Sougayilang genéricos**: 52 rechazados hoy (53 pending → 0). Vigilar que `discover:auto` no regenere junk; valorar filtro `score>=50 && reviews>=10`
+- [ ] **Slug UNIQUE duplicado**: `SHIMANO Sienna FG 4000` y `Stradic FL 2500` siguen fallando en sync_log (2 errores por sync) — revisar slugs en Sheet
 
 ---
 
@@ -94,9 +99,9 @@ PesCatch.es es una web de chollos de material de pesca. El pipeline de datos tie
 
 ### Comandos de verificación
 ```bash
-npm run build
-npm run lint
-npm test   # vitest (98 tests, DB en memoria)
+npm run build   # ✓ 04 Sep 2026
+npm run lint    # 22 warnings, 0 errores
+npm test        # 175/177 (2 flaky timeout preexistentes)
 ```
 
 ### Convenciones de código
