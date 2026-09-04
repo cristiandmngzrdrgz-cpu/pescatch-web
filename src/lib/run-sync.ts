@@ -72,7 +72,9 @@ async function processRow(
   try {
     let matched: { id: string; exists: boolean } | null = null
     let isNew = false
-    const slug = slugify(row.name)
+    // Desambiguar slug por variante (ASIN/EAN) para evitar colisión UNIQUE deals.slug (Sienna/Stradic)
+    const baseSlugSource = ean ? `${row.name}-${ean.slice(-4)}` : row.amazonVariantAsin ? `${row.name}-${row.amazonVariantAsin}` : row.name
+    const slug = slugify(baseSlugSource)
 
     if (ean) {
       matched = await matchByEan(ean)
@@ -80,6 +82,11 @@ async function processRow(
 
     if (!matched) {
       matched = await matchBySlug(slug)
+      // fallback: si el slug desambiguado no matchea pero el slug base sí, intentar match por nombre normalizado
+      if (!matched) {
+        const fallbackSlug = slugify(row.name)
+        if (fallbackSlug !== slug) matched = await matchBySlug(fallbackSlug)
+      }
     }
 
     if (!matched && category) {
@@ -201,7 +208,9 @@ async function processRow(
             pros: row.pros || '',
             cons: row.cons || '',
           })
-        } catch {}
+        } catch (e) {
+          result.errors.push(`Enrich sheet failed for "${row.name}": ${(e as Error).message}`)
+        }
       }
     }
 
@@ -233,7 +242,9 @@ async function processRow(
                     features: details.features,
                     category: category || '',
                   })
-                } catch {}
+                } catch (e) {
+                  result.errors.push(`enrichWithAI failed for "${pName}": ${(e as Error).message}`)
+                }
 
                 if (!enrichment) {
                   enrichment = generateEnrichment(
@@ -253,7 +264,9 @@ async function processRow(
                 })
               }
             }
-          } catch {}
+          } catch (e) {
+            result.errors.push(`Scrape/enrich failed for "${pName}" (ASIN ${asin}): ${(e as Error).message}`)
+          }
         }
       }
     } else {

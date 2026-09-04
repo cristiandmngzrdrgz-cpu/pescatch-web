@@ -1,4 +1,4 @@
-import { getDeals, getFeaturedDeals, getDealCountsByCategory } from '@/data/queries'
+import { getFeaturedDeals, getDealCountsByCategory, getClickStats, getDealsPaginated } from '@/data/queries'
 import { getPosts } from '@/data/blog-queries'
 import { ProductCard } from '@/components/deals/product-card'
 import { AdBanner } from '@/components/ads/AdBanner'
@@ -41,23 +41,19 @@ const categoryIcons: Record<string, React.ComponentType<{ className?: string }>>
 }
 
 export default async function HomePage() {
-  const [featured, latest, topDiscounts, posts] = await Promise.all([
+  const [featured, latestResult, topDiscountsResult, posts, clickStats] = await Promise.all([
     getFeaturedDeals(),
-    getDeals({ sortBy: 'newest' }),
-    getDeals({ sortBy: 'discount' }).then(d => d.slice(0, 5)),
+    getDealsPaginated({ sortBy: 'newest' }, 1, 20),
+    getDealsPaginated({ sortBy: 'discount' }, 1, 5),
     getPosts(4),
+    getClickStats(),
   ])
-
-  const totalDeals = latest.length
+  const latest = latestResult.items
+  const topDiscounts = topDiscountsResult.items
+  const totalDeals = latestResult.total
   const categoryDealCounts = new Map(Object.entries(await getDealCountsByCategory()))
 
   const totalSavings = latest.reduce((sum, d) => sum + Math.max(0, d.originalPrice - d.salePrice), 0)
-
-  // Simulated social proof (deterministic based on date - replace with real tracking data later)
-  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-  const dayHash = parseInt(today.slice(-4), 10) // Last 4 digits of YYYYMMDD
-  const purchasesThisWeek = 23 + (dayHash % 15) // 23-37, consistent per day
-  const hoursSinceLastPurchase = 1 + ((dayHash * 7) % 12) // 1-12h, consistent per day
 
   const groupedFeatured = groupDealsByProduct(featured)
   const groupedLatest = groupDealsByProduct(latest).sort((a, b) => {
@@ -197,26 +193,38 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Social Proof Bar */}
+      {/* Social Proof Bar — datos reales de click_tracking */}
       <section className="py-4" style={{ background: '#0B1A30', borderBottom: '1px solid #1E3A5F' }}>
         <div className="mx-auto max-w-7xl px-4">
           <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 text-sm">
-            <div className="flex items-center gap-2" style={{ color: '#8BA3C7' }}>
-              <ShoppingCart className="h-4 w-4" style={{ color: '#00D4FF' }} />
-              <span className="font-semibold" style={{ color: '#E8F0FE' }}>{purchasesThisWeek}</span>
-              <span>pescadores compraron esta semana</span>
-            </div>
-            <div className="w-px h-6" style={{ background: '#1E3A5F' }} />
-            <div className="flex items-center gap-2" style={{ color: '#8BA3C7' }}>
-              <Clock className="h-4 w-4" style={{ color: '#FFB800' }} />
-              <span>Última compra: hace <span className="font-semibold" style={{ color: '#E8F0FE' }}>{hoursSinceLastPurchase}h</span></span>
-            </div>
-            <div className="w-px h-6" style={{ background: '#1E3A5F' }} />
+            {clickStats && (
+              <>
+                <div className="flex items-center gap-2" style={{ color: '#8BA3C7' }}>
+                  <ShoppingCart className="h-4 w-4" style={{ color: '#00D4FF' }} />
+                  <span className="font-semibold" style={{ color: '#E8F0FE' }}>{clickStats.purchasesThisWeek}</span>
+                  <span>clics esta semana</span>
+                </div>
+                <div className="w-px h-6" style={{ background: '#1E3A5F' }} />
+                {clickStats.hoursSinceLastPurchase !== null && (
+                  <>
+                    <div className="flex items-center gap-2" style={{ color: '#8BA3C7' }}>
+                      <Clock className="h-4 w-4" style={{ color: '#FFB800' }} />
+                      <span>Último clic: hace <span className="font-semibold" style={{ color: '#E8F0FE' }}>{clickStats.hoursSinceLastPurchase}h</span></span>
+                    </div>
+                    <div className="w-px h-6" style={{ background: '#1E3A5F' }} />
+                  </>
+                )}
+              </>
+            )}
             <div className="flex items-center gap-2" style={{ color: '#8BA3C7' }}>
               <TrendingUp className="h-4 w-4" style={{ color: '#26DE81' }} />
               <span>{totalSavings.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })} ahorrados en total</span>
             </div>
-            <p className="text-[0.7rem] ml-auto" style={{ color: '#4A6080' }}>Basado en clicks de afiliados verificados</p>
+            {clickStats ? (
+              <p className="text-[0.7rem] ml-auto" style={{ color: '#4A6080' }}>Basado en clics de afiliados verificados</p>
+            ) : (
+              <p className="text-[0.7rem] ml-auto" style={{ color: '#4A6080' }}>{totalDeals} chollos verificados</p>
+            )}
           </div>
         </div>
       </section>

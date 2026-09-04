@@ -144,34 +144,45 @@ export async function upsertDeal(
     return dealId
   }
 
-  // Create new deal
+  // Create new deal — manejar colisión UNIQUE slug (Sienna/Stradic variantes)
   const dealId = `deal_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
-
-  await db.execute({
-    sql: `INSERT INTO deals (
-      id, productId, title, slug, description, originalPrice, salePrice, shippingCost,
-      discountPercent, currency, imageUrl, images,
-      storeId, storeName, storeUrl, storeReputation, storeCommissionRate,
-      affiliateUrl, category, subcategory, tags,
-      stockStatus, stockCount, rating, reviewCount,
-      technicalSpecs, review, pros, cons,
-      votesUp, votesDown, featured, commission,
-      ean, asin, expiresAt, publishedAt, createdAt, updatedAt
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    args: [
-      dealId, productId, title, slug, '',
-      originalPrice, salePrice, shippingCost,
-      discountPercent, 'EUR', '', '[]',
-      store.id, store.name, store.url || '',
-      store.reputation, store.commissionRate || 0,
-      affiliateUrl, '', '', '[]',
-      stockStatus, 0, 0, 0,
-      '{}', '', '[]', '[]',
-      0, 0, 0, commission,
-      '', '', null, now, now, now,
-    ] as InValue[],
-  })
-
+  let dealSlug = slug
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await db.execute({
+        sql: `INSERT INTO deals (
+          id, productId, title, slug, description, originalPrice, salePrice, shippingCost,
+          discountPercent, currency, imageUrl, images,
+          storeId, storeName, storeUrl, storeReputation, storeCommissionRate,
+          affiliateUrl, category, subcategory, tags,
+          stockStatus, stockCount, rating, reviewCount,
+          technicalSpecs, review, pros, cons,
+          votesUp, votesDown, featured, commission,
+          ean, asin, expiresAt, publishedAt, createdAt, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          dealId, productId, title, dealSlug, '',
+          originalPrice, salePrice, shippingCost,
+          discountPercent, 'EUR', '', '[]',
+          store.id, store.name, store.url || '',
+          store.reputation, store.commissionRate || 0,
+          affiliateUrl, '', '', '[]',
+          stockStatus, 0, 0, 0,
+          '{}', '', '[]', '[]',
+          0, 0, 0, commission,
+          '', '', null, now, now, now,
+        ] as InValue[],
+      })
+      return dealId
+    } catch (e) {
+      const msg = (e as Error).message || ''
+      if (msg.includes('UNIQUE constraint failed: deals.slug') && attempt < 2) {
+        dealSlug = `${slug}-${storeId}-${Math.random().toString(36).slice(2, 4)}`
+        continue
+      }
+      throw e
+    }
+  }
   return dealId
 }
 

@@ -74,8 +74,9 @@ export function AdBanner({ slot, format = 'auto', className = '', requireConsent
     }
   }, [consented, slot])
 
-  // Sin client o sin slot: placeholder visual (no cuenta para AdSense, solo layout/CLS)
+  // Sin client o sin slot: en prod no mostrar nada (evita placeholder a usuarios), en dev placeholder para layout/CLS
   if (!ADSENSE_CLIENT || !slot) {
+    if (process.env.NODE_ENV === 'production') return null
     return (
       <div
         className={`flex items-center justify-center rounded-xl border border-dashed text-xs ${className}`}

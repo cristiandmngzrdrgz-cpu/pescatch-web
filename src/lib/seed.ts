@@ -3,10 +3,11 @@ import { sampleDeals } from '@/data/deals'
 import { migrateExistingDealsToProducts } from '@/data/queries'
 import { seedExtraPosts } from './seed-posts-extra'
 
-let seeded = false
+const globalForSeed = globalThis as unknown as { _pescatchSeeded?: boolean }
+if (globalForSeed._pescatchSeeded === undefined) globalForSeed._pescatchSeeded = false
 
 export async function seedDatabase() {
-  if (seeded) return
+  if (globalForSeed._pescatchSeeded) return
 
   const db = getDb()
   await initSchema()
@@ -108,7 +109,7 @@ export async function seedDatabase() {
   // Migrate existing deals to products (for production DB upgrade)
   await migrateExistingDealsToProducts()
 
-  seeded = true
+  globalForSeed._pescatchSeeded = true
   console.log('✅ Database seeded successfully')
 }
 

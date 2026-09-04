@@ -732,3 +732,28 @@ export const getDealBySlugCached = cache(async (slug: string): Promise<Deal | un
 export const getRelatedDealsCached = cache(async (deal: Deal, limit = 4): Promise<Deal[]> => {
   return getRelatedDeals(deal, limit)
 })
+
+export interface ClickStats {
+  purchasesThisWeek: number
+  hoursSinceLastPurchase: number | null
+}
+
+export async function getClickStats(): Promise<ClickStats | null> {
+  try {
+    const db = getDb()
+    const cntRes = await db.execute("SELECT COUNT(*) as cnt FROM click_tracking WHERE timestamp > datetime('now','-7 days')")
+    const cnt = Number(cntRes.rows[0]?.cnt ?? 0)
+    if (cnt === 0) return null
+    const lastRes = await db.execute("SELECT MAX(timestamp) as lastTs FROM click_tracking")
+    const lastTs = lastRes.rows[0]?.lastTs as string | null
+    let hoursSince: number | null = null
+    if (lastTs) {
+      const diffMs = Date.now() - new Date(lastTs).getTime()
+      hoursSince = Math.max(1, Math.round(diffMs / (1000 * 60 * 60)))
+      if (hoursSince > 99) hoursSince = 99
+    }
+    return { purchasesThisWeek: cnt, hoursSinceLastPurchase: hoursSince }
+  } catch {
+    return null
+  }
+}
