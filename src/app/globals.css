@@ -51,6 +51,12 @@
   --color-mc-text-tertiary: #4A6080;
   --color-mc-card-border: #1E3A5F;
 
+  /* Homepage hero / legacy hex aliases — centraliza los # hardcodeados de page.tsx */
+  --color-navy-hero: #0B1A30;
+  --color-navy-deep: #0B1120;
+  --color-surface-dark: #111827;
+  --color-slate-light: #A0B8D8;
+
   /* Design Tokens */
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;

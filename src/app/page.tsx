@@ -80,7 +80,7 @@ export default async function HomePage() {
     <div>
       {/* HERO */}
       <section className="relative overflow-hidden min-h-[85vh] lg:min-h-[90vh] flex items-center">
-          <div className="absolute inset-0" style={{ background: '#0B1A30' }}>
+          <div className="absolute inset-0 bg-navy-hero">
             <Image
               src="/images/hero-bg.jpg"
               alt="Pesca deportiva"
@@ -100,20 +100,17 @@ export default async function HomePage() {
             {/* Left: Text */}
             <div className="max-w-xl">
               <div className="flex flex-wrap gap-2 mb-6">
-                <div className="inline-flex items-center gap-2 text-sm rounded-full px-4 py-1.5"
-                  style={{ background: 'rgba(0,212,255,0.15)', border: '1px solid rgba(0,212,255,0.3)', color: '#00D4FF' }}>
+                <div className="inline-flex items-center gap-2 text-sm rounded-full px-4 py-1.5 bg-mc-cyan/15 border border-mc-cyan/30 text-mc-cyan">
                   <BookOpen className="h-4 w-4" />
                   <span className="font-semibold">Guías y análisis</span>
                 </div>
-                <div className="inline-flex items-center gap-2 text-sm rounded-full px-4 py-1.5"
-                  style={{ background: 'rgba(255,184,0,0.12)', border: '1px solid rgba(255,184,0,0.3)', color: '#FFB800' }}>
+                <div className="inline-flex items-center gap-2 text-sm rounded-full px-4 py-1.5 bg-mc-amber/12 border border-mc-amber/30 text-mc-amber">
                   <BadgeCheck className="h-4 w-4" />
                   <span className="font-semibold">+{totalDeals} ofertas</span>
             </div>
           </div>
 
-              <h1 className="text-[2.5rem] sm:text-[3.5rem] lg:text-[4rem] font-extrabold leading-[1.05] tracking-tight mb-5"
-                style={{ color: '#E8F0FE', textShadow: '0 2px 20px rgba(0,0,0,0.3)' }}>
+              <h1 className="text-[2.5rem] sm:text-[3.5rem] lg:text-[4rem] font-extrabold leading-[1.05] tracking-tight mb-5 text-mc-text [text-shadow:0_2px_20px_rgba(0,0,0,0.3)]">
                 <span style={{
                   background: 'linear-gradient(135deg, #00D4FF, #5EEAD4 100%)',
                   WebkitBackgroundClip: 'text',
@@ -125,8 +122,8 @@ export default async function HomePage() {
                 <br />y los Mejores Chollos
               </h1>
 
-              <p className="text-lg sm:text-xl leading-relaxed mb-8 max-w-lg" style={{ color: '#A0B8D8' }}>
-                Analizamos y comparamos el material de pesca para que aciertes en cada compra. <strong style={{ color: '#E8F0FE' }}>Guías honestas, chollos verificados</strong> en Amazon y AliExpress.
+              <p className="text-lg sm:text-xl leading-relaxed mb-8 max-w-lg text-slate-light">
+                Analizamos y comparamos el material de pesca para que aciertes en cada compra. <strong className="text-mc-text">Guías honestas, chollos verificados</strong> en Amazon y AliExpress.
               </p>
 
               <div className="flex flex-wrap gap-3">
@@ -194,36 +191,36 @@ export default async function HomePage() {
       </section>
 
       {/* Social Proof Bar — datos reales de click_tracking */}
-      <section className="py-4" style={{ background: '#0B1A30', borderBottom: '1px solid #1E3A5F' }}>
+      <section className="py-4 bg-navy-hero border-b border-mc-border">
         <div className="mx-auto max-w-7xl px-4">
           <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 text-sm">
             {clickStats && (
               <>
-                <div className="flex items-center gap-2" style={{ color: '#8BA3C7' }}>
-                  <ShoppingCart className="h-4 w-4" style={{ color: '#00D4FF' }} />
-                  <span className="font-semibold" style={{ color: '#E8F0FE' }}>{clickStats.purchasesThisWeek}</span>
+                <div className="flex items-center gap-2 text-mc-text-secondary">
+                  <ShoppingCart className="h-4 w-4 text-mc-cyan" />
+                  <span className="font-semibold text-mc-text">{clickStats.purchasesThisWeek}</span>
                   <span>clics esta semana</span>
                 </div>
-                <div className="w-px h-6" style={{ background: '#1E3A5F' }} />
+                <div className="w-px h-6 bg-mc-border" />
                 {clickStats.hoursSinceLastPurchase !== null && (
                   <>
-                    <div className="flex items-center gap-2" style={{ color: '#8BA3C7' }}>
-                      <Clock className="h-4 w-4" style={{ color: '#FFB800' }} />
-                      <span>Último clic: hace <span className="font-semibold" style={{ color: '#E8F0FE' }}>{clickStats.hoursSinceLastPurchase}h</span></span>
+                    <div className="flex items-center gap-2 text-mc-text-secondary">
+                      <Clock className="h-4 w-4 text-mc-amber" />
+                      <span>Último clic: hace <span className="font-semibold text-mc-text">{clickStats.hoursSinceLastPurchase}h</span></span>
                     </div>
-                    <div className="w-px h-6" style={{ background: '#1E3A5F' }} />
+                    <div className="w-px h-6 bg-mc-border" />
                   </>
                 )}
               </>
             )}
-            <div className="flex items-center gap-2" style={{ color: '#8BA3C7' }}>
-              <TrendingUp className="h-4 w-4" style={{ color: '#26DE81' }} />
+            <div className="flex items-center gap-2 text-mc-text-secondary">
+              <TrendingUp className="h-4 w-4 text-mc-success" />
               <span>{totalSavings.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })} ahorrados en total</span>
             </div>
             {clickStats ? (
-              <p className="text-[0.7rem] ml-auto" style={{ color: '#4A6080' }}>Basado en clics de afiliados verificados</p>
+              <p className="text-[0.7rem] ml-auto text-mc-text-tertiary">Basado en clics de afiliados verificados</p>
             ) : (
-              <p className="text-[0.7rem] ml-auto" style={{ color: '#4A6080' }}>{totalDeals} chollos verificados</p>
+              <p className="text-[0.7rem] ml-auto text-mc-text-tertiary">{totalDeals} chollos verificados</p>
             )}
           </div>
         </div>
