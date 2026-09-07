@@ -21,8 +21,21 @@ const POPULAR_BRANDS = [
 
 const PREMIUM_BRANDS = ['shimano', 'daiwa', 'okuma']
 
+function isFakeBrand(brand: string | null | undefined): boolean {
+  if (!brand) return true
+  const b = brand.trim()
+  if (b.length < 2) return true
+  if (b.includes('€')) return true
+  if (b.includes('kg') && b.includes('€')) return true
+  if (b.endsWith(':')) return true
+  if (/^\d/.test(b)) return true
+  if (b.toLowerCase() === 'recomendado:') return true
+  return false
+}
+
 function isCuratedStrict(c: AmazonCandidate): boolean {
-  const b = c.brand?.toLowerCase() ?? ''
+  if (isFakeBrand(c.brand)) return false
+  const b = c.brand!.toLowerCase()
   const hasPremium = PREMIUM_BRANDS.some(p => b.includes(p))
   if (!hasPremium) return false
   const ratingNorm = c.rating > 5 ? c.rating / 20 : c.rating
@@ -33,6 +46,14 @@ function isCuratedStrict(c: AmazonCandidate): boolean {
     const discount = ((c.originalPrice - c.price) / c.originalPrice) * 100
     if (discount < 8) return false
   }
+  return true
+}
+
+function isValidForSave(c: ScoredCandidate): boolean {
+  if (isFakeBrand(c.brand)) return false
+  if (c.reviews < 10) return false
+  if (c.score < 50) return false
+  if (c.price < 5 || c.price > 600) return false
   return true
 }
 
@@ -59,7 +80,9 @@ function scoreCandidate(c: AmazonCandidate): number {
     else score += Math.min(25, Math.round(discount * 1.5))
   }
 
-  if (c.brand) {
+  if (isFakeBrand(c.brand)) {
+    score -= 20
+  } else if (c.brand) {
     const isPopular = POPULAR_BRANDS.some(b => c.brand!.toLowerCase().includes(b))
     if (isPopular) score += 30
   } else {
@@ -150,9 +173,22 @@ async function discoverAuto() {
   }
 
   const curated = allCandidates.filter(isCuratedStrict)
-  const pool = curated.length >= 3 ? curated : allCandidates
-  if (curated.length >= 3) console.log(`\n✓ Filtro estricto premium: ${curated.length} candidatos (Shimano/Daiwa/Okuma)`)
-  else console.log(`\n⚠️ Filtro estricto solo ${curated.length} (<3), usando pool completo (${allCandidates.length})`)
+  const valid = allCandidates.filter(isValidForSave)
+  let pool: ScoredCandidate[]
+  if (curated.length >= 3) {
+    pool = curated
+    console.log(`\n✓ Filtro estricto premium: ${curated.length} candidatos (Shimano/Daiwa/Okuma)`)
+  } else if (valid.length >= 5) {
+    pool = valid
+    console.log(`\n✓ Filtro válido: ${valid.length} candidatos (score>=50, reviews>=10, brand ok) — curated solo ${curated.length}`)
+  } else if (valid.length > 0) {
+    pool = valid
+    console.log(`\n⚠️ Solo ${valid.length} candidatos válidos (<5), guardando solo válidos (evita junk)`)
+  } else {
+    console.log(`\n❌ 0 candidatos válidos (score>=50, reviews>=10, brand ok). No se guarda junk. Total escaneado: ${allCandidates.length}`)
+    console.log(`   Curated premium: ${curated.length} | Válidos: ${valid.length}`)
+    return
+  }
 
   const ranked = pool.sort((a, b) => b.score - a.score).slice(0, 50)
 

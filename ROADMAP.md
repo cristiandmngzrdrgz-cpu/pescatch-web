@@ -2,7 +2,7 @@
 
 > Web de chollos de material de pesca. Dominio: `pescatch.es`
 > Tech stack: Next.js 16 + TypeScript + Tailwind CSS 4 + shadcn/ui + SQLite/Turso
-> **Última actualización:** 2026-09-04
+> **Última actualización:** 2026-09-07
 
 ---
 
@@ -91,6 +91,9 @@
 - **Backlog 04 Sep 2026**: 53 `pending_candidates` locales auditados → 51 rechazados (0 reviews / fake rating 100→5.0 con 0 reviews, Sougayilang genéricos, perillas/cabezal corte junk, duplicados x2-x4), 1 duplicado de deal existente, 1 aprobado espejado. Local: 0 pending (783 rejected, 13 approved). Turso 0 pending. Backlog liquidado.
 - **Fix `scoreCandidate` (04 Sep, `auto.ts`)**: `rating 0 reviews` ya no puntúa (fake AE 5.0/0), `reviews<10` half-rating, descuento >80% cap 10pts (evita inflado 94% de AE). Evita que futuros `discover:auto` generen 50 junk con score 85.
 - **Verificación 04 Sep**: `clean-expired` 0 expirados, `build` OK, `lint` 22 warnings, `test` 175/177 (2 flaky timeout preexistentes), `sync_log` Turso 04 Sep 06:10 OK (283 filas, 0 creados, 281 actualizados).
+- **Backlog 07 Sep 2026**: 43 pending (score 30-49, 40/43 brand fake `€`/`:`/`null`, consumibles plomos/anzuelos) + 31 approved legacy (11 Sougayilang fake 100/0 + 20 duplicados low-score) → rechazados → `rejected=925, pending=0, approved=0`. Turso `push-candidates` 0 inserts.
+- **Blindaje discover 07 Sep**: `scripts/discover/auto.ts` + `auto-amazon.ts` → `isFakeBrand()` + `isValidForSave(reviews>=10 && score>=50 && !fakeBrand && 5€≤price≤600€)`; `scoreCandidate` penaliza fake -20; pool: `curated>=3` → premium, `valid>=5` → válido, `valid>0` → solo válidos, `0 válidos→0 guardados` (no rellena con junk). `robots.txt` añade `rss.xml`/`deals.xml` sitemaps.
+- **Verificación 07 Sep**: `build` 81s OK, `lint` 22 warnings 0 errores, `test` 177/177 ✓.
 
 ---
 

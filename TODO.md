@@ -1,7 +1,7 @@
 # TODO — Mejora del pipeline de datos
 
-**Última actualización:** 2026-09-04
-**Estado actual:** ✅ 9/9 tareas completadas (Fases 1-4 + Infra) + mantenimiento semanal
+**Última actualización:** 2026-09-07
+**Estado actual:** ✅ 9/9 tareas completadas (Fases 1-4 + Infra) + mantenimiento 07 Sep
 
 > Nota: este archivo cubre el pipeline de datos. El ROADMAP.md cubre todo el proyecto (marketing, SEO, infraestructura).
 
@@ -88,10 +88,11 @@ PesCatch.es es una web de chollos de material de pesca. El pipeline de datos tie
 - [x] **A1:R100 hardcodeado** → `RANGE = SHEET_NAME` + `ensureHeaders` expande más allá de Z
 - [x] **EANs de 12 dígitos** resueltos vía RAW mode (`0022255230759`, `0031324038523`)
 
-### Nuevos pendientes (04 Sep 2026)
+### Nuevos pendientes (07 Sep 2026)
 - [x] **Scoring 0 reviews**: fake rating 100/0 ya no puntúa (fix `scoreCandidate` 04 Sep)
-- [ ] **Backlog Sougayilang genéricos**: 52 rechazados hoy (53 pending → 0). Vigilar que `discover:auto` no regenere junk; valorar filtro `score>=50 && reviews>=10`
-- [ ] **Slug UNIQUE duplicado**: `SHIMANO Sienna FG 4000` y `Stradic FL 2500` siguen fallando en sync_log (2 errores por sync) — revisar slugs en Sheet
+- [x] **Backlog Sougayilang genéricos**: auditado 04 Sep (53→0) + 07 Sep (43 pending + 31 approved junk → 0). Blindaje `discover:auto` + `auto-amazon.ts`: `isFakeBrand` (rechaza `€`/`:`/`Recomendado:`), `isValidForSave` (`reviews>=10 && score>=50 && brand ok && 5€≤price≤600€`), fallback ya no guarda junk (si 0 válidos → 0 guardados). `scoreCandidate` penaliza fake brand -20 y cap descuento >80%→10pts.
+- [x] **Backlog 07 Sep live**: 43 pending Amazon (todos `score 30-49` + 40/43 brand fake `€`) y 31 approved legacy (11 fake 100/0 Sougayilang) → rechazados en bloque. Local `pending=0 approved=0 rejected=925`. Turso `push-candidates` dry-run 0 inserts. `discover-auto.log` marcará 0 válidos hasta que haya stock real.
+- [ ] **Slug UNIQUE duplicado**: `SHIMANO Sienna FG 4000` y `Stradic FL 2500` siguen con 2 errores/sync (mitigado en código: `upsertDeal` retry `UNIQUE deals.slug` 3 intentos + `generateUniqueSlug` excluye id; no bloquea sync — 279 updated). Requiere dedup manual en Sheet (mismo `name` con EAN diferente genera `slug` colisión). Ver `src/lib/run-sync.ts:49-59` y `src/lib/sync/matcher.ts:147-185`.
 
 ---
 
@@ -99,9 +100,9 @@ PesCatch.es es una web de chollos de material de pesca. El pipeline de datos tie
 
 ### Comandos de verificación
 ```bash
-npm run build   # ✓ 04 Sep 2026
+npm run build   # ✓ 07 Sep 2026 (81s compile, 48/48 static)
 npm run lint    # 22 warnings, 0 errores
-npm test        # 175/177 (2 flaky timeout preexistentes)
+npm test        # 177/177 ✓
 ```
 
 ### Convenciones de código
