@@ -19,11 +19,11 @@ export interface ProductEntry {
 }
 
 export function extractProducts(content: string): { products: ProductEntry[]; clean: string } {
-  const match = content.match(/<!--\s*PRODUCTS_DATA:\s*(\[.*?\])\s*-->/)
+  const match = content.match(/<!--\s*PRODUCTS_DATA:\s*(\[[\s\S]*?\])\s*-->/)
   if (!match) return { products: [], clean: content }
   try {
     const raw = JSON.parse(match[1])
-    const clean = content.replace(/<!--\s*PRODUCTS_DATA:\s*(\[.*?\])\s*-->/g, '')
+    const clean = content.replace(/<!--\s*PRODUCTS_DATA:\s*(\[[\s\S]*?\])\s*-->/g, '')
 
     let products: ProductEntry[]
     if (raw[0]?.stores) {
