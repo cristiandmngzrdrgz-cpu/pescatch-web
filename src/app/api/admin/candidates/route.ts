@@ -50,7 +50,14 @@ export async function POST(request: NextRequest) {
       if (candidate.originalPrice) {
         rowData[`${store}OriginalPrice`] = candidate.originalPrice
       }
-      const row = headers.map(h => rowData[h] ?? '')
+      const toCamel = (s: string) => s.replace(/[-_\s]+(.)/g, (_: string, c: string) => c.toUpperCase()).replace(/^[A-Z]/, (c: string) => c.toLowerCase())
+      const row = headers.map(h => {
+        const camel = toCamel(h)
+        return (rowData[h] ?? rowData[camel] ?? '') as string | number | boolean
+      })
+      if (candidate.imageUrl && !row.some(v => String(v).includes('m.media-amazon.com') || String(v).includes('alicdn') || String(v).includes('ae-pic'))) {
+        console.warn(`[candidates] imageUrl not mapped to sheet row for ${candidate.asin || candidate.url}: headers=${headers.join(',')}`)
+      }
       await appendRow(row)
     } catch (err) {
       console.error('Error appending to sheet:', err)

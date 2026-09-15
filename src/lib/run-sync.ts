@@ -58,6 +58,31 @@ async function generateUniqueSlug(base: string, excludeId?: string): Promise<str
   return slug
 }
 
+async function resolveFallbackImageUrl(db: ReturnType<typeof getDb>, amazonUrl: string | undefined, ean: string): Promise<string | null> {
+  const asin = amazonUrl ? extractAsin(amazonUrl) : null
+  if (asin) {
+    try {
+      const res = await db.execute({
+        sql: `SELECT imageUrl FROM pending_candidates WHERE asin = ? AND imageUrl IS NOT NULL AND imageUrl != '' ORDER BY CASE WHEN status='approved' THEN 0 ELSE 1 END, created_at DESC LIMIT 1`,
+        args: [asin],
+      })
+      const img = res.rows[0]?.imageUrl as string | undefined
+      if (img) return img.replace(/_AC_UL\d+_\./, '_AC_SX679_.')
+    } catch {}
+  }
+  if (ean) {
+    try {
+      const res = await db.execute({
+        sql: `SELECT imageUrl FROM pending_candidates WHERE ean = ? AND imageUrl IS NOT NULL AND imageUrl != '' LIMIT 1`,
+        args: [ean],
+      })
+      const img = res.rows[0]?.imageUrl as string | undefined
+      if (img) return img.replace(/_AC_UL\d+_\./, '_AC_SX679_.')
+    } catch {}
+  }
+  return null
+}
+
 async function processRow(
   row: SyncRow,
   result: SyncResult,
@@ -68,6 +93,14 @@ async function processRow(
   const ean = row.ean?.trim() || ''
   const category = normalizeCategory(row.category)
   const subcategory = normalizeSubcategory(category, row.subcategory)
+  // Fallback de imagen: si Sheet viene sin imageUrl pero pending_candidates sí la tiene (ASIN/EAN), rescatarla
+  if (!row.imageUrl || row.imageUrl.trim() === '') {
+    const fallback = await resolveFallbackImageUrl(db, row.amazonUrl, ean)
+    if (fallback) {
+      console.log(`  🖼️ Fallback image para "${row.name}" desde pending_candidates: ${fallback.slice(0, 60)}...`)
+      row.imageUrl = fallback
+    }
+  }
 
   try {
     let matched: { id: string; exists: boolean } | null = null
@@ -225,7 +258,7 @@ async function processRow(
             const { scrapeAmazonDetails } = await import('../../scripts/discover/amazon')
             console.log(`  🔍 Scraping Amazon ${asin} for "${pName}"...`)
             const details = await scrapeAmazonDetails(asin)
-            if (details.features.length > 0 || details.description) {
+            if (details.features.length > 0 || details.description || details.imageUrl) {
               const existingDeal = await db.execute({
                 sql: 'SELECT id FROM deals WHERE productId = ? AND storeId = ?',
                 args: [matched.id, 'amazon'],

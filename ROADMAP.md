@@ -2,7 +2,7 @@
 
 > Web de chollos de material de pesca. Dominio: `pescatch.es`
 > Tech stack: Next.js 16 + TypeScript + Tailwind CSS 4 + shadcn/ui + SQLite/Turso
-> **Última actualización:** 2026-09-07
+> **Última actualización:** 2026-09-14
 
 ---
 
@@ -94,6 +94,7 @@
 - **Backlog 07 Sep 2026**: 43 pending (score 30-49, 40/43 brand fake `€`/`:`/`null`, consumibles plomos/anzuelos) + 31 approved legacy (11 Sougayilang fake 100/0 + 20 duplicados low-score) → rechazados → `rejected=925, pending=0, approved=0`. Turso `push-candidates` 0 inserts.
 - **Blindaje discover 07 Sep**: `scripts/discover/auto.ts` + `auto-amazon.ts` → `isFakeBrand()` + `isValidForSave(reviews>=10 && score>=50 && !fakeBrand && 5€≤price≤600€)`; `scoreCandidate` penaliza fake -20; pool: `curated>=3` → premium, `valid>=5` → válido, `valid>0` → solo válidos, `0 válidos→0 guardados` (no rellena con junk). `robots.txt` añade `rss.xml`/`deals.xml` sitemaps.
 - **Verificación 07 Sep**: `build` 81s OK, `lint` 22 warnings 0 errores, `test` 177/177 ✓.
+- **Mantenimiento 14 Sep 2026**: `clean-expired` 0, `refresh-prices:prod --apply` 120 updated/31 failed/0 removed (131 pushes Turso), `sync --no-enrich` 294 rows 2 created 292 updated **0 errores** (fix slug UNIQUE `matcher.ts:132-186` check determinístico `-${storeId}` antes de INSERT/UPDATE + fallback random; antes 2 errores/sync Sienna/Stradic). `build` 117s OK 48/48, `lint` 22 warnings, `test` 175/177 (2 flaky preexistentes). TODO 9/9 100% + pendientes 0.
 
 ---
 

@@ -131,15 +131,36 @@ export async function upsertDeal(
 
   if (existing.rows.length > 0) {
     const dealId = existing.rows[0].id as string
-
-    await db.execute({
-       sql: `UPDATE deals SET
-         title = ?, slug = ?, originalPrice = ?, salePrice = ?, shippingCost = ?, discountPercent = ?,
-         stockStatus = ?, affiliateUrl = ?, storeName = ?, storeUrl = ?,
-         storeReputation = ?, storeCommissionRate = ?, commission = ?, expiresAt = ?, updatedAt = ?
-       WHERE id = ?`,
-       args: [title, slug, originalPrice, salePrice, shippingCost, discountPercent, stockStatus, affiliateUrl, storeName, store.url || '', store.reputation, store.commissionRate || 0, commission, null, now, dealId],
-    })
+    let finalSlug = slug
+    // Evitar colisión UNIQUE en UPDATE: si otro deal ya usa ese slug, generar variante determinística
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const clash = await db.execute({ sql: 'SELECT id FROM deals WHERE slug = ? AND id != ?', args: [finalSlug, dealId] })
+      if (clash.rows.length === 0) break
+      finalSlug = attempt === 0 ? `${slug}-${storeId}` : `${slug}-${storeId}-${attempt}`
+    }
+    try {
+      await db.execute({
+         sql: `UPDATE deals SET
+          title = ?, slug = ?, originalPrice = ?, salePrice = ?, shippingCost = ?, discountPercent = ?,
+          stockStatus = ?, affiliateUrl = ?, storeName = ?, storeUrl = ?,
+          storeReputation = ?, storeCommissionRate = ?, commission = ?, expiresAt = ?, updatedAt = ?
+        WHERE id = ?`,
+         args: [title, finalSlug, originalPrice, salePrice, shippingCost, discountPercent, stockStatus, affiliateUrl, storeName, store.url || '', store.reputation, store.commissionRate || 0, commission, null, now, dealId],
+      })
+    } catch (e) {
+      const msg = (e as Error).message || ''
+      if (msg.includes('UNIQUE constraint failed: deals.slug')) {
+        finalSlug = `${slug}-${storeId}-${Math.random().toString(36).slice(2, 4)}`
+        await db.execute({
+           sql: `UPDATE deals SET
+          title = ?, slug = ?, originalPrice = ?, salePrice = ?, shippingCost = ?, discountPercent = ?,
+          stockStatus = ?, affiliateUrl = ?, storeName = ?, storeUrl = ?,
+          storeReputation = ?, storeCommissionRate = ?, commission = ?, expiresAt = ?, updatedAt = ?
+        WHERE id = ?`,
+           args: [title, finalSlug, originalPrice, salePrice, shippingCost, discountPercent, stockStatus, affiliateUrl, storeName, store.url || '', store.reputation, store.commissionRate || 0, commission, null, now, dealId],
+        })
+      } else throw e
+    }
 
     return dealId
   }
@@ -147,6 +168,12 @@ export async function upsertDeal(
   // Create new deal — manejar colisión UNIQUE slug (Sienna/Stradic variantes)
   const dealId = `deal_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
   let dealSlug = slug
+  // Check determinístico antes de INSERT para evitar 3 intentos aleatorios
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const clash = await db.execute({ sql: 'SELECT id FROM deals WHERE slug = ?', args: [dealSlug] })
+    if (clash.rows.length === 0) break
+    dealSlug = attempt === 0 ? `${slug}-${storeId}` : `${slug}-${storeId}-${attempt}`
+  }
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       await db.execute({

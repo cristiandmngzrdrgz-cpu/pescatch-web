@@ -1,7 +1,7 @@
 import { type Page } from 'playwright'
 import * as path from 'path'
 import type { AmazonCandidate } from './amazon'
-import { isFishingProduct, braveAvailable, launchBraveContext, setupStealthPage } from '../../src/lib/scraping-utils'
+import { isFishingProduct, braveAvailable, launchBraveContext, setupStealthPage, extractBrand } from '../../src/lib/scraping-utils'
 
 function sleep(ms: number) {
   return new Promise(r => setTimeout(r, ms))
@@ -71,13 +71,22 @@ async function extractProductsFromPage(page: Page, keyword: string, category: st
       const rating = ratingMatch ? parseFloat(ratingMatch[0].replace(',', '.')) : 0
 
       let reviews = 0
-      const reviewSpans = Array.from(card.querySelectorAll('[class*="a-size-base"], [class*="a-link-normal"]'))
-      for (const span of reviewSpans) {
-        const t = span.textContent?.trim() || ''
-        const n = parseInt(t.replace(/\./g, ''), 10)
-        if (n > 0 && !t.includes('€') && !t.includes('$')) {
-          reviews = n
-          break
+      // Reviews está enlazado a #customerReviews — selector específico, fallback heurístico si no existe
+      const reviewsLink = card.querySelector('a[href*="customerReviews"], a[href*="#customerReviews"]')
+      if (reviewsLink) {
+        const t = (reviewsLink.textContent || '').trim()
+        const n = parseInt(t.replace(/\./g, '').replace(/[^0-9]/g, ''), 10)
+        if (!isNaN(n) && n > 0) reviews = n
+      }
+      if (reviews === 0) {
+        const reviewSpans = Array.from(card.querySelectorAll('[class*="a-size-base"], [class*="a-link-normal"]'))
+        for (const span of reviewSpans) {
+          const t = span.textContent?.trim() || ''
+          if (t.includes('€') || t.includes('$')) continue
+          // solo números tipo "1.234" o "123"
+          if (!/^[\d.]+$/.test(t.replace(/\s/g, ''))) continue
+          const n = parseInt(t.replace(/\./g, ''), 10)
+          if (n > 0) { reviews = n; break }
         }
       }
 
@@ -88,7 +97,7 @@ async function extractProductsFromPage(page: Page, keyword: string, category: st
       const brandEl = card.querySelector('[class*="a-row"] [class*="a-size-base"]')
       if (brandEl) {
         const t = brandEl.textContent?.trim() || ''
-        if (t && t.length < 30 && !t.includes(' ')) brand = t
+        if (t && t.length < 30 && !t.includes(' ') && !t.includes(':') && !t.includes('€')) brand = t
       }
 
       results.push({ asin, title, price: Math.round(price * 100) / 100, rating, reviews, imageUrl, brand })
@@ -99,7 +108,13 @@ async function extractProductsFromPage(page: Page, keyword: string, category: st
 
   const filtered = raw.filter(r => isFishingProduct(r.title, keyword))
 
-  return filtered.map(r => ({
+  return filtered.map(r => {
+    let brand = r.brand
+    if (!brand || brand.includes(':') || brand.includes('€')) {
+      const fromTitle = extractBrand(r.title)
+      if (fromTitle) brand = fromTitle
+    }
+    return {
     asin: r.asin,
     title: r.title,
     price: r.price,
@@ -110,9 +125,10 @@ async function extractProductsFromPage(page: Page, keyword: string, category: st
     keyword,
     category,
     imageUrl: r.imageUrl,
-    brand: r.brand,
+    brand,
     ean: null as string | null,
-  }))
+  }
+  })
 }
 
 export interface AmazonDetailsStealth {
@@ -361,7 +377,7 @@ export async function scrapeBestsellersStealth(category: string): Promise<Amazon
       keyword: '__bestsellers__',
       category,
       imageUrl: r.imageUrl,
-      brand: null,
+      brand: extractBrand(r.title),
       ean: null,
     }))
   } finally {
@@ -419,7 +435,7 @@ export async function scrapeNewReleasesStealth(category: string): Promise<Amazon
       keyword: '__new_releases__',
       category,
       imageUrl: r.imageUrl,
-      brand: null,
+      brand: extractBrand(r.title),
       ean: null,
     }))
   } finally {
