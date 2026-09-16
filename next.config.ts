@@ -1,6 +1,14 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  async headers() {
+    return [
+      {
+        source: '/ads.txt',
+        headers: [{ key: 'Content-Type', value: 'text/plain; charset=utf-8' }],
+      },
+    ]
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 86400,

@@ -1,3 +1,1 @@
-# ads.txt para PesCatch.es — Google AdSense
-# Propietario verificado 2026-09-02 — AdSense pub-6408920021627188
 google.com, pub-6408920021627188, DIRECT, f08c47fec0942fa0
