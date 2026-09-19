@@ -55,6 +55,7 @@ import { DealCtaButton } from '@/components/deals/deal-cta-button'
 import { MobileCtaButton } from '@/components/deals/mobile-cta-button'
 import { PriceAlertButton } from '@/components/deals/price-alert-button'
 import { AdBanner } from '@/components/ads/AdBanner'
+import { DealViewTracker } from '@/components/deals/deal-view-tracker'
 import { CATEGORIES, STORES } from '@/types'
 import Link from 'next/link'
 
@@ -136,6 +137,7 @@ export default async function DealDetailPage({
 
   return (
     <>
+      <DealViewTracker dealId={deal.id} category={deal.category} />
       <JsonLd data={[itemPageSchema, productSchema, breadcrumbs]} />
       <div className="mx-auto max-w-7xl px-4 py-8 pb-24 lg:pb-8">
 

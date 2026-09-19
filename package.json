@@ -27,7 +27,8 @@
     "send-price-alerts": "npx tsx scripts/send-price-alerts.ts",
     "clean-expired": "npx tsx scripts/clean-expired-deals.ts",
     "match-products": "npx tsx scripts/match-deals-to-products.ts",
-    "backup-db": "npx tsx scripts/backup-db.ts"
+    "backup-db": "npx tsx scripts/backup-db.ts",
+    "auto-approve": "npx tsx scripts/auto-approve-curated.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
