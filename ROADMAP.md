@@ -2,7 +2,7 @@
 
 > Web de chollos de material de pesca. Dominio: `pescatch.es`
 > Tech stack: Next.js 16 + TypeScript + Tailwind CSS 4 + shadcn/ui + SQLite/Turso
-> **Última actualización:** 2026-09-18
+> **Última actualización:** 2026-09-19
 
 ---
 
@@ -97,6 +97,7 @@
 - **Mantenimiento 14 Sep 2026**: `clean-expired` 0, `refresh-prices:prod --apply` 120 updated/31 failed/0 removed (131 pushes Turso), `sync --no-enrich` 294 rows 2 created 292 updated **0 errores** (fix slug UNIQUE `matcher.ts:132-186` check determinístico `-${storeId}` antes de INSERT/UPDATE + fallback random; antes 2 errores/sync Sienna/Stradic). `build` 117s OK 48/48, `lint` 22 warnings, `test` 175/177 (2 flaky preexistentes). TODO 9/9 100% + pendientes 0.
 - **Mantenimiento 17 Sep 2026**: `clean-expired` 0, `sync --no-enrich` 319 rows 2 creados 317 updated 0 errores (207s), `backup-db` 4.33MB, `candidates` 24 pending → 0 pending (24 rechazados: 17 ya en deals + 7 duplicados approved; blindaje `isFakeBrand`/`isValidForSave` OK, 0 fake brand), `approved` 25 → 8 tras purgar 17 dups vs deals (quedan B00KM587HQ/B01MFH2JAH/B0CH16WSLM/B08NK1HGQ4/B07N6JS8GJ/B0CMV4TB3R/HMR2/RJB7, score 71-81), `pending 0 / approved 8 / rejected 1026`. `refresh-prices` **133 updated / 33 failed / 0 removed + 9 priceAlert** (price_history 12358, `TURSO push-prices --apply` 0 pendientes — ya sincronizado), Blog `_Blog/` archivado: cajas 5955 == DB (publicado 10 Sep), fluoro fake B0XXXXX descartado vs DB real 4820 (4 prod B0H1R9TZLT etc). `build` 49/49 OK, `lint` 22 warnings, `test` 175/177 (2 flaky api-admin-sync/cron).
 - **Mantenimiento 18 Sep 2026**: `push` 2 commits (ropa fix + mantenimiento 17 Sep), `candidates` 19 pending + 8 approved → **13 únicos aprobados** (Shimano Baitrunner 60.49€, Ninja LT 55€, Sweepfire EC 22.91€, Ninja X Feeder 72€ + 9 únicos 22-128€, score 67-81) + 6 dup variantes rechazados → Sheet (13 `appendRow`) + `sync` 332→336 filas (6 creados local / 4 creados Turso) + `publish:prod --apply` 3 drafts→published, Blog **`mejor-ropa-impermeable-pesca-2026`** 5 prendas (Navis 71€, Vadeador 68€, Sombrero 29€, Botas 16€, Guantes 13€) + push a Turso, **AliExpress 4 picks** (JSFUN 14.95€, Cadence Darker 28.88€, Goture Xceed 35.59€, KUAISHA 26.07€) con precio manual verificado (sin inflar tachado) → `sync` 336 filas 6/4 creados → `published 169` (+4, total 173), `pending 0 / approved 25 / rejected 1051`, `price_history 13299`, `backup-db` 2026-09-18, `clean-expired` 0, `build` 49/49 OK (97s), `test` 177/177 ✓, `lint` 22 warnings.
+- **Mantenimiento 19 Sep 2026**: `clean-expired` 0, `backup-db` 2026-09-19, `sync --no-enrich` 336 rows 2 creados 334 updated 0 errores (239s, id 72), `scraping_health` 10:17 Amazon 97/0 + AE 45/31, `candidates` 23 pending → 17 dup approved rechazados → **6 pending únicos** (B0CH17B8Z1 60€, B075VCFDKJ 58€, B017M320VO 27€, B0846PNXKM 37€, B0846PLYSZ 39€, B0CSDR4MPC 67€, 70-79) `pending 6 / approved 25 / rejected 1068`, `price_history 13795`, `sitemap` 21 posts OK, `lint` 22 warnings, `test` 177/177 ✓.
 
 ---
 
