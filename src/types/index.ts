@@ -146,7 +146,7 @@ export interface DealFilters {
   minPrice?: number
   maxPrice?: number
   publishedSince?: string
-  sortBy?: 'discount' | 'price_asc' | 'price_desc' | 'newest' | 'popular'
+  sortBy?: 'discount' | 'price_asc' | 'price_desc' | 'newest' | 'popular' | 'commission'
   search?: string
   page?: number
   limit?: number

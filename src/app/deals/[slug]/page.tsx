@@ -385,6 +385,10 @@ export default async function DealDetailPage({
                 <span>Devolución fácil</span>
               </div>
             </div>
+            <div className="rounded-xl p-3 text-center text-xs" style={{ background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.15)' }}>
+              <span style={{ color: '#8BA3C7' }}>¿Quieres que te avise cuando baje? </span>
+              <Link href="/telegram" style={{ color: '#00D4FF' }} className="font-semibold">Únete al Telegram → 1 mensaje/semana</Link>
+            </div>
 
             <PriceAlertButton dealId={deal.id} dealSlug={deal.slug} currentPrice={deal.salePrice} alertCancelled={alertCancelled === 'true'} />
 

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Fish, LayoutDashboard, List, PlusCircle, ArrowLeft, Newspaper, MessageSquare, RefreshCw, ChevronDown, ChevronRight, ClipboardList } from 'lucide-react'
+import { Fish, LayoutDashboard, List, PlusCircle, ArrowLeft, Newspaper, MessageSquare, RefreshCw, ChevronDown, ChevronRight, ClipboardList, TrendingUp } from 'lucide-react'
 
 function NavLink({ href, icon: Icon, label, active }: { href: string; icon: React.ElementType; label: string; active: boolean }) {
   return (
@@ -74,6 +74,7 @@ export default function AdminSidebar() {
 
         <div className="mt-3 mb-1 px-3 text-xs font-semibold uppercase tracking-wider" style={{ color: '#4A6080' }}>Gestión</div>
         <NavLink href="/admin/candidates" icon={ClipboardList} label="Candidatos" active={pathname === '/admin/candidates'} />
+        <NavLink href="/admin/monetizacion" icon={TrendingUp} label="Monetización" active={pathname === '/admin/monetizacion'} />
         <NavLink href="/admin/comments" icon={MessageSquare} label="Comentarios" active={pathname === '/admin/comments'} />
         <NavLink href="/admin/sync" icon={RefreshCw} label="Sync" active={pathname === '/admin/sync'} />
       </nav>

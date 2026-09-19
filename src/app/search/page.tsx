@@ -19,6 +19,7 @@ const PAGE_SIZE = 12
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Mas recientes' },
   { value: 'discount', label: 'Mayor descuento' },
+  { value: 'commission', label: 'Más comisión' },
   { value: 'price_asc', label: 'Precio: menor a mayor' },
   { value: 'price_desc', label: 'Precio: mayor a menor' },
   { value: 'popular', label: 'Mas votados' },

@@ -83,6 +83,7 @@ function buildOrderBy(sortBy?: DealFilters['sortBy']): string {
     case 'price_desc': return 'ORDER BY salePrice DESC'
     case 'newest':     return 'ORDER BY publishedAt DESC'
     case 'popular':    return 'ORDER BY votesUp DESC'
+    case 'commission': return 'ORDER BY commission DESC'
     default:           return 'ORDER BY publishedAt DESC'
   }
 }
