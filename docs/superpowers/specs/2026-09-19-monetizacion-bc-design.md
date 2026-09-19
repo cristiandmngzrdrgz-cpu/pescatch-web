@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-09-19
 **Autor:** Muse Spark + Cristian
-**Estado:** Draft → pendiente revisión usuario antes de plan de implementación
+**Estado:** Aprobado 2026-09-19 — Vercel solo `AMAZON_PA_TAG` (tag-only, PA-API código listo `amazon-adapter.ts:14` sin keys)
 **Enfoque aprobado:** B+C mix (5-8h/semana, 1-2 posts/semana, promo ligera, máxima automatización)
 
 ---
@@ -137,7 +137,7 @@ Gate de decisión al final de semana 4: si CTR <1.5% y Telegram <30, pivotar a e
 
 ## 7. Manejo de errores y restricciones
 
-- **Sin API keys reales para Amazon PA-API** — `buildAmazonUrl` solo añade `?tag=` sin PA-API; no se promete precios en tiempo real de PA-API. Todo scrape es fetch + `isAmazonNotFoundPage` (`price-scraper/not-available.ts`).
+- **Amazon PA-API:** código operativo `amazon-adapter.ts:14` (`lookupViaPaApi` con `AMAZON_PA_API_KEY/SECRET`), pero **Vercel/env local solo tienen `AMAZON_PA_TAG=pescatch-21` (verificado 19 Sep)** — hoy opera tag-only `buildAmazonUrl` (`amazon-affiliate.ts:1`). Si algún día se añaden keys, `lookup` pasa a devolver precio/stock real sin cambiar flujo; hasta entonces `store.manualPrice ?? apiResult.price` en `run-sync.ts` y tag-only es suficiente para monetizar.
 - **AE precio "desde" distinto del real** — ya documentado `AGENTS.md:65` (verificar `es.aliexpress.com/item/<PID>.html` antes de publicar, `manualPrice` manda sobre API `store.manualPrice ?? apiResult.price` en `run-sync.ts`). No revertir.
 - **Playwright lazy** — cualquier uso con `await import('playwright')` dentro de función (no romper bundle Vercel).
 - **Rate limiting Amazon 3s** — `discover` max 1/hora (`AGENTS.md:55`).
@@ -184,4 +184,6 @@ Gate de decisión al final de semana 4: si CTR <1.5% y Telegram <30, pivotar a e
 
 ---
 
-**Siguiente paso:** tras tu revisión de este spec, invocar `writing-plans` para plan de implementación detallado por componente con orden y dependencias.
+**Corrección 19 Sep:** Vercel solo `AMAZON_PA_TAG` verificado — plan tag-only sin bloqueos; PA-API queda como mejora opcional futura.
+
+**Siguiente paso:** P0 tracking + auto-approve-curated en ejecución.
