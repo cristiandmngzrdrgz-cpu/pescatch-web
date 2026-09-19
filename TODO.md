@@ -1,7 +1,7 @@
 # TODO — Mejora del pipeline de datos
 
-**Última actualización:** 2026-09-17
-**Estado actual:** ✅ 9/9 tareas completadas (Fases 1-4 + Infra) + mantenimiento 17 Sep (319 rows 0 errores, pending 0)
+**Última actualización:** 2026-09-18
+**Estado actual:** ✅ 9/9 tareas completadas (Fases 1-4 + Infra) + mantenimiento 18 Sep (336 rows, published 173, pending 0, posts 21)
 
 > Nota: este archivo cubre el pipeline de datos. El ROADMAP.md cubre todo el proyecto (marketing, SEO, infraestructura).
 
@@ -98,6 +98,8 @@ PesCatch.es es una web de chollos de material de pesca. El pipeline de datos tie
 - `clean-expired` 0 expirados, `refresh-prices:prod --apply` 120 updated 31 failed 0 removed 2 alerts → 131 pushes a Turso, `push-candidates` 0, `sync --no-enrich` 0 errores (previo 2), `build` 48/48 OK, `lint` 22 warnings, `test` 175/177 (2 flaky timeout preexistentes).
 ### Mantenimiento 17 Sep 2026
 - `clean-expired` 0, `sync --no-enrich` 319 rows 2 creados 317 updated 0 errores (207s), `backup-db` 4.33MB (`data/backups/pescatch-2026-09-17.db`), `candidates` 24 pending → 0 pending (24 rechazados dup deals/approved; 0 fake brand), `approved` 25→8 (purgados 17 dups vs deals, quedan 8 score 71-81: B00KM587HQ/B01MFH2JAH/B0CH16WSLM/B08NK1HGQ4/B07N6JS8GJ/B0CMV4TB3R/HMR2/RJB7), `rejected 1026`, `refresh-prices` 133 updated / 33 failed / 0 removed + 9 priceAlert (price_history 12358, `push-prices --apply` 0 pendientes). Blog `_Blog/` archivado: cajas 5955 == DB (publicado), fluoro fake B0XXXXX descartado vs DB real 4820. `build` 49/49 OK, `lint` 22 warnings, `test` 175/177 (2 flaky).
+### Mantenimiento 18 Sep 2026
+- `push` 2 commits, `candidates` 19+8 → 13 únicos aprobados (B00KISCZ3Y 60€, B0CH17TGCM 55€, B017KJTV1W 22€, B0CMV4TB3R 72€ + 9 únicos) + 6 dup rechazados → Sheet + `sync` 336 filas 6 creados/4 Turso + `publish` 3 drafts→published, Blog `mejor-ropa-impermeable-pesca-2026` 5 prendas + push Turso, AE 4 picks (JSFUN 14.95€, Cadence 28.88€, Goture Xceed 35.59€, KUAISHA 26.07€) precio manual verificado → `published 173` (+4, total 203), `pending 0 / approved 25 / rejected 1051`, `price_history 13299`, `backup 2026-09-18`, `clean-expired` 0, `build` 49/49 OK, `test` 177/177 ✓.
 
 ---
 
@@ -105,10 +107,10 @@ PesCatch.es es una web de chollos de material de pesca. El pipeline de datos tie
 
 ### Comandos de verificación
 ```bash
-npm run build   # ✓ 17 Sep 2026 (49/49 static, 8.8s gen)
+npm run build   # ✓ 18 Sep 2026 (49/49 static, 97s)
 npm run lint    # 22 warnings, 0 errores
-npm test        # 175/177 (2 flaky timeout preexistentes api-admin-sync/cron)
-npm run sync -- --no-enrich # ✓ 17 Sep 0 errores (319 rows, 2 created 317 updated)
+npm test        # 177/177 ✓
+npm run sync -- --no-enrich # ✓ 18 Sep 0 errores (336 rows, 6 creados)
 ```
 
 ### Convenciones de código
