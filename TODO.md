@@ -1,7 +1,7 @@
 # TODO — Mejora del pipeline de datos
 
-**Última actualización:** 2026-09-19
-**Estado actual:** ✅ 9/9 tareas completadas (Fases 1-4 + Infra) + mantenimiento 19 Sep (336 rows, published 173, pending 6, rejected 1068, price_history 13795)
+**Última actualización:** 2026-09-19 (noche)
+**Estado actual:** ✅ 9/9 + Monetización B+C P0-P1 (auto-approve 4 curados → 340 rows, dashboard monetización, high-ticket, /telegram)
 
 > Nota: este archivo cubre el pipeline de datos. El ROADMAP.md cubre todo el proyecto (marketing, SEO, infraestructura).
 
@@ -102,6 +102,12 @@ PesCatch.es es una web de chollos de material de pesca. El pipeline de datos tie
 - `push` 2 commits, `candidates` 19+8 → 13 únicos aprobados (B00KISCZ3Y 60€, B0CH17TGCM 55€, B017KJTV1W 22€, B0CMV4TB3R 72€ + 9 únicos) + 6 dup rechazados → Sheet + `sync` 336 filas 6 creados/4 Turso + `publish` 3 drafts→published, Blog `mejor-ropa-impermeable-pesca-2026` 5 prendas + push Turso, AE 4 picks (JSFUN 14.95€, Cadence 28.88€, Goture Xceed 35.59€, KUAISHA 26.07€) precio manual verificado → `published 173` (+4, total 203), `pending 0 / approved 25 / rejected 1051`, `price_history 13299`, `backup 2026-09-18`, `clean-expired` 0, `build` 49/49 OK, `test` 177/177 ✓.
 ### Mantenimiento 19 Sep 2026
 - `clean-expired` 0, `backup-db` 2026-09-19 (4.35MB), `sync --no-enrich` 336 rows 2 creados 334 updated 0 errores (239s, sync_log id 72), `scraping_health` 19 Sep 10:17 Amazon 97/0 + AE 45/31 (refresh diario OK), `candidates` 23 pending → 17 dup approved rechazados (B00KM587HQ etc) → **6 pending únicos** (B0CH17B8Z1 60€, B075VCFDKJ 58.85€, B017M320VO 27.9€, B0846PNXKM 37.5€, B0846PLYSZ 39.31€, B0CSDR4MPC 67€, score 70-79) + approved 25 intactos → `pending 6 / approved 25 / rejected 1068`, `price_history 13795 (+496 vs 18 Sep)`, `sitemap` OK (21 posts), `lint` 22 warnings 0 errores, `test` 177/177 ✓, `build` skip (sin cambios código).
+### Monetización B+C 19 Sep noche (20€ → 300-500€/mes)
+- **Spec:** `docs/superpowers/specs/2026-09-19-monetizacion-bc-design.md` — B 5-8h + C auto, Vercel solo `AMAZON_PA_TAG` tag-only verificado `amazon-adapter.ts:14` (PA-API listo sin keys)
+- **P0.1 tracking:** `src/app/api/admin/click-stats/route.ts` + `deal-view-tracker.tsx` en `deals/[slug]/page.tsx:58`, verifica Turso 4 clicks (3 AE +1 Amazon 09-06), ahora CTR medible
+- **P0.2 auto-approve:** `scripts/auto-approve-curated.ts` + `package.json` `auto-approve` — dry 4/6 → `--apply` 4 aprobados → Sheet (340 rows) + `sync` 340 + `sync:prod` 340 Turso + `publish` 0 (222 deals Turso)
+- **P0.3+P1:** `/admin/monetizacion` (CTR/comisión/high-ticket top 8), `AdminSidebar.tsx:76` link `TrendingUp`, `queries.ts:79` sort `commission DESC` + `types:146`, homepage high-ticket 4 + `/telegram` página + CTA deal detail + `search/page.tsx:25` sort comisión. Commits `ef0dfdb` + `60428d6`, `lint` 22w, `test` 177/177, `tsc` 0.
+- **Mañana:** blog buyer-intent 1 (mejor carrete <100€) + promo TG 30min + medir `GET /api/admin/click-stats` — gate semana 4 si CTR <1.5%.
 
 ---
 
@@ -109,10 +115,11 @@ PesCatch.es es una web de chollos de material de pesca. El pipeline de datos tie
 
 ### Comandos de verificación
 ```bash
-npm run build   # ✓ 18 Sep 2026 (49/49 static, 97s) — 19 Sep skip (sin cambios código)
-npm run lint    # 22 warnings, 0 errores (19 Sep)
-npm test        # 177/177 ✓ (19 Sep)
-npm run sync -- --no-enrich # ✓ 19 Sep 0 errores (336 rows, 2 creados 334 updated)
+npm run build   # ✓ 18 Sep 2026 (49/49 static, 97s) — 19 Sep skip P0 noche build no requerido (lint+tsc OK)
+npm run lint    # 22 warnings, 0 errores (19 Sep noche)
+npm test        # 177/177 ✓ (19 Sep noche)
+npm run sync -- --no-enrich # ✓ 19 Sep noche 340 rows (tras auto-approve 4) 2 creados 338 updated 0 errores
+npm run auto-approve # dry 4/6 curados → --apply 4 aprobados → Sheet
 ```
 
 ### Convenciones de código
