@@ -23,15 +23,26 @@ async function handle(request: NextRequest) {
     const db = getDb()
 
     const storePlaceholders = DISABLED_STORES.map(() => '?').join(',')
-    const result = await db.execute({
+    type DealRow = { title: string; salePrice: number; originalPrice: number; discountPercent: number; storeName: string; slug: string; imageUrl: string | null }
+    const high = await db.execute({
       sql: `SELECT d.title, d.salePrice, d.originalPrice, d.discountPercent, d.storeName, d.slug, d.imageUrl
-            FROM deals d
-            WHERE d.status = 'published' AND d.discountPercent > 0
-              AND d.storeId NOT IN (${storePlaceholders})
-            ORDER BY d.discountPercent DESC
-            LIMIT 10`,
+            FROM deals d WHERE d.status='published' AND d.discountPercent>0 AND d.storeId NOT IN (${storePlaceholders})
+            ORDER BY d.commission DESC LIMIT 3`,
       args: DISABLED_STORES,
     })
+    const highRows = high.rows as unknown as DealRow[]
+    const highSlugs = highRows.map(r => r.slug)
+    const notIn = highSlugs.map(() => '?').join(',')
+    const discSql = highSlugs.length
+      ? `SELECT d.title, d.salePrice, d.originalPrice, d.discountPercent, d.storeName, d.slug, d.imageUrl
+         FROM deals d WHERE d.status='published' AND d.discountPercent>0 AND d.storeId NOT IN (${storePlaceholders}) AND d.slug NOT IN (${notIn})
+         ORDER BY d.discountPercent DESC LIMIT 3`
+      : `SELECT d.title, d.salePrice, d.originalPrice, d.discountPercent, d.storeName, d.slug, d.imageUrl
+         FROM deals d WHERE d.status='published' AND d.discountPercent>0 AND d.storeId NOT IN (${storePlaceholders})
+         ORDER BY d.discountPercent DESC LIMIT 3`
+    const disc = await db.execute({ sql: discSql, args: [...DISABLED_STORES, ...highSlugs] })
+    const discRows = disc.rows as unknown as DealRow[]
+    const result = { rows: [...highRows, ...discRows] } as { rows: DealRow[] }
 
     const deals = result.rows as unknown as Array<{
       title: string

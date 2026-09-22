@@ -39,15 +39,29 @@ async function handle(request: NextRequest) {
     const db = getDb()
 
     const storePlaceholders = DISABLED_STORES.map(() => '?').join(',')
-    const result = await db.execute({
-      sql: `SELECT d.title, d.salePrice, d.originalPrice, d.discountPercent, d.storeName, d.slug
+    type TgRow = { title: string; salePrice: number; originalPrice: number; discountPercent: number; storeName: string; slug: string; commission: number; storeId: string }
+    let result = await db.execute({
+      sql: `SELECT d.title, d.salePrice, d.originalPrice, d.discountPercent, d.storeName, d.slug, d.commission, d.storeId
             FROM deals d
             WHERE d.status = 'published' AND d.discountPercent > 0
               AND d.storeId NOT IN (${storePlaceholders})
-            ORDER BY d.discountPercent DESC
-            LIMIT 10`,
+            ORDER BY d.commission DESC, d.discountPercent DESC
+            LIMIT 8`,
       args: DISABLED_STORES,
     })
+    // Asegura 1 AE high-commission si top 8 no lo incluye
+    const rowsTyped = result.rows as unknown as TgRow[]
+    const hasAE = rowsTyped.some(r => r.storeId === 'aliexpress')
+    if (!hasAE) {
+      const ae = await db.execute({
+        sql: `SELECT d.title, d.salePrice, d.originalPrice, d.discountPercent, d.storeName, d.slug, d.commission, d.storeId
+              FROM deals d WHERE d.status='published' AND d.storeId='aliexpress' AND d.discountPercent>0
+                AND d.storeId NOT IN (${storePlaceholders}) ORDER BY d.commission DESC LIMIT 1`,
+        args: DISABLED_STORES,
+      })
+      const aeRows = ae.rows as unknown as TgRow[]
+      if (aeRows.length) result = { rows: [...rowsTyped.slice(0, 7), ...aeRows] } as unknown as typeof result
+    }
 
     const deals = result.rows as unknown as Array<{
       title: string

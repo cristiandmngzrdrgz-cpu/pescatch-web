@@ -29,7 +29,7 @@ export function buildTelegramMessage(deals: TelegramDeal[]): string {
     ].join('\n')
   })
 
-  return `<b>🎣 Chollos de pesca destacados</b>\n\n${lines.join('\n\n')}\n\n<a href="${BASE_URL}/search">Ver todos los chollos →</a>`
+  return `<b>🎣 Chollos de pesca destacados</b>\n\n${lines.join('\n\n')}\n\n⚡ <a href="${BASE_URL}/top-chollos">Últimas 24h — más rentables primero</a> · <a href="${BASE_URL}/search">Ver todos →</a>`
 }
 
 function formatPrice(n: number): string {

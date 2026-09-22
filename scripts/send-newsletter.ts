@@ -14,13 +14,21 @@ async function sendNewsletter() {
   await seedDatabase()
   const db = getDb()
 
-  const result = await db.execute({
-    sql: `SELECT d.title, d.salePrice, d.originalPrice, d.discountPercent, d.storeName, d.slug, d.imageUrl
-          FROM deals d
-          WHERE d.status = 'published' AND d.discountPercent > 0
-          ORDER BY d.discountPercent DESC
-          LIMIT 10`,
+  // Spec §5.5: 3 high-ticket (commission) + 3 por descuento — sin duplicar
+  const high = await db.execute({
+    sql: `SELECT d.title, d.salePrice, d.originalPrice, d.discountPercent, d.storeName, d.slug, d.imageUrl, d.commission
+          FROM deals d WHERE d.status='published' AND d.discountPercent>0 ORDER BY d.commission DESC LIMIT 3`,
   })
+  const highSlugs = (high.rows as any[]).map((r: any) => r.slug)
+  const placeholders = highSlugs.map(() => '?').join(',')
+  const discSql = highSlugs.length
+    ? `SELECT d.title, d.salePrice, d.originalPrice, d.discountPercent, d.storeName, d.slug, d.imageUrl
+       FROM deals d WHERE d.status='published' AND d.discountPercent>0 AND d.slug NOT IN (${placeholders}) ORDER BY d.discountPercent DESC LIMIT 3`
+    : `SELECT d.title, d.salePrice, d.originalPrice, d.discountPercent, d.storeName, d.slug, d.imageUrl
+       FROM deals d WHERE d.status='published' AND d.discountPercent>0 ORDER BY d.discountPercent DESC LIMIT 3`
+  const disc = await db.execute({ sql: discSql, args: highSlugs })
+  const rows = [...(high.rows as any[]), ...(disc.rows as any[])]
+  const result = { rows } as any
 
   const deals = result.rows as unknown as Array<{
     title: string

@@ -12,15 +12,27 @@ async function sendTelegram() {
   await seedDatabase()
   const db = getDb()
 
+  // Spec §5.2: top por comisión (high-ticket primero) + 1 AE high-commission fallback
   const result = await db.execute({
-    sql: `SELECT d.title, d.salePrice, d.originalPrice, d.discountPercent, d.storeName, d.slug
+    sql: `SELECT d.title, d.salePrice, d.originalPrice, d.discountPercent, d.storeName, d.slug, d.commission, d.storeId
           FROM deals d
           WHERE d.status = 'published' AND d.discountPercent > 0
-          ORDER BY d.discountPercent DESC
-          LIMIT 10`,
+          ORDER BY d.commission DESC, d.discountPercent DESC
+          LIMIT 8`,
   })
+  // Garantiza 1 AE si no está en top 8 y hay AE con comisión
+  const hasAE = (result.rows as any[]).some(r => r.storeId === 'aliexpress')
+  let deals = result.rows as unknown as Array<{ title: string; salePrice: number; originalPrice: number; discountPercent: number; storeName: string; slug: string; commission: number; storeId: string }>
+  if (!hasAE) {
+    const ae = await db.execute({
+      sql: `SELECT d.title, d.salePrice, d.originalPrice, d.discountPercent, d.storeName, d.slug, d.commission, d.storeId
+            FROM deals d WHERE d.status='published' AND d.storeId='aliexpress' AND d.discountPercent>0 ORDER BY d.commission DESC LIMIT 1`,
+    })
+    if (ae.rows.length) deals = [...deals.slice(0, 7), ...(ae.rows as any[])]
+  }
 
-  const deals = result.rows as unknown as Array<{
+  // deals ya tipado arriba (con commission/storeId), recastea para buildTelegramMessage
+  const telegramDeals = deals as unknown as Array<{
     title: string
     salePrice: number
     originalPrice: number
@@ -34,7 +46,7 @@ async function sendTelegram() {
     return
   }
 
-  const message = buildTelegramMessage(deals)
+  const message = buildTelegramMessage(telegramDeals)
   console.log(`📣 Publicando ${deals.length} chollos en Telegram...`)
 
   const res = await sendTelegramMessage(message)
