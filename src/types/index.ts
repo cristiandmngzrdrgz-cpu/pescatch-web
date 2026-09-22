@@ -113,6 +113,7 @@ export interface ProductGroup {
   bestStore: string
   storeCount: number
   discountPercent: number
+  commission: number
 }
 
 export interface Comment {

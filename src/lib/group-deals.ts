@@ -40,6 +40,7 @@ export function groupDealsByProduct(deals: Deal[]): ProductGroup[] {
       discountPercent: hasMultipleStores
         ? Math.max(...groupDeals.map(d => d.discountPercent))
         : best.discountPercent,
+      commission: Math.max(...groupDeals.map(d => d.commission || 0)),
     })
   }
 
