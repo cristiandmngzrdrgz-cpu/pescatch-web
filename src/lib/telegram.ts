@@ -40,7 +40,7 @@ function escapeTelegram(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-export async function sendTelegramMessage(text: string): Promise<{ ok: boolean; error?: string }> {
+export async function sendTelegramMessage(text: string): Promise<{ ok: boolean; error?: string; messageId?: number }> {
   const token = process.env.TELEGRAM_BOT_TOKEN
   const channel = process.env.TELEGRAM_CHANNEL_ID
 
@@ -60,10 +60,28 @@ export async function sendTelegramMessage(text: string): Promise<{ ok: boolean; 
       }),
     })
 
-    const data = (await res.json()) as { ok: boolean; description?: string }
+    const data = (await res.json()) as { ok: boolean; description?: string; result?: { message_id: number } }
     if (!res.ok || !data.ok) {
       return { ok: false, error: data.description || `HTTP ${res.status}` }
     }
+    return { ok: true, messageId: data.result?.message_id }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) }
+  }
+}
+
+export async function pinTelegramMessage(messageId: number): Promise<{ ok: boolean; error?: string }> {
+  const token = process.env.TELEGRAM_BOT_TOKEN
+  const channel = process.env.TELEGRAM_CHANNEL_ID
+  if (!token || !channel) return { ok: false, error: 'Telegram no configurado' }
+  try {
+    const res = await fetch(`${TELEGRAM_API}/bot${token}/pinChatMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: channel, message_id: messageId, disable_notification: true }),
+    })
+    const data = (await res.json()) as { ok: boolean; description?: string }
+    if (!res.ok || !data.ok) return { ok: false, error: data.description || `HTTP ${res.status}` }
     return { ok: true }
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) }

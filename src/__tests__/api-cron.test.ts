@@ -14,6 +14,17 @@ vi.mock('@/lib/telegram', () => ({
   buildTelegramMessage: (deals: Array<{ title: string }>) =>
     'MSG:' + deals.map((d) => d.title).join('|'),
   sendTelegramMessage: vi.fn(async (message: string) => ({ ok: true, mockedMessage: message })),
+  pinTelegramMessage: vi.fn(async () => ({ ok: true })),
+}))
+
+vi.mock('@/lib/x-client', () => ({
+  isXConfigured: () => false,
+  buildXText: (deals: Array<{ title: string }>) => 'X:' + deals.map((d) => d.title).join('|'),
+  postTweet: vi.fn(async () => ({ ok: true, id: 'mock-id' })),
+}))
+
+vi.mock('@/lib/ai-providers/groq', () => ({
+  callGroq: vi.fn(async () => null),
 }))
 
 vi.mock('@/lib/email', () => ({
@@ -38,6 +49,7 @@ const cronRoutes = {
   'price-alerts': () => import('@/app/api/cron/price-alerts/route'),
   newsletter: () => import('@/app/api/cron/newsletter/route'),
   telegram: () => import('@/app/api/cron/telegram/route'),
+  promo: () => import('@/app/api/cron/promo/route'),
 }
 
 type CronRoute = keyof typeof cronRoutes

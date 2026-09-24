@@ -52,6 +52,33 @@ $Tasks = @(
     Minute = 5
     DayOfWeek = "Monday"
   }
+  @{
+    Name = "PesCatch-Promo-Mon"
+    Description = "Promo Telegram+X lunes 09:10"
+    Script = "scripts/promo-auto.ts"
+    ScriptArgs = "--apply"
+    Hour = 9
+    Minute = 10
+    DayOfWeek = "Monday"
+  }
+  @{
+    Name = "PesCatch-Promo-Wed"
+    Description = "Promo Telegram+X miercoles 09:10"
+    Script = "scripts/promo-auto.ts"
+    ScriptArgs = "--apply"
+    Hour = 9
+    Minute = 10
+    DayOfWeek = "Wednesday"
+  }
+  @{
+    Name = "PesCatch-Promo-Fri"
+    Description = "Promo Telegram+X viernes 09:10"
+    Script = "scripts/promo-auto.ts"
+    ScriptArgs = "--apply"
+    Hour = 9
+    Minute = 10
+    DayOfWeek = "Friday"
+  }
 )
 
 function Install-Task {

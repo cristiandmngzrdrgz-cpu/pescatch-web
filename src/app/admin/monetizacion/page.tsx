@@ -145,6 +145,16 @@ export default async function MonetizacionPage() {
       </div>
 
       <div className="rounded-2xl p-6" style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
+        <h2 className="font-bold mb-3" style={{ color: '#E8F0FE' }}>Promo 3×/semana (lunes/miércoles/viernes 09:10)</h2>
+        <p className="text-xs mb-3" style={{ color: '#8BA3C7' }}>Telegram + X (draft si no hay X keys). Semi-auto 2 semanas: genera <code>data/promo-draft-YYYY-MM-DD.md</code> para tu visto bueno, luego full-auto. Cron Vercel <code>/api/cron/promo</code> + local <code>PesCatch-Promo-*</code>.</p>
+        <div className="flex gap-2">
+          <a href="/api/admin/promo" className="text-xs px-3 py-1 rounded" style={{ background: '#1A2535', border: '1px solid #1E3A5F', color: '#8BA3C7' }}>Preview JSON</a>
+          <span className="text-xs px-3 py-1" style={{ color: '#4A6080' }}>POST /api/admin/promo → publica ahora (admin auth)</span>
+        </div>
+        <p className="text-xs mt-2" style={{ color: '#4A6080' }}>Comandos: <code>npm run promo:dry</code> preview · <code>npm run promo -- --apply</code> publica · <code>curl -X POST /api/cron/promo?force=1 -H &quot;Authorization: Bearer $CRON_SECRET&quot;</code></p>
+      </div>
+
+      <div className="rounded-2xl p-6" style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
         <h2 className="font-bold mb-3" style={{ color: '#E8F0FE' }}>Recientes (20)</h2>
         {recent.length === 0 ? <p className="text-sm" style={{ color: '#4A6080' }}>Sin eventos.</p> : (
           <div className="space-y-1 text-xs" style={{ color: '#8BA3C7' }}>

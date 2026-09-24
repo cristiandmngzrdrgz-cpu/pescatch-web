@@ -28,7 +28,9 @@
     "clean-expired": "npx tsx scripts/clean-expired-deals.ts",
     "match-products": "npx tsx scripts/match-deals-to-products.ts",
     "backup-db": "npx tsx scripts/backup-db.ts",
-    "auto-approve": "npx tsx scripts/auto-approve-curated.ts"
+    "auto-approve": "npx tsx scripts/auto-approve-curated.ts",
+    "promo": "npx tsx scripts/promo-auto.ts",
+    "promo:dry": "npx tsx scripts/promo-auto.ts --dry-run"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
