@@ -51,11 +51,14 @@ Responde JSON {"telegram":"...","x":"..."} solo JSON, sin explicaciones.`
       { role: 'system', content: 'Eres un pescador que escribe promos cortas, humanas y sin tono IA. Devuelves solo JSON válido.' },
       { role: 'user', content: prompt },
     ],
-    { temperature: 0.7, maxTokens: 900 }
+    { temperature: 0.7, maxTokens: 2000, reasoningEffort: 'low' }
   )
   if (!raw) return { telegram: null, x: null }
   try {
-    const j = JSON.parse(raw.replace(/```json|```/g, '').trim())
+    const cleaned = raw.replace(/```json|```/g, '').trim()
+    const start = cleaned.indexOf('{')
+    const end = cleaned.lastIndexOf('}')
+    const j = JSON.parse(start >= 0 && end > start ? cleaned.slice(start, end + 1) : cleaned)
     // validación mínima precio real en mensaje
     const checkPrice = deals.some(d => j.telegram?.includes(d.salePrice.toFixed(2)) || j.telegram?.includes(d.salePrice.toFixed(2).replace('.', ',')))
     if (!checkPrice) return { telegram: null, x: null }

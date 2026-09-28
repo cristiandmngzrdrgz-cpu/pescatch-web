@@ -19,6 +19,7 @@ export async function callGroq(
     model?: string
     temperature?: number
     maxTokens?: number
+    reasoningEffort?: 'none' | 'low' | 'medium' | 'high'
   }
 ): Promise<string | null> {
   const apiKey = process.env.GROQ_API_KEY
@@ -28,23 +29,27 @@ export async function callGroq(
     return null
   }
 
-  const model = options?.model ?? 'llama-3.3-70b-versatile'
+  const model = options?.model ?? 'openai/gpt-oss-120b'
   const temperature = options?.temperature ?? 0.7
   const maxTokens = options?.maxTokens ?? 2000
 
   try {
+    const body: Record<string, unknown> = {
+      model,
+      messages,
+      temperature,
+      max_tokens: maxTokens,
+    }
+    // Los modelos de razonamiento (gpt-oss) consumen el presupuesto de tokens
+    // pensando; con 'low' queda margen para la respuesta en prompts largos.
+    if (options?.reasoningEffort) body.reasoning_effort = options.reasoningEffort
     const response = await fetch(GROQ_API_URL, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model,
-        messages,
-        temperature,
-        max_tokens: maxTokens,
-      }),
+      body: JSON.stringify(body),
       signal: AbortSignal.timeout(20000),
     })
 
