@@ -1,7 +1,7 @@
 # TODO — Mejora del pipeline de datos
 
-**Última actualización:** 2026-09-19 (noche)
-**Estado actual:** ✅ 9/9 + Monetización B+C P0-P1 (auto-approve 4 curados → 340 rows, dashboard monetización, high-ticket, /telegram)
+**Última actualización:** 2026-09-28 (mañana)
+**Estado actual:** ✅ 9/9 + Monetización B+C P0-P1 + mantenimiento 28 Sep (refresh 118/56/0, candidates 38→0, 4 aprobados → web, test 178/178)
 
 > Nota: este archivo cubre el pipeline de datos. El ROADMAP.md cubre todo el proyecto (marketing, SEO, infraestructura).
 
@@ -108,6 +108,14 @@ PesCatch.es es una web de chollos de material de pesca. El pipeline de datos tie
 - **P0.2 auto-approve:** `scripts/auto-approve-curated.ts` + `package.json` `auto-approve` — dry 4/6 → `--apply` 4 aprobados → Sheet (340 rows) + `sync` 340 + `sync:prod` 340 Turso + `publish` 0 (222 deals Turso)
 - **P0.3+P1:** `/admin/monetizacion` (CTR/comisión/high-ticket top 8), `AdminSidebar.tsx:76` link `TrendingUp`, `queries.ts:79` sort `commission DESC` + `types:146`, homepage high-ticket 4 + `/telegram` página + CTA deal detail + `search/page.tsx:25` sort comisión. Commits `ef0dfdb` + `60428d6`, `lint` 22w, `test` 177/177, `tsc` 0.
 - **Mañana:** blog buyer-intent 1 (mejor carrete <100€) + promo TG 30min + medir `GET /api/admin/click-stats` — gate semana 4 si CTR <1.5%.
+### Mantenimiento 28 Sep 2026
+- `clean-expired` 0 expirados, `backup-db` 2026-09-28, `refresh-prices:prod --apply` 118 updated / 56 failed / 0 removed + 5 priceAlert (email admin + reset) + push 18 deals a Turso
+- `candidates` 32 local + 6 Turso pending → 0 pending: 2 fuzzy-dups (Kairiki B07N6K56QK, Method Feeder B08WHVZ925) + 27 dups locales (20 exactos vs published, 4 familia Ninja X Feeder, Sienna B0873PQW96 dup de Sienna FG 4000 38€, 2 Triforce caras) rechazados; 4 aprobados → Sheet (Revros LT 64.50€, Saragosa SW 252.95€, Sahara FJ 86.77€, Triforce Target 39.90€) + `push-candidates --apply` 3 inserts
+- Fix ASIN deal Stradic `B0873PQW96→B07V2PLT9S` (local + Turso; el asin colisionaba con la URL de la Sienna)
+- `sync` 362 rows 3 creados 0 errores (GROQ_API_KEY ausente → enrich heurístico) + `sync:prod` 362 (1 creado) + `publish:prod --apply` 0 pendientes → Turso `published 182 / draft 42`, `pending 0 / approved 165 / rejected 300`
+- Crons Vercel verificados en Turso: sync 06:11 (358 rows 0 err), telegram 09:29, promo 09:58, refresh cursor 06:00; newsletter 09:00 sin clave de estado (sin verificar). Programador local: 0 tareas PesCatch instaladas.
+- `build` 53/53 OK, `lint` 22 warnings 0 errores, `test` 178/178 ✓
+- **Pendiente:** blog buyer-intent semanal (mejor carrete <100€) + medir CTR (`GET /api/admin/click-stats`)
 
 ---
 
