@@ -124,7 +124,12 @@ PesCatch.es es una web de chollos de material de pesca. El pipeline de datos tie
 - CTR: `click_tracking` Turso **8 total** (+4 desde 19 Sep), last7 2, 7/8 AliExpress; referrers reales www + `utm_source=chatgpt.com`. CTR real (views) solo en dashboard Vercel Analytics (deal_view→deal_click); gate 1.5% pendiente de revisar allí
 - Blog `mejor-carrete-spinning-100-2026`: **ASINs cruzados** (Nasci→Stradic 179.99€, Nexave→Ninja LT) → reescrito §5/§6 + guías/FAQ/veredicto: **Revros LT 2500 64.50€ (B0CB77G23H) + Sahara FJ 2500 86.77€ (B09VYG4TWW)** + precios actuales en los 4 restantes + excerpt/meta/relatedAsins → push Turso OK
 - `build` 53/53 OK, `lint` 22 warnings 0 errores, `test` 178/178 ✓
+### Descubrimiento 29 Sep tarde (día seco)
+- `discover:auto`: 418 Amazon + 1163 AE → filtro premium guardó 25 → **25/25 dups** (re-escrapeos de deals/approved; incl. Legalis-dup-Turso + Catana-variante) → rechazados, `pending 0`
+- AE: 1048-1242 productos pero **0 válidos** — la API no devuelve reviews (todo rev:0) ni marca (1206/1242 brand null) + descuentos inflados -90/-95% → el blindaje los frena por diseño. Añadir AE exige curación manual + verificación de precio en item page (sin BrightData aquí)
 - **Pendiente:** schedulers como admin + revisar CTR en Vercel Analytics
+- Amazon bajo rate-limit (1/h): no re-ejecutar hasta pasada 1h; bestsellers/novedades dieron 0 (stealth vacío)
+- Decisión usuario: cerrar sin añadir. Próximo discover: mañana 6:00 (tarea local cuando se instale como admin) o manual en 1h+
 
 ---
 
