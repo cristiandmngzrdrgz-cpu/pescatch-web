@@ -115,7 +115,16 @@ PesCatch.es es una web de chollos de material de pesca. El pipeline de datos tie
 - `sync` 362 rows 3 creados 0 errores (GROQ_API_KEY ausente → enrich heurístico) + `sync:prod` 362 (1 creado) + `publish:prod --apply` 0 pendientes → Turso `published 182 / draft 42`, `pending 0 / approved 165 / rejected 300`
 - Crons Vercel verificados en Turso: sync 06:11 (358 rows 0 err), telegram 09:29, promo 09:58, refresh cursor 06:00; newsletter 09:00 sin clave de estado (sin verificar). Programador local: 0 tareas PesCatch instaladas.
 - `build` 53/53 OK, `lint` 22 warnings 0 errores, `test` 178/178 ✓
-- **Pendiente:** blog buyer-intent semanal (mejor carrete <100€) + medir CTR (`GET /api/admin/click-stats`)
+### Mantenimiento 29 Sep 2026
+- Push 2 commits pendientes (`bbf7fed` + `7a174ba` groq) → origin al día
+- `clean-expired` 0, `backup-db` 2026-09-29, `refresh-prices:prod --apply` **121 updated / 54 failed / 0 removed + 5 priceAlert** + push 23 deals a Turso
+- `candidates`: discover matinal dejó 26 pending → **25 rechazados** (24 ASIN-EN-APPROVED/FUZZY 1.00 + Catana B076TJY272 variante del deal publicado) + 1 aprobado (Legalis LT B08NK3VMCN 64.95€) → **incidente**: la fila Sheet duplicaba el deal Legalis ya publicado en Turso y el sync sobrescribió el deal local Ninja 23 LT (llsn) con datos del Legalis. **Reparado**: fila 364 borrada del Sheet, deal llsn restaurado del backup (Ninja 56€ published), PH espurio 64.95 eliminado, candidato 1758 → rejected. Turso intacto (182/42; el sync:prod solo corrigió la URL del Legalis c1x4 a B08NK3VMCN+tag). Lección: auditar candidatos también contra fuzzy del sync (`matcher.ts`), no solo `dealMatchSimilarity`. `pending 0 / approved 33 / rejected 1182` local
+- `sync` 363 rows 2 creados (productos Sougayilang) 0 errores + `sync:prod` 363 (0 creados) + `publish:prod --apply` 0 pendientes → Turso `published 182 / draft 42`
+- Schedulers: 0 tareas instaladas; intento de instalar solo diarias **bloqueado (0x80070005, falta admin)** → pendiente ejecutar como admin `C:\Users\crist\AppData\Local\Temp\opencode\install-daily-tasks.ps1` (DiscoverAuto 6:00, Refresh 8:00, Clean 3:00, PriceAlerts 8:30; lunes los cubre Vercel)
+- CTR: `click_tracking` Turso **8 total** (+4 desde 19 Sep), last7 2, 7/8 AliExpress; referrers reales www + `utm_source=chatgpt.com`. CTR real (views) solo en dashboard Vercel Analytics (deal_view→deal_click); gate 1.5% pendiente de revisar allí
+- Blog `mejor-carrete-spinning-100-2026`: **ASINs cruzados** (Nasci→Stradic 179.99€, Nexave→Ninja LT) → reescrito §5/§6 + guías/FAQ/veredicto: **Revros LT 2500 64.50€ (B0CB77G23H) + Sahara FJ 2500 86.77€ (B09VYG4TWW)** + precios actuales en los 4 restantes + excerpt/meta/relatedAsins → push Turso OK
+- `build` 53/53 OK, `lint` 22 warnings 0 errores, `test` 178/178 ✓
+- **Pendiente:** schedulers como admin + revisar CTR en Vercel Analytics
 
 ---
 
