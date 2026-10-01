@@ -133,6 +133,9 @@ export async function refreshAllPrices(options: RefreshOptions = {}): Promise<Re
     } else if (status === 'sanity_filtered') {
       alerts++
       updated++
+    } else if (status === 'quarantined') {
+      alerts++
+      skipped++
     } else {
       skipped++
     }

@@ -131,6 +131,23 @@ PesCatch.es es una web de chollos de material de pesca. El pipeline de datos tie
 - Amazon bajo rate-limit (1/h): no re-ejecutar hasta pasada 1h; bestsellers/novedades dieron 0 (stealth vacío)
 - Decisión usuario: cerrar sin añadir. Próximo discover: mañana 6:00 (tarea local cuando se instale como admin) o manual en 1h+
 
+### Mantenimiento 30 Sep 2026 (miércoles, día de promo)
+- Nube OK sin tocar nada: `sync` 06:11 (362 rows 0 err), `promo` 09:58 enviada (idempotencia 20h → no republicar), cursor refresh 07:35, `pending 0 / approved 165 / rejected 300` + `published 182 / draft 42` en Turso
+- `promo:dry` local → `data/promo-draft-2026-09-30.md` (fallback sin IA; X no configurado → solo draft para copia manual)
+- `clean-expired` 0, `backup-db` 2026-09-30
+- `candidates` local: 28 pending del discover matinal → **28/28 rechazados** (27 ASIN-EN-APPROVED/FUZZY 1.00 o asinInUrl vs deals; 1810 Legalis B08NK3VMCN rechazado preventivo por incidente 29 Sep — duplica el deal publicado en Turso) → `pending 0 / approved 33 / rejected 1235`
+- `refresh-prices:prod --apply` **118 updated / 0 skipped / 57 failed / 0 removed + 1 priceAlert** + push 9 deals a Turso (el chunk horario ya tenía casi todo sincronizado)
+- CTR: `click_tracking` Turso **8 total**, last7 1, 7/8 AE + 1 Amazon; `price_alerts` activas 0. Gate 1.5% pendiente en dashboard Vercel Analytics
+- `test` 176/178 (2 flaky timeout preexistentes) → rerun 178/178 ✓; `build` skip (sin cambios de código)
+- **Pendiente:** schedulers locales como admin (0 tareas instaladas) + revisar CTR en Vercel Analytics
+### Monetización P0 30 Sep tarde (confianza + cuarentena de precios)
+- **Hallazgo**: los scrapers publicaban precios de variante errónea (Stradic 183€→27€ -85%, PENN →14€ -92%, BG →34€ -73%); la promo de las 09:58 salió con el 34€ falso. `updateDealInDb` escribía siempre (`sanity_filtered` solo avisaba por email)
+- **Fix cuarentena** (`price-scraper/index.ts` + `db.ts` + `refresh-all.ts`): cambio >40% no se publica hasta que un 2º scrape lo confirme (±5%); sin baseline se aplica directo. Nuevas columnas `pendingPrice`/`pendingPriceCount` (migración). Estado `quarantined` cuenta como alerta, no como updated. 5 tests nuevos (`price-quarantine.test.ts`)
+- **Limpieza confianza**: 5 deals basura → draft en Turso (3 Sougayilang -93/-94% + mango carbono -93% + 2 sin comisión parados desde 31 Ago) → `published 177 / draft 47`. Reparados en local Stradic 183€ y PENN 142€ (valores Turso verificados). Sync-safe: `upsertDeal` no toca `status`
+- Verificación AE: los 83 links `s.click` resuelven al producto exacto con tracking (falsa alarma del prefijo común); Amazon siempre con `?tag=` vía `buildAmazonUrl` en render
+- `build` 53/53 OK, `lint` 0 errores, `test` 183/183 ✓ (178 + 5 nuevos; 2 flaky preexistentes en primera pasada)
+- **Pendiente monetización**: slots AdSense (sin SLOT no hay display), claves X gratis (promo 3x/sem en manual), incentivo newsletter (0 subs), Telegram 2 miembros, 1 post buyer-intent/semana
+
 ---
 
 ## Notas técnicas

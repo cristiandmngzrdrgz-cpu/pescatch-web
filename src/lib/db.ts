@@ -102,6 +102,8 @@ export async function initSchema() {
       publishedAt TEXT NOT NULL DEFAULT (datetime('now')),
       createdAt TEXT NOT NULL DEFAULT (datetime('now')),
       priceAlert INTEGER NOT NULL DEFAULT 0,
+      pendingPrice REAL,
+      pendingPriceCount INTEGER NOT NULL DEFAULT 0,
       updatedAt TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(productId, storeId)
     )`,
@@ -298,6 +300,12 @@ export async function migrateSchema() {
   }
   if (!columnNames.includes('variantAsin')) {
     await db.execute("ALTER TABLE deals ADD COLUMN variantAsin TEXT DEFAULT ''")
+  }
+  if (!columnNames.includes('pendingPrice')) {
+    await db.execute("ALTER TABLE deals ADD COLUMN pendingPrice REAL")
+  }
+  if (!columnNames.includes('pendingPriceCount')) {
+    await db.execute("ALTER TABLE deals ADD COLUMN pendingPriceCount INTEGER NOT NULL DEFAULT 0")
   }
 
   const postInfo = await db.execute("PRAGMA table_info(posts)")

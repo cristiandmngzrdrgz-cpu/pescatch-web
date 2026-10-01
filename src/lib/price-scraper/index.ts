@@ -97,12 +97,15 @@ export async function scrapeStore(
 }
 
 const PRICE_SANITY_THRESHOLD = 0.4
+// Un precio pendiente se confirma si el siguiente scrape lo repite (±5%).
+// Evita publicar errores de variante (ej. Stradic 183€ → 34€) hasta confirmar.
+const PENDING_CONFIRM_TOLERANCE = 0.05
 
 export async function updateDealInDb(
   dealId: string,
   scrapedPrice: ScrapedPrice,
   currentPrice: number,
-): Promise<'updated' | 'kept' | 'sanity_filtered'> {
+): Promise<'updated' | 'kept' | 'sanity_filtered' | 'quarantined'> {
   const { getDb } = await import('@/lib/db')
   const db = getDb()
   const now = new Date().toISOString()
@@ -110,15 +113,34 @@ export async function updateDealInDb(
   const newPrice = scrapedPrice.price
 
   const existing = await db.execute({
-    sql: 'SELECT originalPrice FROM deals WHERE id = ?',
+    sql: 'SELECT originalPrice, pendingPrice, pendingPriceCount FROM deals WHERE id = ?',
     args: [dealId],
   })
   const currentOriginalPrice = existing.rows.length > 0
     ? Number(existing.rows[0].originalPrice)
     : 0
+  const pendingPrice = existing.rows.length > 0 && existing.rows[0].pendingPrice != null
+    ? Number(existing.rows[0].pendingPrice)
+    : null
+  const pendingCount = existing.rows.length > 0
+    ? Number(existing.rows[0].pendingPriceCount ?? 0)
+    : 0
 
-  const diff = Math.abs(newPrice - currentPrice) / (currentPrice || 1)
-  const hasBigChange = diff > PRICE_SANITY_THRESHOLD
+  // Sin baseline no hay nada contra lo que validar: se aplica directo.
+  const diff = currentPrice > 0 ? Math.abs(newPrice - currentPrice) / currentPrice : 0
+  const hasBigChange = currentPrice > 0 && diff > PRICE_SANITY_THRESHOLD
+
+  if (hasBigChange) {
+    const confirmed = pendingPrice != null
+      && Math.abs(newPrice - pendingPrice) / (pendingPrice || 1) <= PENDING_CONFIRM_TOLERANCE
+    if (!confirmed) {
+      await db.execute({
+        sql: `UPDATE deals SET pendingPrice = ?, pendingPriceCount = ?, priceAlert = ?, updatedAt = ? WHERE id = ?`,
+        args: [newPrice, pendingCount + 1, 1, now, dealId],
+      })
+      return 'quarantined'
+    }
+  }
 
   // Clamp: si el precio sube por encima del original guardado, el descuento no
   // puede ser negativo. El original pasa a ser el precio nuevo (0% descuento).
@@ -131,7 +153,7 @@ export async function updateDealInDb(
     sql: `UPDATE deals SET
       salePrice = ?, originalPrice = ?, discountPercent = ?,
       shippingCost = ?, stockStatus = ?, updatedAt = ?,
-      priceAlert = ?
+      priceAlert = ?, pendingPrice = NULL, pendingPriceCount = 0
     WHERE id = ?`,
     args: [
       newPrice,
