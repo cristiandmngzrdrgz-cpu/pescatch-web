@@ -159,6 +159,10 @@ PesCatch.es es una web de chollos de material de pesca. El pipeline de datos tie
 - `build` 53/53 OK, `lint` 22 warnings 0 errores, `test` 183/183 ✓ (sin flaky)
 - **Pendiente usuario:** schedulers como admin (0 tareas) + AdSense slots + claves X + revisar CTR en Vercel Analytics
 
+### Blog 06 Oct 2026 (buyer-intent semanal)
+- Tema inicial mochila/caja descartado: slug `mejores-cajas-mochilas-pesca-2026` ya publicado (3+2 desde 17 Sep) → pivot a cañas
+- Blog **`mejor-cana-spinning-pesca-2026`**: 5 cañas (Tormentor2 29€ 4.3★/177 + ORRA Predator 39€ −51% 4.4★/91 + Crossfire 40€ + Vengeance CX 44.99€ 4.5★/105 + Legalis SB 902 74€ lubina), 5/5 slugs vs deals published, precios = salePrice hoy, ASINs 1:1 verificados (sin cruces), render 200 OK en dev (badges + CTAs con tag). Push Turso OK (post 27)
+
 ### Monetización P0 30 Sep tarde (confianza + cuarentena de precios)
 - **Hallazgo**: los scrapers publicaban precios de variante errónea (Stradic 183€→27€ -85%, PENN →14€ -92%, BG →34€ -73%); la promo de las 09:58 salió con el 34€ falso. `updateDealInDb` escribía siempre (`sanity_filtered` solo avisaba por email)
 - **Fix cuarentena** (`price-scraper/index.ts` + `db.ts` + `refresh-all.ts`): cambio >40% no se publica hasta que un 2º scrape lo confirme (±5%); sin baseline se aplica directo. Nuevas columnas `pendingPrice`/`pendingPriceCount` (migración). Estado `quarantined` cuenta como alerta, no como updated. 5 tests nuevos (`price-quarantine.test.ts`)
