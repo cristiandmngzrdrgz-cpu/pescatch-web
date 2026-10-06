@@ -11,7 +11,7 @@ export function NewsletterForm() {
   const [message, setMessage] = useState('')
 
   if (status === 'success') {
-    return <p className="text-sm font-semibold" style={{ color: '#26DE81' }}>Gracias! Te has suscrito.</p>
+    return <p className="text-sm font-semibold" style={{ color: '#26DE81' }}>Listo! Cada lunes, top chollos en tu email.</p>
   }
 
   return (
@@ -53,7 +53,7 @@ export function NewsletterForm() {
         }} />
       <Button type="submit" disabled={status === 'loading'} className="h-10 px-5 font-semibold rounded-xl transition-all duration-200 glow-cta"
         style={{ background: '#00D4FF', color: '#0B1120', boxShadow: '0 0 12px rgba(0,212,255,0.3)' }}>
-        {status === 'loading' ? '...' : 'Suscribir'}
+        {status === 'loading' ? '...' : 'Quiero los chollos'}
       </Button>
       </div>
       {status === 'error' && (

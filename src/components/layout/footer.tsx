@@ -25,7 +25,7 @@ export function Footer() {
               La plataforma líder en chollos de pesca en España. Buscamos, verificamos y publicamos las mejores ofertas en material de pesca para que ahorres en tu pasión.
             </p>
             <div className="mt-5">
-              <label className="text-sm block mb-2.5 font-medium" style={{ color: '#8BA3C7' }}>Recibe los mejores chollos en tu email</label>
+              <label className="text-sm block mb-2.5 font-medium" style={{ color: '#8BA3C7' }}>Top 10 chollos cada lunes · 1 email/semana, cero spam</label>
               <NewsletterForm />
             </div>
             <a

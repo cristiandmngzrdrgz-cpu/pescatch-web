@@ -1,7 +1,7 @@
 # TODO — Mejora del pipeline de datos
 
-**Última actualización:** 2026-09-28 (mañana)
-**Estado actual:** ✅ 9/9 + Monetización B+C P0-P1 + mantenimiento 28 Sep (refresh 118/56/0, candidates 38→0, 4 aprobados → web, test 178/178)
+**Última actualización:** 2026-10-06 (mañana)
+**Estado actual:** ✅ 9/9 + Monetización B+C P0-P1 + mantenimiento 06 Oct (triaje 26→0, MegaForce a web, refresh 112/53/0, test 183/183)
 
 > Nota: este archivo cubre el pipeline de datos. El ROADMAP.md cubre todo el proyecto (marketing, SEO, infraestructura).
 
@@ -140,6 +140,25 @@ PesCatch.es es una web de chollos de material de pesca. El pipeline de datos tie
 - CTR: `click_tracking` Turso **8 total**, last7 1, 7/8 AE + 1 Amazon; `price_alerts` activas 0. Gate 1.5% pendiente en dashboard Vercel Analytics
 - `test` 176/178 (2 flaky timeout preexistentes) → rerun 178/178 ✓; `build` skip (sin cambios de código)
 - **Pendiente:** schedulers locales como admin (0 tareas instaladas) + revisar CTR en Vercel Analytics
+### Mantenimiento 03 Oct 2026 (sábado, prep lunes)
+- Nube sana sin tocar nada: `sync` 06:11 diario OK (01/02/03 Oct, 362 rows 0 err), promo enviada 02 Oct, cursor refresh 03 Oct 08:37, newsletter lunes 05 Oct pendiente (subs 0)
+- `candidates` local: 31 pending del discover 01-03 Oct → **30 rechazados** (27 ASIN-EN-APPROVED/deal + Legalis B08NK3VMCN preventivo incidente 29 Sep + Catana-46 B076TJY272 variante + FX-29.97 B07WJ2K6W9 variante de approved) + **1 aprobado** (Crossfire Spin B07JLHGVB7 40.99€, único verificado) → Sheet + `sync` 363 rows 3 creados + `sync:prod` 363 (1 creado) + `publish` 0 → Turso `published 178 / draft 47`, `pending 0 / approved 34 / rejected 1265` local
+- CTR: `click_tracking` Turso **10 total** (+2 desde 30 Sep), last7 3, 8/10 AE; gate 1.5% pendiente en dashboard Vercel Analytics
+- Cuarentena funcionando: 9 deals con `pendingPrice` (ej. Baitrunner ST sale 184€ vs pending 24€ — variante falsa frenada)
+- Blog **`mejor-hilo-trenzado-pesca-2026`**: 5 bobinas (4×Kairiki 8 19.95-21.99€ + genérica 12.99€), 5/5 slugs vs deals published, push Turso OK (post 26)
+- Newsletter incentive: footer `Top 10 chollos cada lunes · 1 email/semana` + CTA `Quiero los chollos` (`footer.tsx`, `newsletter-form.tsx`)
+- AdSense: CLIENT real en `.env` pero SLOT_HOME/SLOT_DEAL sin crear → el usuario crea 2 bloques display y los pone en Vercel (CLIENT+SLOTs); X: sin keys → promo sigue manual (`promo:dry`)
+- `backup-db` 2026-10-03, `build` 53/53 OK, `lint` 22 warnings 0 errores, `test` 183/183 ✓
+- **Pendiente usuario:** schedulers como admin (`install-daily-tasks.ps1`, 0 tareas) + AdSense slots + claves X + revisar CTR en Vercel Analytics
+
+### Mantenimiento 06 Oct 2026 (martes, post-lunes)
+- Nube OK: `sync` 02/03/04/05 Oct diario OK (363 rows 0 err), telegram + promo enviadas 05 Oct, cursor refresh 06 Oct 09:29, newsletter 05 Oct sin verificar (sin clave de estado, subs 0). CTR: `click_tracking` **10 total**, last7 2, último 01 Oct. Turso pre-sync `published 178 / draft 47`, `pending 0 / approved 165 / rejected 300`, `price_history 22218`
+- `clean-expired` 0, `backup-db` 2026-10-06
+- `candidates` local: 26 pending del discover 04-06 Oct → **25 rechazados** (24 ASIN-EN-APPROVED/deal/FUZZY 1.00 + Catana-46 B076TJY272 preventivo) + **1 aprobado** (Daiwa MegaForce B00I0VY4Q2 58.99€, rev 92, único verificado: ni en deals ni fuzzy ≤0.33) → Sheet (fila 364) + `sync` 364 rows 1 creado (MegaForce published 58.99%) + `sync:prod` 364 (1 creado) + `publish` 0 → Turso `published 179 / draft 47`, `pending 0 / approved 35 / rejected 1290` local
+- `refresh-prices:prod --apply` **112 updated / 12 skipped / 53 failed / 0 removed + 12 cuarentena** (email admin + reset) + push 119 deals a Turso. Cuarentena local 12: BG 128€ vs 27€ (count 3), Baitrunner ST 66€ vs 122€ (count 5), Black Widow 62€ vs 10€ — variantes falsas frenadas
+- `build` 53/53 OK, `lint` 22 warnings 0 errores, `test` 183/183 ✓ (sin flaky)
+- **Pendiente usuario:** schedulers como admin (0 tareas) + AdSense slots + claves X + revisar CTR en Vercel Analytics
+
 ### Monetización P0 30 Sep tarde (confianza + cuarentena de precios)
 - **Hallazgo**: los scrapers publicaban precios de variante errónea (Stradic 183€→27€ -85%, PENN →14€ -92%, BG →34€ -73%); la promo de las 09:58 salió con el 34€ falso. `updateDealInDb` escribía siempre (`sanity_filtered` solo avisaba por email)
 - **Fix cuarentena** (`price-scraper/index.ts` + `db.ts` + `refresh-all.ts`): cambio >40% no se publica hasta que un 2º scrape lo confirme (±5%); sin baseline se aplica directo. Nuevas columnas `pendingPrice`/`pendingPriceCount` (migración). Estado `quarantined` cuenta como alerta, no como updated. 5 tests nuevos (`price-quarantine.test.ts`)
