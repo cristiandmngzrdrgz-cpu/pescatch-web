@@ -1,7 +1,7 @@
 # TODO — Mejora del pipeline de datos
 
-**Última actualización:** 2026-10-14
-**Estado actual:** ✅ 9/9 + Monetización B+C P0-P1 + mantenimiento 14 Oct (triaje 35→0, 3 high-ticket a web, refresh 134/42/0, blog feeder, test 183/183)
+**Última actualización:** 2026-10-15
+**Estado actual:** ✅ 9/9 + Monetización B+C P0-P1 + mantenimiento 14 Oct + plan ingresos (roundup semanal, post 29)
 
 > Nota: este archivo cubre el pipeline de datos. El ROADMAP.md cubre todo el proyecto (marketing, SEO, infraestructura).
 
@@ -150,6 +150,10 @@ PesCatch.es es una web de chollos de material de pesca. El pipeline de datos tie
 - AdSense: CLIENT real en `.env` pero SLOT_HOME/SLOT_DEAL sin crear → el usuario crea 2 bloques display y los pone en Vercel (CLIENT+SLOTs); X: sin keys → promo sigue manual (`promo:dry`)
 - `backup-db` 2026-10-03, `build` 53/53 OK, `lint` 22 warnings 0 errores, `test` 183/183 ✓
 - **Pendiente usuario:** schedulers como admin (`install-daily-tasks.ps1`, 0 tareas) + AdSense slots + claves X + revisar CTR en Vercel Analytics
+
+### Plan ingresos 15 Oct 2026 (aprobado: todo)
+- Diagnóstico: el freno es tráfico (12 clicks, 0 subs), no catálogo. Fases: 0 medir (Analytics/SC — usuario) → 1 desbloqueos usuario (AdSense slots, X keys, schedulers, dashboards) → 2 contenido que vende (roundup semanal + nichos) → 3 ampliar discover (marcas/categorías/bestsellers) → 4 distribución.
+- **Roundup semanal `chollos-pesca-semana-42-2026`** (Fase 2, primero): 10 productos (7 Amazon con descuento real −49%..−14% + 3 AE precio verificado), 10/10 slugs vs deals, render 200 OK, push Turso OK (post 29). Websearch caído (2 intentos) → señal pública de indexación pendiente.
 
 ### Mantenimiento 14 Oct 2026 (miércoles, 8 días desde 06 Oct)
 - Nube sana sin tocar nada: `sync` diario 10-14 Oct OK (364 rows 0 creados 364 updated 0 omitidos), telegram enviado 12 Oct, promo enviada 14 Oct 09:58, cursor refresh 14 Oct 10:43, newsletter 12 Oct sin verificar (sin clave de estado, subs 0)
