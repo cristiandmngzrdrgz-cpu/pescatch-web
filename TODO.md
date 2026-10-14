@@ -1,7 +1,7 @@
 # TODO — Mejora del pipeline de datos
 
-**Última actualización:** 2026-10-06 (mañana)
-**Estado actual:** ✅ 9/9 + Monetización B+C P0-P1 + mantenimiento 06 Oct (triaje 26→0, MegaForce a web, refresh 112/53/0, test 183/183)
+**Última actualización:** 2026-10-14
+**Estado actual:** ✅ 9/9 + Monetización B+C P0-P1 + mantenimiento 14 Oct (triaje 35→0, 3 high-ticket a web, refresh 134/42/0, blog feeder, test 183/183)
 
 > Nota: este archivo cubre el pipeline de datos. El ROADMAP.md cubre todo el proyecto (marketing, SEO, infraestructura).
 
@@ -150,6 +150,16 @@ PesCatch.es es una web de chollos de material de pesca. El pipeline de datos tie
 - AdSense: CLIENT real en `.env` pero SLOT_HOME/SLOT_DEAL sin crear → el usuario crea 2 bloques display y los pone en Vercel (CLIENT+SLOTs); X: sin keys → promo sigue manual (`promo:dry`)
 - `backup-db` 2026-10-03, `build` 53/53 OK, `lint` 22 warnings 0 errores, `test` 183/183 ✓
 - **Pendiente usuario:** schedulers como admin (`install-daily-tasks.ps1`, 0 tareas) + AdSense slots + claves X + revisar CTR en Vercel Analytics
+
+### Mantenimiento 14 Oct 2026 (miércoles, 8 días desde 06 Oct)
+- Nube sana sin tocar nada: `sync` diario 10-14 Oct OK (364 rows 0 creados 364 updated 0 omitidos), telegram enviado 12 Oct, promo enviada 14 Oct 09:58, cursor refresh 14 Oct 10:43, newsletter 12 Oct sin verificar (sin clave de estado, subs 0)
+- `clean-expired` 0, `backup-db` 2026-10-14
+- `candidates` local: 35 pending del discover 07-14 Oct → **32 rechazados** (dups vs deals published/approved: Baitrunner, Ninja LT, FX, Ninja X Spin/Feeder, Sweepfire, Revros, FX XT, Catana-variante, Okuma Baitfeeder, MegaForce, BG, bolsa Daiwa, Kairiki, Exceler, Triforce, Siena, Method) + **3 aprobados únicos** (Daiwa Crosscast Surf 150€, Crosscast Spod 109€, Okuma Inspira 148.38€, score 70-71, high-ticket) → Sheet + `sync` 367 rows 5 creados 0 errores + `sync:prod` 367 (3 creados) + `publish` 0 → Turso `published 182 / draft 47`
+- `refresh-prices:prod --apply` **134 updated / 1 skipped / 42 failed / 0 removed + 7 priceAlert** + push 11 deals a Turso. Triforce 49→39.90€, Okuma Baitfeeder 37→31.77€, Baitrunner FB 42→66.37€
+- CTR: `click_tracking` Turso **12 total** (+2 desde 06 Oct), last7 2, 9/12 AE; `price_alerts` activas 0. Gate 1.5% pendiente en dashboard Vercel Analytics
+- Blog **`equipo-feeder-barato-2026`**: caña Triforce 39.90€ + Okuma Baitfeeder 31.77€ + Baitrunner ST 66.37€ + cebadores 13.99€ + soporte 16.19€ (equipo completo 101.85€), 5/5 slugs vs deals published, render 200 OK en dev, push Turso OK (post 28). Ratings 4.5-4.6 del discover en los 3 principales; 4.3/4.4 editorial en accesorios genéricos (sin rating en Amazon/AE)
+- `build` 53/53 OK, `lint` 22 warnings 0 errores, `test` 183/183 ✓ (2 flaky en primera pasada, verde en rerun)
+- **Pendiente usuario:** schedulers como admin (0 tareas) + AdSense slots + claves X + revisar CTR en Vercel Analytics
 
 ### Mantenimiento 06 Oct 2026 (martes, post-lunes)
 - Nube OK: `sync` 02/03/04/05 Oct diario OK (363 rows 0 err), telegram + promo enviadas 05 Oct, cursor refresh 06 Oct 09:29, newsletter 05 Oct sin verificar (sin clave de estado, subs 0). CTR: `click_tracking` **10 total**, last7 2, último 01 Oct. Turso pre-sync `published 178 / draft 47`, `pending 0 / approved 165 / rejected 300`, `price_history 22218`

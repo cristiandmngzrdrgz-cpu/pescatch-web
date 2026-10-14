@@ -2,7 +2,7 @@
 
 > Web de chollos de material de pesca. Dominio: `pescatch.es`
 > Tech stack: Next.js 16 + TypeScript + Tailwind CSS 4 + shadcn/ui + SQLite/Turso
-> **Última actualización:** 2026-10-06
+> **Última actualización:** 2026-10-14
 
 ---
 
@@ -104,6 +104,8 @@
 - **Mantenimiento 03 Oct 2026 (prep lunes)**: nube OK (sync diario 362 rows 01/02/03 Oct, promo 02 Oct, cursor refresh 03 Oct), `candidates` 31→0 (30 dups rechazados + Crossfire Spin 40.99€ aprobado → Sheet → `sync`/`sync:prod` 363 + `publish` 0 → Turso `published 178/draft 47`), CTR **10 clicks** (+2, 8/10 AE), cuarentena frenando 9 pendientes (Baitrunner 184€ vs 24€ falso). Blog **`mejor-hilo-trenzado-pesca-2026`** (5 bobinas Kairiki+genérica, push Turso). Newsletter incentive en footer. AdSense/X pendientes del usuario (slots + keys). `backup` 03 Oct, `build` 53/53, `lint` 22w, `test` 183/183 ✓.
 - **Mantenimiento 06 Oct 2026 (post-lunes)**: nube OK (sync 02-05 Oct, telegram+promo 05 Oct, cursor refresh 06 Oct; newsletter sin verificar, subs 0), `candidates` 26→0 (25 dups rechazados + MegaForce 58.99€ aprobado → Sheet → `sync`/`sync:prod` 364 + `publish` 0 → Turso `published 179/draft 47`), CTR **10 clicks** (last7 2), `refresh-prices:prod --apply` **112/12/53/0 + 12 cuarentena** (push 119 Turso; BG/Baitrunner/Black Widow frenados), `clean` 0, `backup` 06 Oct, `build` 53/53, `lint` 22w, `test` 183/183 ✓.
 - **Blog 06 Oct 2026 (buyer-intent semanal)**: `mejor-cana-spinning-pesca-2026` (Tormentor2 29€ + ORRA −51% + Crossfire + Vengeance + Legalis; 5/5 slugs vs deals, render 200 OK). Tema mochila/caja descartado por duplicado con el post del 17 Sep.
+- **Mantenimiento 14 Oct 2026**: nube OK (sync 10-14 Oct, telegram 12 Oct, promo 14 Oct, cursor refresh 14 Oct; newsletter sin verificar, subs 0), `candidates` 35→0 (32 dups rechazados + 3 aprobados high-ticket: Crossfire Surf 150€, Crossfire Spod 109€, Inspira 148€ → Sheet → `sync`/`sync:prod` 367 + `publish` 0 → Turso `published 182/draft 47`), `refresh-prices:prod --apply` **134/1/42/0 + 7 priceAlert** (push 11 Turso; Triforce 49→39.90€, Okuma 37→31.77€, Baitrunner FB 42→66.37€), CTR **12 clicks** (+2, 9/12 AE), `clean` 0, `backup` 14 Oct, `build` 53/53, `lint` 22w, `test` 183/183 ✓.
+- **Blog 14 Oct 2026 (buyer-intent semanal)**: `equipo-feeder-barato-2026` (Triforce 39.90€ + Okuma Baitfeeder 31.77€ + Baitrunner ST 66.37€ + cebadores 13.99€ + soporte 16.19€ = equipo 101.85€; 5/5 slugs vs deals, render 200 OK). Push Turso OK (post 28).
 
 ---
 
