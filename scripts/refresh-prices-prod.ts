@@ -56,7 +56,7 @@ async function main() {
   console.log('\n=== 2/2 PROPAGAR A PRODUCCIÓN (Turso) ===')
   await runPush(apply)
 
-  console.log(`\n✅ Workflow completo. Ejecuta con --apply para escribir en Turso (por defecto es dry-run).`)
+  console.log(`\n✅ Workflow completo.${apply ? ' Cambios escritos en Turso.' : ' Dry-run: ejecuta con --apply para escribir en Turso.'}`)
 }
 
 main().catch(err => {
