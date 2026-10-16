@@ -398,8 +398,11 @@ export default async function DealDetailPage({
             </div>
           </div>
 
-          {/* Ad: Deal sidebar (rectangle, no intrusivo bajo CTA) */}
-          <AdBanner slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_DEAL} format="rectangle" />
+          {/* Ad: Deal sidebar (rectangle, no intrusivo bajo CTA).
+              Solo se renderiza cuando hay slot configurado (post-aprobación AdSense). */}
+          {process.env.NEXT_PUBLIC_ADSENSE_SLOT_DEAL ? (
+            <AdBanner slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_DEAL} format="rectangle" />
+          ) : null}
 
           {/* Votes */}
           <div className="rounded-2xl p-5 transition-all duration-200 hover:shadow-[0_0_15px_rgba(0,212,255,0.08)]"

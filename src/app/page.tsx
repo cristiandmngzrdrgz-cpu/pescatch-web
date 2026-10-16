@@ -374,12 +374,15 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Ad: Home - entre Destacados y Categorias (no intrusivo, horizontal) */}
-      <section className="py-6" style={{ background: '#0B1120' }}>
-        <div className="mx-auto max-w-7xl px-4">
-          <AdBanner slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME} format="horizontal" className="max-w-4xl mx-auto" />
-        </div>
-      </section>
+      {/* Ad: Home - entre Destacados y Categorias (no intrusivo, horizontal).
+          Solo se renderiza cuando hay slot configurado (post-aprobación AdSense). */}
+      {process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME ? (
+        <section className="py-6" style={{ background: '#0B1120' }}>
+          <div className="mx-auto max-w-7xl px-4">
+            <AdBanner slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME} format="horizontal" className="max-w-4xl mx-auto" />
+          </div>
+        </section>
+      ) : null}
 
       {/* Categories */}
       <section className="py-16 md:py-20 relative overflow-hidden" style={{ background: '#0B1120' }}>

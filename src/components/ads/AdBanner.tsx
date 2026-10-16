@@ -105,6 +105,9 @@ export function AdBanner({ slot, format = 'auto', className = '', requireConsent
 
   return (
     <div ref={ref} className={`overflow-hidden rounded-xl ${className}`} style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
+      <div className="px-3 pt-2 text-[10px] uppercase tracking-widest" style={{ color: '#4A6080' }}>
+        Publicidad
+      </div>
       <ins
         className="adsbygoogle"
         style={{ display: 'block' }}

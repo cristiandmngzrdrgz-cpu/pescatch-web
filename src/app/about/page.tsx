@@ -39,7 +39,7 @@ export default function AboutPage() {
           <h2 className="text-xl font-bold mb-3" style={{ color: '#E8F0FE' }}>Cómo verificamos los chollos</h2>
           <div className="space-y-3">
             {[
-              'Monitorizamos precios en Amazon, AliExpress y más tiendas.',
+              'Monitorizamos precios en Amazon y AliExpress',
               'Comparamos con el precio medio del mercado.',
               'Solo publicamos deals con al menos un 15% de descuento real.',
               'Verificamos disponibilidad, envío y reputación de la tienda.',
@@ -51,6 +51,16 @@ export default function AboutPage() {
               </div>
             ))}
           </div>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-bold mb-3" style={{ color: '#E8F0FE' }}>Transparencia: cómo nos financiamos</h2>
+          <p className="text-sm leading-relaxed">
+            PesCatch es gratuito. Nos financiamos con comisiones de afiliado (Amazon y AliExpress):
+            si compras desde nuestros enlaces, la tienda nos paga una parte sin que pagues más.
+            Próximamente también mostraremos anuncios de Google AdSense. Nunca publicamos un chollo
+            por interés comercial: si no hay descuento real verificado, no se publica.
+          </p>
         </section>
 
         <section>

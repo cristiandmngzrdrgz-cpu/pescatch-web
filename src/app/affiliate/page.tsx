@@ -2,7 +2,7 @@ export default function AffiliatePage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
       <h1 className="text-3xl font-extrabold tracking-tight mb-6" style={{ color: '#E8F0FE' }}>Programa de Afiliados</h1>
-      <p className="text-sm mb-8" style={{ color: '#8BA3C7' }}>Última actualización: 28 de junio de 2026</p>
+      <p className="text-sm mb-8" style={{ color: '#8BA3C7' }}>Última actualización: 16 de octubre de 2026</p>
 
       <div className="space-y-8" style={{ color: '#8BA3C7' }}>
         <section>
@@ -21,7 +21,6 @@ export default function AffiliatePage() {
             {[
               { name: 'Amazon Associates', desc: 'El programa de afiliados de Amazon. Comisiones entre 1-10% según categoría.', url: 'https://affiliate-program.amazon.es' },
               { name: 'AliExpress Affiliate', desc: 'Programa de afiliados de AliExpress para productos de pesca.', url: 'https://portals.aliexpress.com' },
-              { name: 'eBay Partner Network', desc: 'Programa de afiliados de eBay para productos de segunda mano y nuevos.', url: 'https://partnernetwork.ebay.es' },
             ].map((partner) => (
               <div key={partner.name} className="rounded-xl p-4 transition-all duration-200 hover:shadow-[0_0_15px_rgba(0,212,255,0.1)]"
                 style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
