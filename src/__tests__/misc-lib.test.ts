@@ -64,6 +64,97 @@ describe('pending-candidates', () => {
   })
 })
 
+describe('pending-candidates anti-duplicados', () => {
+  const base = {
+    title: 'Producto test', originalPrice: 70, rating: 4.5, reviews: 50,
+    keyword: 'caña', category: 'canas', imageUrl: null, brand: 'Shimano', ean: null, score: 90, source: 'test',
+  }
+
+  it('no re-guarda un candidato rechazado si el precio no baja ≥10%', async () => {
+    const { savePendingCandidates, getPendingCandidates, rejectCandidate } = await import('@/lib/pending-candidates')
+    const url = 'https://www.amazon.es/dp/B0DUPTEST1'
+
+    await savePendingCandidates([{ ...base, asin: 'B0DUPTEST1', price: 50, url }])
+    const [first] = await getPendingCandidates(10)
+    await rejectCandidate(first.id)
+
+    const saved = await savePendingCandidates([{ ...base, asin: 'B0DUPTEST1', price: 49, url }])
+    expect(saved).toBe(0)
+    expect(await getPendingCandidates(10)).toHaveLength(0)
+  })
+
+  it('re-guarda un rechazado si el precio cae ≥10%, marcado como revisado', async () => {
+    const { savePendingCandidates, getPendingCandidates, rejectCandidate } = await import('@/lib/pending-candidates')
+    const url = 'https://www.amazon.es/dp/B0DUPTEST2'
+
+    await savePendingCandidates([{ ...base, asin: 'B0DUPTEST2', price: 50, url }])
+    const [first] = await getPendingCandidates(10)
+    await rejectCandidate(first.id)
+
+    const saved = await savePendingCandidates([{ ...base, asin: 'B0DUPTEST2', price: 40, url }])
+    expect(saved).toBe(1)
+
+    const [reentry] = await getPendingCandidates(10)
+    expect(reentry.price).toBe(40)
+    expect(reentry.source).toContain('revisado -20%')
+  })
+
+  it('no re-guarda un candidato ya aprobado', async () => {
+    const { savePendingCandidates, getPendingCandidates, approveCandidate } = await import('@/lib/pending-candidates')
+    const url = 'https://www.amazon.es/dp/B0DUPTEST3'
+
+    await savePendingCandidates([{ ...base, asin: 'B0DUPTEST3', price: 50, url }])
+    const [first] = await getPendingCandidates(10)
+    await approveCandidate(first.id)
+
+    const saved = await savePendingCandidates([{ ...base, asin: 'B0DUPTEST3', price: 30, url }])
+    expect(saved).toBe(0)
+  })
+
+  it('no guarda un candidato cuyo ASIN ya es un deal', async () => {
+    const { savePendingCandidates, getPendingCandidates } = await import('@/lib/pending-candidates')
+    const { getDb } = await import('@/lib/db')
+    const db = getDb()
+    const asin = 'B0DEALTEST'
+
+    await db.execute({
+      sql: `INSERT INTO deals (id, title, slug, originalPrice, salePrice, asin, affiliateUrl, storeId, status)
+            VALUES ('deal-test-dupe', 'Deal test', 'deal-test-dupe', 60, 45, ?, 'https://www.amazon.es/dp/B0DEALTEST?tag=t', 'amazon', 'published')`,
+      args: [asin],
+    })
+
+    try {
+      const saved = await savePendingCandidates([{
+        ...base, asin, price: 30, url: 'https://www.amazon.es/dp/B0DEALTEST',
+      }])
+      expect(saved).toBe(0)
+      expect(await getPendingCandidates(10)).toHaveLength(0)
+    } finally {
+      await db.execute({ sql: 'DELETE FROM deals WHERE id = ?', args: ['deal-test-dupe'] })
+    }
+  })
+
+  it('no guarda un candidato AliExpress cuyo item ya es un deal', async () => {
+    const { savePendingCandidates } = await import('@/lib/pending-candidates')
+    const { getDb } = await import('@/lib/db')
+    const db = getDb()
+
+    await db.execute({
+      sql: `INSERT INTO deals (id, title, slug, originalPrice, salePrice, affiliateUrl, storeId, status)
+            VALUES ('deal-test-ae', 'Deal AE test', 'deal-test-ae', 40, 30, 'https://www.aliexpress.com/item/1005001234567.html', 'aliexpress', 'published')`,
+    })
+
+    try {
+      const saved = await savePendingCandidates([{
+        ...base, asin: '', price: 25, url: 'https://www.aliexpress.com/item/1005001234567.html', brand: null,
+      }])
+      expect(saved).toBe(0)
+    } finally {
+      await db.execute({ sql: 'DELETE FROM deals WHERE id = ?', args: ['deal-test-ae'] })
+    }
+  })
+})
+
 describe('rate-limit', () => {
   it('allows requests within the limit', async () => {
     const { checkRateLimit } = await import('@/lib/rate-limit')

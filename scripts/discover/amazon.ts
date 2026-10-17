@@ -54,31 +54,33 @@ export async function searchAmazon(
   }))
 }
 
-export async function scrapeAmazonBestsellers(category: string): Promise<AmazonCandidate[]> {
+export async function scrapeAmazonBestsellers(category: string, node: string = AMAZON_FISHING_NODE): Promise<AmazonCandidate[]> {
   await searchLimiter.wait()
 
-  const url = `https://www.amazon.es/gp/bestsellers/sports/${AMAZON_FISHING_NODE}`
+  const url = `https://www.amazon.es/gp/bestsellers/sports/${node}`
   const res = await fetchWithTimeout(url, fetchHeaders())
   if (!res.ok) return []
   const html = await res.text()
 
+  // originalPrice null: el listado no trae precio tachado fiable. Inventarlo
+  // (price*1.3) inflaría el score con un descuento falso en scoreCandidate.
   return extractProducts(html, '__bestsellers__', category).map(c => ({
     ...c,
-    originalPrice: Math.round(c.price * 1.3 * 100) / 100,
+    originalPrice: null,
   }))
 }
 
-export async function scrapeAmazonNewReleases(category: string): Promise<AmazonCandidate[]> {
+export async function scrapeAmazonNewReleases(category: string, node: string = AMAZON_FISHING_NODE): Promise<AmazonCandidate[]> {
   await searchLimiter.wait()
 
-  const url = `https://www.amazon.es/gp/new-releases/sports/${AMAZON_FISHING_NODE}`
+  const url = `https://www.amazon.es/gp/new-releases/sports/${node}`
   const res = await fetchWithTimeout(url, fetchHeaders())
   if (!res.ok) return []
   const html = await res.text()
 
   return extractProducts(html, '__new_releases__', category).map(c => ({
     ...c,
-    originalPrice: Math.round(c.price * 1.3 * 100) / 100,
+    originalPrice: null,
   }))
 }
 
@@ -144,33 +146,24 @@ function extractBestsellerProducts(
   const products: AmazonCandidate[] = []
   const seen = new Set<string>()
 
-  // Bestseller pages use p13n grid with data-asin
-  const asinRegex = /data-asin="(B0[A-Z0-9]{8})"/g
-  let asinMatch
-  while ((asinMatch = asinRegex.exec(html)) !== null) {
-    if (products.length >= 20) break
-    const asin = asinMatch[1]
+  // Cada card va marcada por data-asin; el segmento hasta el siguiente data-asin
+  // es exactamente una card (layout actual: _cDEzb_p13n-sc-*).
+  const asinMatches = [...html.matchAll(/data-asin="(B0[A-Z0-9]{8})"/g)]
+
+  for (let i = 0; i < asinMatches.length && products.length < 20; i++) {
+    const asin = asinMatches[i][1]
     if (seen.has(asin)) continue
     seen.add(asin)
 
-    const startIdx = Math.max(0, asinMatch.index - 800)
-    const endIdx = Math.min(html.length, asinMatch.index + 12000)
-    const fragment = html.slice(startIdx, endIdx)
+    const start = asinMatches[i].index ?? 0
+    const nextStart = i + 1 < asinMatches.length ? (asinMatches[i + 1].index ?? html.length) : html.length
+    const end = nextStart - start > 500 ? nextStart : Math.min(html.length, start + 6000)
+    const fragment = html.slice(start, end)
 
-    let title = extractTitle(fragment)
-
-    // Fallback: p13n titles
-    if (!title) {
-      const pTitle = fragment.match(/<div[^>]+class="[^"]*p13n-sc-truncate[^"]*"[^>]*>([^<]+)</i)
-      if (pTitle) title = pTitle[1]
-    }
-    if (!title) {
-      const imgM = fragment.match(/<img[^>]+alt="([^"]{10,})"[^>]*>/i)
-      if (imgM) title = imgM[1]
-    }
+    const title = extractBestsellerTitle(fragment)
     if (!title) continue
 
-    const price = extractPrice(fragment)
+    const price = extractBestsellerPrice(fragment)
     if (price <= 0 || price > 2000) continue
 
     products.push({
@@ -190,6 +183,44 @@ function extractBestsellerProducts(
   }
 
   return products
+}
+
+function decodeEntities(text: string): string {
+  return text
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+}
+
+function extractBestsellerTitle(fragment: string): string | null {
+  // Layout actual (2026): div con clase p13n-sc-css-line-clamp-*
+  const clamp = fragment.match(/class="[^"]*p13n-sc-css-line-clamp[^"]*"[^>]*>([^<]{5,300})</i)
+  if (clamp) return decodeEntities(clamp[1])
+
+  // Layout anterior: p13n-sc-truncate
+  const truncate = fragment.match(/class="[^"]*p13n-sc-truncate[^"]*"[^>]*>([^<]{5,300})</i)
+  if (truncate) return decodeEntities(truncate[1])
+
+  const fallback = extractTitle(fragment)
+  return fallback ? decodeEntities(fallback) : null
+}
+
+function extractBestsellerPrice(fragment: string): number {
+  const patterns = [
+    /class="[^"]*p13n-sc-price[^"]*"[^>]*>\s*([\d.,]+)\s*(?:&nbsp;)?€/i,
+    /class="[^"]*a-color-price[^"]*"[^>]*>\s*([\d.,]+)\s*(?:&nbsp;)?€/i,
+  ]
+  for (const pattern of patterns) {
+    const m = fragment.match(pattern)
+    if (m) {
+      const price = parseSpanishPrice(m[1])
+      if (price > 0) return price
+    }
+  }
+  return extractPrice(fragment)
 }
 
 function cleanTitle(t: string): string {

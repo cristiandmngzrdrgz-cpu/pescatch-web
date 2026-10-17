@@ -21,27 +21,113 @@ export interface PendingCandidate {
   updated_at: string
 }
 
+const AMAZON_ASIN_RE = /\/dp\/(B0[A-Z0-9]{8})/i
+const AE_ITEM_RE = /\/item\/(\d+)(?:\.html)?/i
+
+// Un candidato ya rechazado solo vuelve a entrar si su precio ha caído al menos
+// un 10% respecto a la última vez que se vio (evita re-llenar el panel de dups).
+const REENTRY_PRICE_DROP = 0.9
+
+interface KnownRow {
+  status: PendingCandidate['status']
+  price: number
+}
+
+function keysFromUrl(url: string): { asin: string; aeId: string } {
+  const asin = url.match(AMAZON_ASIN_RE)?.[1]?.toUpperCase() ?? ''
+  const aeId = url.match(AE_ITEM_RE)?.[1] ?? ''
+  return { asin, aeId }
+}
+
+/**
+ * Snapshot de lo ya conocido: candidatos en cualquier estado + ASINs/PIDs que
+ * ya son deals. Sirve para no volver a guardar lo que ya se trió o publicó.
+ */
+async function loadKnown(): Promise<{
+  byUrl: Map<string, KnownRow>
+  byKey: Map<string, KnownRow>
+  dealKeys: Set<string>
+}> {
+  const db = getDb()
+  const [candidateRows, dealRows] = await Promise.all([
+    db.execute('SELECT url, asin, status, price FROM pending_candidates ORDER BY id DESC'),
+    db.execute('SELECT asin, affiliateUrl, storeUrl FROM deals'),
+  ])
+
+  const byUrl = new Map<string, KnownRow>()
+  const byKey = new Map<string, KnownRow>()
+
+  for (const row of candidateRows.rows) {
+    const known: KnownRow = {
+      status: row.status as PendingCandidate['status'],
+      price: Number(row.price) || 0,
+    }
+    const url = String(row.url || '').trim().toLowerCase()
+    if (url && !byUrl.has(url)) byUrl.set(url, known)
+
+    const { asin, aeId } = keysFromUrl(String(row.url || ''))
+    const key = asin || aeId
+    if (key && !byKey.has(key)) byKey.set(key, known)
+  }
+
+  const dealKeys = new Set<string>()
+  for (const row of dealRows.rows) {
+    const asinCol = String(row.asin || '').toUpperCase()
+    if (asinCol) dealKeys.add(asinCol)
+    for (const url of [row.affiliateUrl, row.storeUrl]) {
+      const { asin, aeId } = keysFromUrl(String(url || ''))
+      if (asin) dealKeys.add(asin)
+      if (aeId) dealKeys.add(aeId)
+    }
+  }
+
+  return { byUrl, byKey, dealKeys }
+}
+
 export async function savePendingCandidates(candidates: Omit<PendingCandidate, 'id' | 'status' | 'created_at' | 'updated_at'>[]): Promise<number> {
   const db = getDb()
+  const { byUrl, byKey, dealKeys } = await loadKnown()
   let saved = 0
 
   for (const c of candidates) {
-    const existing = await db.execute({
-      sql: 'SELECT id FROM pending_candidates WHERE url = ? AND status = ?',
-      args: [c.url, 'pending'],
-    })
+    const urlKey = c.url.trim().toLowerCase()
+    const { asin: urlAsin, aeId } = keysFromUrl(c.url)
+    const asin = (c.asin || urlAsin).toUpperCase()
+    const key = asin || aeId
 
-    if (existing.rows.length > 0) continue
+    // Ya es un deal (publicado o draft): el refresh de precios es el que manda.
+    if (key && dealKeys.has(key)) continue
+
+    const known = byUrl.get(urlKey) ?? (key ? byKey.get(key) : undefined)
+    let source = c.source
+
+    if (known) {
+      const canReenter =
+        known.status === 'rejected' &&
+        known.price > 0 &&
+        c.price > 0 &&
+        c.price <= known.price * REENTRY_PRICE_DROP
+
+      if (!canReenter) continue
+
+      const drop = Math.round((1 - c.price / known.price) * 100)
+      source = `${c.source} · revisado -${drop}%`
+    }
 
     await db.execute({
       sql: `INSERT INTO pending_candidates (asin, title, price, originalPrice, rating, reviews, url, keyword, category, imageUrl, brand, ean, score, source)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         c.asin, c.title, c.price, c.originalPrice, c.rating, c.reviews,
-        c.url, c.keyword, c.category, c.imageUrl, c.brand, c.ean, c.score, c.source,
+        c.url, c.keyword, c.category, c.imageUrl, c.brand, c.ean, c.score, source,
       ],
     })
     saved++
+
+    // Dedup dentro de la misma tanda: el primero que entra gana.
+    const seen: KnownRow = { status: 'pending', price: c.price }
+    byUrl.set(urlKey, seen)
+    if (key) byKey.set(key, seen)
   }
 
   return saved

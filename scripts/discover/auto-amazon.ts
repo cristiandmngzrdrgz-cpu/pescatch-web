@@ -1,14 +1,22 @@
 import 'dotenv/config'
-import { CATEGORIES } from './keywords'
-import { type AmazonCandidate } from './amazon'
+import { AMAZON_BRAND_KEYWORDS, BESTSELLER_NODES, CATEGORIES, flattenKeywords, groupKeywords, pickBatch, type KeywordEntry } from './keywords'
+import { scrapeAmazonBestsellers, scrapeAmazonNewReleases, type AmazonCandidate } from './amazon'
 import { braveAvailable } from './decathlon-scraper'
-import { searchAmazonAll, scrapeBestsellersStealth, scrapeNewReleasesStealth } from './amazon-scraper'
+import { searchAmazonAll } from './amazon-scraper'
 import { savePendingCandidates } from '../../src/lib/pending-candidates'
 import { initSchema, migrateSchema } from '../../src/lib/db'
+import { getCronState, setCronState } from '../../src/lib/cron-state'
 
 // PROPÓSITO: descubrir SOLO candidatos de Amazon (keywords + bestsellers + novedades).
 // No ejecuta AliExpress ni Decathlon. Guarda en pending_candidates (local).
 // FECHA: 2026-08-10
+//
+// Rotación: cada ejecución escanea un lote y avanza el cursor (cron_state).
+// El ciclo completo del catálogo se cubre en varios días. `--all` escanea todo.
+const KEYWORD_BATCH_SIZE = 25
+const NODE_BATCH_SIZE = 3
+const KEYWORD_CURSOR_KEY = 'discover_keyword_cursor'
+const NODE_CURSOR_KEY = 'discover_node_cursor'
 
 interface ScoredCandidate extends AmazonCandidate {
   score: number
@@ -101,9 +109,26 @@ async function discoverAmazonOnly() {
 
   const allCandidates: ScoredCandidate[] = []
   const seenAsins = new Set<string>()
+  const scanAll = process.argv.includes('--all')
+  const batchArg = process.argv.find(a => a.startsWith('--batch='))
+  const keywordBatchSize = batchArg ? Math.max(1, parseInt(batchArg.split('=')[1], 10) || KEYWORD_BATCH_SIZE) : KEYWORD_BATCH_SIZE
 
-  console.log('── FASE 1/3: Amazon keywords (stealth) ──')
-  const amazonResults = await searchAmazonAll(CATEGORIES)
+  console.log('── FASE 1/2: Amazon keywords (stealth) ──')
+  const keywordPool: KeywordEntry[] = [...flattenKeywords(CATEGORIES), ...AMAZON_BRAND_KEYWORDS]
+  let keywordBatch = keywordPool
+  let nextKeywordCursor: number | null = null
+
+  if (scanAll) {
+    console.log(`   Catálogo completo (${keywordPool.length} keywords)`)
+  } else {
+    const cursor = parseInt(await getCronState(KEYWORD_CURSOR_KEY), 10) || 0
+    const picked = pickBatch(keywordPool, cursor, keywordBatchSize)
+    keywordBatch = picked.batch
+    nextKeywordCursor = picked.nextCursor
+    console.log(`   Lote ${keywordBatch.length}/${keywordPool.length} · cursor ${cursor} → ${nextKeywordCursor} · ciclo completo en ~${Math.ceil(keywordPool.length / keywordBatchSize)} días (--all para todo)`)
+  }
+
+  const amazonResults = await searchAmazonAll(groupKeywords(keywordBatch))
   for (const r of amazonResults) {
     if (seenAsins.has(r.asin)) continue
     seenAsins.add(r.asin)
@@ -111,23 +136,51 @@ async function discoverAmazonOnly() {
   }
   console.log(`  ${amazonResults.length} productos encontrados`)
 
-  console.log('\n── FASE 2/3: Amazon Bestsellers ──')
-  const bestsellers = await scrapeBestsellersStealth('Pesca General')
-  for (const r of bestsellers) {
-    if (seenAsins.has(r.asin)) continue
-    seenAsins.add(r.asin)
-    allCandidates.push({ ...r, score: scoreCandidate(r), source: 'Amazon Bestsellers' })
-  }
-  console.log(`  ${bestsellers.length} bestsellers`)
+  if (nextKeywordCursor !== null) await setCronState(KEYWORD_CURSOR_KEY, String(nextKeywordCursor))
 
-  console.log('\n── FASE 3/3: Amazon Novedades ──')
-  const newReleases = await scrapeNewReleasesStealth('Pesca General')
-  for (const r of newReleases) {
-    if (seenAsins.has(r.asin)) continue
-    seenAsins.add(r.asin)
-    allCandidates.push({ ...r, score: scoreCandidate(r), source: 'Amazon Novedades' })
+  console.log('\n── FASE 2/2: Amazon Bestsellers + Novedades (fetch directo) ──')
+  let nodes = BESTSELLER_NODES
+  let nextNodeCursor: number | null = null
+
+  if (!scanAll) {
+    const cursor = parseInt(await getCronState(NODE_CURSOR_KEY), 10) || 0
+    const picked = pickBatch(BESTSELLER_NODES, cursor, NODE_BATCH_SIZE)
+    nodes = picked.batch
+    nextNodeCursor = picked.nextCursor
+    console.log(`   Nodos: ${nodes.map(n => n.label).join(', ')} (cursor ${cursor} → ${nextNodeCursor})`)
   }
-  console.log(`  ${newReleases.length} novedades`)
+
+  for (const { label, node } of nodes) {
+    try {
+      const bestsellers = await scrapeAmazonBestsellers(label, node)
+      let added = 0
+      for (const r of bestsellers) {
+        if (seenAsins.has(r.asin)) continue
+        seenAsins.add(r.asin)
+        allCandidates.push({ ...r, score: scoreCandidate(r), source: `Amazon Bestsellers: ${label}` })
+        added++
+      }
+      console.log(`   ${label}: ${bestsellers.length} bestsellers (${added} nuevos)`)
+    } catch (err) {
+      console.log(`   ⚠️ Bestsellers ${label} falló: ${err instanceof Error ? err.message : err}`)
+    }
+
+    try {
+      const newReleases = await scrapeAmazonNewReleases(label, node)
+      let added = 0
+      for (const r of newReleases) {
+        if (seenAsins.has(r.asin)) continue
+        seenAsins.add(r.asin)
+        allCandidates.push({ ...r, score: scoreCandidate(r), source: `Amazon Novedades: ${label}` })
+        added++
+      }
+      console.log(`   ${label}: ${newReleases.length} novedades (${added} nuevos)`)
+    } catch (err) {
+      console.log(`   ⚠️ Novedades ${label} falló: ${err instanceof Error ? err.message : err}`)
+    }
+  }
+
+  if (nextNodeCursor !== null) await setCronState(NODE_CURSOR_KEY, String(nextNodeCursor))
 
   if (allCandidates.length === 0) {
     console.log('\n❌ No se encontraron candidatos Amazon.')
@@ -175,7 +228,7 @@ async function discoverAmazonOnly() {
     }))
   )
 
-  console.log(`✅ ${saved} nuevos candidatos guardados (${ranked.length - saved} duplicados)`)
+  console.log(`✅ ${saved} nuevos candidatos guardados (${ranked.length - saved} descartados: ya vistos, duplicados o ya publicados)`)
 
   console.log('\n📋 Siguiente paso: npm run push-candidates:prod -- --apply')
   console.log('   Luego revisa y aprueba en: /admin/candidates')
