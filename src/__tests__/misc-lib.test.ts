@@ -153,6 +153,58 @@ describe('pending-candidates anti-duplicados', () => {
       await db.execute({ sql: 'DELETE FROM deals WHERE id = ?', args: ['deal-test-ae'] })
     }
   })
+
+  it('no guarda un clon (similitud ≥0.85) de un deal activo con otro ASIN', async () => {
+    const { savePendingCandidates, getPendingCandidates } = await import('@/lib/pending-candidates')
+    const { getDb } = await import('@/lib/db')
+    const db = getDb()
+
+    await db.execute({
+      sql: `INSERT INTO deals (id, title, slug, originalPrice, salePrice, brand, storeId, status)
+            VALUES ('deal-test-clon', 'Daiwa Revros LT - Carrete de Pesca para Lagos y Ríos, tamaño 1000-6000', 'deal-test-clon', 80, 65, 'Daiwa', 'amazon', 'published')`,
+    })
+
+    try {
+      const saved = await savePendingCandidates([{
+        ...base,
+        asin: 'B0CLONTEST',
+        title: 'Daiwa Revros LT, Carrete de Pesca para Lagos y Ríos tamaño 1000',
+        price: 60,
+        url: 'https://www.amazon.es/dp/B0CLONTEST',
+        brand: 'Daiwa',
+      }])
+      expect(saved).toBe(0)
+      expect(await getPendingCandidates(10)).toHaveLength(0)
+    } finally {
+      await db.execute({ sql: 'DELETE FROM deals WHERE id = ?', args: ['deal-test-clon'] })
+    }
+  })
+
+  it('sí guarda un producto distinto (similitud <0.85)', async () => {
+    const { savePendingCandidates } = await import('@/lib/pending-candidates')
+    const { getDb } = await import('@/lib/db')
+    const db = getDb()
+
+    await db.execute({
+      sql: `INSERT INTO deals (id, title, slug, originalPrice, salePrice, brand, storeId, status)
+            VALUES ('deal-test-distinto', 'Daiwa Revros LT - Carrete de Pesca para Lagos y Ríos, tamaño 1000-6000', 'deal-test-distinto', 80, 65, 'Daiwa', 'amazon', 'published')`,
+    })
+
+    try {
+      const saved = await savePendingCandidates([{
+        ...base,
+        asin: 'B0DISTINTO',
+        title: 'Mustad Kit de anzuelos surtidos 100 unidades con caja',
+        price: 15,
+        url: 'https://www.amazon.es/dp/B0DISTINTO',
+        brand: 'Mustad',
+      }])
+      expect(saved).toBe(1)
+    } finally {
+      await db.execute({ sql: 'DELETE FROM deals WHERE id = ?', args: ['deal-test-distinto'] })
+      await db.execute({ sql: 'DELETE FROM pending_candidates WHERE url = ?', args: ['https://www.amazon.es/dp/B0DISTINTO'] })
+    }
+  })
 })
 
 describe('rate-limit', () => {

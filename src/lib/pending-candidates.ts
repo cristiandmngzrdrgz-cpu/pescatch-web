@@ -1,4 +1,5 @@
 import { getDb } from './db'
+import { dealMatchSimilarity } from './sync/fuzzy-matcher'
 
 export interface PendingCandidate {
   id: number
@@ -28,9 +29,18 @@ const AE_ITEM_RE = /\/item\/(\d+)(?:\.html)?/i
 // un 10% respecto a la última vez que se vio (evita re-llenar el panel de dups).
 const REENTRY_PRICE_DROP = 0.9
 
+// Variante de un deal activo con otro ASIN: si el título se parece ≥85%
+// (dealMatchSimilarity) no entra al panel — el refresh de precios del deal ya manda.
+const CLONE_THRESHOLD = 0.85
+
 interface KnownRow {
   status: PendingCandidate['status']
   price: number
+}
+
+interface DealTitle {
+  title: string
+  brand: string
 }
 
 function keysFromUrl(url: string): { asin: string; aeId: string } {
@@ -39,19 +49,34 @@ function keysFromUrl(url: string): { asin: string; aeId: string } {
   return { asin, aeId }
 }
 
+function isDealClone(
+  candidate: { title: string; brand: string | null },
+  dealTitles: DealTitle[],
+): boolean {
+  if (!candidate.title) return false
+  for (const deal of dealTitles) {
+    if (dealMatchSimilarity(candidate.title, candidate.brand ?? '', deal.title, deal.brand) >= CLONE_THRESHOLD) {
+      return true
+    }
+  }
+  return false
+}
+
 /**
- * Snapshot de lo ya conocido: candidatos en cualquier estado + ASINs/PIDs que
- * ya son deals. Sirve para no volver a guardar lo que ya se trió o publicó.
+ * Snapshot de lo ya conocido: candidatos en cualquier estado + ASINs/PIDs y
+ * títulos de deals activos. Sirve para no volver a guardar lo que ya se trió,
+ * publicó o es una variante clara de un deal existente.
  */
 async function loadKnown(): Promise<{
   byUrl: Map<string, KnownRow>
   byKey: Map<string, KnownRow>
   dealKeys: Set<string>
+  dealTitles: DealTitle[]
 }> {
   const db = getDb()
   const [candidateRows, dealRows] = await Promise.all([
     db.execute('SELECT url, asin, status, price FROM pending_candidates ORDER BY id DESC'),
-    db.execute('SELECT asin, affiliateUrl, storeUrl FROM deals'),
+    db.execute("SELECT asin, affiliateUrl, storeUrl, title, brand FROM deals WHERE status != 'expired'"),
   ])
 
   const byUrl = new Map<string, KnownRow>()
@@ -71,6 +96,7 @@ async function loadKnown(): Promise<{
   }
 
   const dealKeys = new Set<string>()
+  const dealTitles: DealTitle[] = []
   for (const row of dealRows.rows) {
     const asinCol = String(row.asin || '').toUpperCase()
     if (asinCol) dealKeys.add(asinCol)
@@ -79,14 +105,15 @@ async function loadKnown(): Promise<{
       if (asin) dealKeys.add(asin)
       if (aeId) dealKeys.add(aeId)
     }
+    dealTitles.push({ title: String(row.title || ''), brand: String(row.brand ?? '') })
   }
 
-  return { byUrl, byKey, dealKeys }
+  return { byUrl, byKey, dealKeys, dealTitles }
 }
 
 export async function savePendingCandidates(candidates: Omit<PendingCandidate, 'id' | 'status' | 'created_at' | 'updated_at'>[]): Promise<number> {
   const db = getDb()
-  const { byUrl, byKey, dealKeys } = await loadKnown()
+  const { byUrl, byKey, dealKeys, dealTitles } = await loadKnown()
   let saved = 0
 
   for (const c of candidates) {
@@ -112,6 +139,9 @@ export async function savePendingCandidates(candidates: Omit<PendingCandidate, '
 
       const drop = Math.round((1 - c.price / known.price) * 100)
       source = `${c.source} · revisado -${drop}%`
+    } else if (isDealClone(c, dealTitles)) {
+      // Variante de un deal activo: el deal existente ya cubre el producto.
+      continue
     }
 
     await db.execute({
