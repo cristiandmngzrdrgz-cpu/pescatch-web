@@ -61,6 +61,7 @@ bypass-confirmation.json
 
 # debug / session artifacts (screenshots, snapshots, logs de trabajo)
 /_debug/
+.opencode/
 
 # typescript
 *.tsbuildinfo
