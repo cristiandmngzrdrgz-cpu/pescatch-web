@@ -109,7 +109,7 @@ async function eligibleCount(): Promise<number> {
   const r = await db.execute(
     `SELECT COUNT(*) as n FROM deals
      WHERE status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now'))
-       AND affiliateUrl != '' AND storeId != 'decathlon'`
+       AND affiliateUrl != '' AND storeId NOT IN ('decathlon', 'aliexpress')`
   )
   return Number(r.rows[0].n)
 }
@@ -186,6 +186,20 @@ describe('GET /api/cron/refresh-prices (chunked)', () => {
     expect(body.chunk).toBe('full')
     expect(body.updated).toBe(total + 1)
     expect(await getCursor()).toBe('')
+  })
+
+  it('no refresca deals de AliExpress (precios verificados a mano)', async () => {
+    const ae = await seedDeal({
+      storeId: 'aliexpress',
+      storeName: 'AliExpress',
+      affiliateUrl: 'https://es.aliexpress.com/item/1005000000000000.html',
+    })
+    vi.mocked(scrapeStore).mockImplementation(async (url: string) => okPrice(url))
+
+    const { GET } = await cronRoutes['refresh-prices']()
+    const res = await GET(cronRequest('/api/cron/refresh-prices?limit=all'))
+    expect(res.status).toBe(200)
+    expect(vi.mocked(scrapeStore).mock.calls.map(([url]) => url)).not.toContain(ae.affiliateUrl)
   })
 
   it('borra deals no disponibles y los devuelve en removedIds', async () => {

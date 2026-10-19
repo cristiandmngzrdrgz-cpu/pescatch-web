@@ -66,25 +66,23 @@ export async function scrapeStore(
     }
 
     case 'aliexpress': {
-      // API de afiliados (sin navegador ni captcha). Es la única vía de refresh:
-      // el fallback con navegador Brave no sirve porque AliExpress bloquea con
-      // captcha "no soy un robot". Solo disponible si hay productId resoluble
-      // (directo o s.click → redirect). La API da a veces un precio "desde"
-      // (mín. de variantes/sin IVA) distinto del real; para no corromper precios
-      // publicados se aplica un gate: si el precio de la API difiere >15% del
-      // actual en BD, se descarta (cuenta como failed y no toca nada).
+      // API de afiliados (sin navegador ni captcha). OJO: devuelve el precio de
+      // app (`target_app_sale_price`), que suele ser más bajo que el de la ficha
+      // web y trae descuentos/MSRP falsos. Por eso AliExpress está excluido de
+      // `refreshAllPrices`; este path solo se usa en verificaciones manuales.
+      // Gate estricto: si difiere >5% del precio actual en BD, se descarta.
       const apiResult = await scrapeAliExpressApi(url)
       if (apiResult) {
         const dev = currentPrice
           ? Math.abs(apiResult.price - currentPrice) / currentPrice
           : 0
-        if (!currentPrice || dev <= 0.15) {
+        if (!currentPrice || dev <= 0.05) {
           return { success: true, storeId, price: apiResult }
         }
         return {
           success: false,
           storeId,
-          error: `API price ${apiResult.price}€ differs >15% from current ${currentPrice}€`,
+          error: `API price ${apiResult.price}€ differs >5% from current ${currentPrice}€`,
         }
       }
 
@@ -113,12 +111,13 @@ export async function updateDealInDb(
   const newPrice = scrapedPrice.price
 
   const existing = await db.execute({
-    sql: 'SELECT originalPrice, pendingPrice, pendingPriceCount FROM deals WHERE id = ?',
+    sql: 'SELECT originalPrice, pendingPrice, pendingPriceCount, storeId FROM deals WHERE id = ?',
     args: [dealId],
   })
   const currentOriginalPrice = existing.rows.length > 0
     ? Number(existing.rows[0].originalPrice)
     : 0
+  const storeId = existing.rows.length > 0 ? String(existing.rows[0].storeId ?? '') : ''
   const pendingPrice = existing.rows.length > 0 && existing.rows[0].pendingPrice != null
     ? Number(existing.rows[0].pendingPrice)
     : null
@@ -144,9 +143,13 @@ export async function updateDealInDb(
 
   // Clamp: si el precio sube por encima del original guardado, el descuento no
   // puede ser negativo. El original pasa a ser el precio nuevo (0% descuento).
+  // AliExpress: sin original verificado, no fabricar un 30% de descuento; la
+  // regla del proyecto es 0% si la ficha no trae tachado real.
   const originalPrice = currentOriginalPrice > 0
     ? Math.max(currentOriginalPrice, newPrice)
-    : Math.round(newPrice * 1.3 * 100) / 100
+    : storeId === 'aliexpress'
+      ? newPrice
+      : Math.round(newPrice * 1.3 * 100) / 100
   const discountPercent = Math.round(((originalPrice - newPrice) / (originalPrice || 1)) * 100)
 
   await db.execute({

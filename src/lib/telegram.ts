@@ -102,6 +102,36 @@ export async function sendTelegramMessage(text: string): Promise<{ ok: boolean; 
   }
 }
 
+// Corrige un mensaje ya publicado (p. ej. un digest fijado con precios obsoletos)
+// sin borrarlo ni perder el pin.
+export async function editTelegramMessage(messageId: number, text: string): Promise<{ ok: boolean; error?: string }> {
+  const token = process.env.TELEGRAM_BOT_TOKEN
+  const channel = process.env.TELEGRAM_CHANNEL_ID
+  if (!token || !channel) return { ok: false, error: 'Telegram no configurado' }
+
+  try {
+    const res = await fetch(`${TELEGRAM_API}/bot${token}/editMessageText`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: channel,
+        message_id: messageId,
+        text,
+        parse_mode: 'HTML',
+        disable_web_page_preview: false,
+      }),
+    })
+
+    const data = (await res.json()) as { ok: boolean; description?: string }
+    if (!res.ok || !data.ok) {
+      return { ok: false, error: data.description || `HTTP ${res.status}` }
+    }
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) }
+  }
+}
+
 export async function pinTelegramMessage(messageId: number): Promise<{ ok: boolean; error?: string }> {
   const token = process.env.TELEGRAM_BOT_TOKEN
   const channel = process.env.TELEGRAM_CHANNEL_ID

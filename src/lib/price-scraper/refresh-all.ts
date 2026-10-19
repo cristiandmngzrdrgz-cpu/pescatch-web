@@ -10,8 +10,12 @@ import { getCronState, setCronState } from '@/lib/cron-state'
 const REFRESH_CURSOR_KEY = 'refresh_prices_cursor'
 
 // Condiciones compartidas entre la consulta del chunk y el chequeo "¿quedan más?".
+// AliExpress queda FUERA del refresh automático: su API de afiliados devuelve el
+// precio de app (`target_app_sale_price`), no el de la ficha web, y descuentos/MSRP
+// falsos. Los precios AE se verifican a mano contra la ficha (BrightData/Playwright)
+// y se corrigen en el Sheet; el refresh automático los pisaba con precios más bajos.
 const ELIGIBLE_DEALS_WHERE = `status = 'published' AND (expiresAt IS NULL OR expiresAt > datetime('now')) AND affiliateUrl != ''
-     AND storeId != 'decathlon'`
+     AND storeId NOT IN ('decathlon', 'aliexpress')`
 
 interface DealRow {
   id: string
