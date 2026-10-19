@@ -46,7 +46,7 @@ $Tasks = @(
   }
   @{
     Name = "PesCatch-Telegram"
-    Description = "Publica los top chollos en el canal de Telegram"
+    Description = "Digest semanal de Telegram (rotacion 21 dias, pin)"
     Script = "scripts/send-telegram.ts"
     Hour = 9
     Minute = 5
@@ -54,7 +54,7 @@ $Tasks = @(
   }
   @{
     Name = "PesCatch-Promo-Mon"
-    Description = "Promo Telegram+X lunes 09:10"
+    Description = "Promo solo X lunes 09:10 (Telegram va en el digest)"
     Script = "scripts/promo-auto.ts"
     ScriptArgs = "--apply"
     Hour = 9
@@ -63,7 +63,7 @@ $Tasks = @(
   }
   @{
     Name = "PesCatch-Promo-Wed"
-    Description = "Promo Telegram+X miercoles 09:10"
+    Description = "Promo Telegram (novedades) + X miercoles 09:10"
     Script = "scripts/promo-auto.ts"
     ScriptArgs = "--apply"
     Hour = 9
@@ -72,7 +72,7 @@ $Tasks = @(
   }
   @{
     Name = "PesCatch-Promo-Fri"
-    Description = "Promo Telegram+X viernes 09:10"
+    Description = "Promo solo X viernes 09:10 (sin Telegram)"
     Script = "scripts/promo-auto.ts"
     ScriptArgs = "--apply"
     Hour = 9

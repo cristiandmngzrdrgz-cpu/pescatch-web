@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyCronAuth } from '../auth'
-import { getDb } from '@/lib/db'
 import { seedDatabase } from '@/lib/seed'
-import { DISABLED_STORES } from '@/data/queries'
-import { isTelegramConfigured, buildTelegramMessage, sendTelegramMessage } from '@/lib/telegram'
 import { getCronState, setCronState } from '@/lib/cron-state'
+import {
+  buildTelegramMessage,
+  isTelegramConfigured,
+  pinTelegramMessage,
+  sendTelegramMessage,
+  telegramDateHeading,
+  unpinTelegramMessage,
+} from '@/lib/telegram'
+import { markTelegramDealsSent, selectTelegramDeals } from '@/lib/telegram-selection'
 
 // Vercel Cron invoca con GET + Authorization: Bearer CRON_SECRET.
 export const maxDuration = 300
 
 const TELEGRAM_KEY = 'last_telegram_sent'
+const PIN_KEY = 'last_telegram_pin_id'
 const TELEGRAM_WINDOW_MS = 20 * 60 * 60 * 1000 // 20h (<24h para permitir reintento al día siguiente si falla el cron)
 
 async function handle(request: NextRequest) {
@@ -36,54 +43,41 @@ async function handle(request: NextRequest) {
       }
     }
 
-    const db = getDb()
-
-    const storePlaceholders = DISABLED_STORES.map(() => '?').join(',')
-    type TgRow = { title: string; salePrice: number; originalPrice: number; discountPercent: number; storeName: string; slug: string; commission: number; storeId: string }
-    let result = await db.execute({
-      sql: `SELECT d.title, d.salePrice, d.originalPrice, d.discountPercent, d.storeName, d.slug, d.commission, d.storeId
-            FROM deals d
-            WHERE d.status = 'published' AND d.discountPercent > 0
-              AND d.storeId NOT IN (${storePlaceholders})
-            ORDER BY d.commission DESC, d.discountPercent DESC
-            LIMIT 8`,
-      args: DISABLED_STORES,
-    })
-    // Asegura 1 AE high-commission si top 8 no lo incluye
-    const rowsTyped = result.rows as unknown as TgRow[]
-    const hasAE = rowsTyped.some(r => r.storeId === 'aliexpress')
-    if (!hasAE) {
-      const ae = await db.execute({
-        sql: `SELECT d.title, d.salePrice, d.originalPrice, d.discountPercent, d.storeName, d.slug, d.commission, d.storeId
-              FROM deals d WHERE d.status='published' AND d.storeId='aliexpress' AND d.discountPercent>0
-                AND d.storeId NOT IN (${storePlaceholders}) ORDER BY d.commission DESC LIMIT 1`,
-        args: DISABLED_STORES,
-      })
-      const aeRows = ae.rows as unknown as TgRow[]
-      if (aeRows.length) result = { rows: [...rowsTyped.slice(0, 7), ...aeRows] } as unknown as typeof result
-    }
-
-    const deals = result.rows as unknown as Array<{
-      title: string
-      salePrice: number
-      originalPrice: number
-      discountPercent: number
-      storeName: string
-      slug: string
-    }>
-
+    const deals = await selectTelegramDeals({ mode: 'digest', limit: 8 })
     if (deals.length === 0) {
-      return NextResponse.json({ success: true, message: 'No hay chollos para publicar', sent: false })
+      return NextResponse.json({ success: true, sent: false, message: 'No hay chollos para publicar' })
     }
 
-    const message = buildTelegramMessage(deals)
+    const message = buildTelegramMessage(deals, {
+      heading: telegramDateHeading('🎣 Chollos de la semana'),
+    })
     const res = await sendTelegramMessage(message)
 
+    let pinned = false
     if (res.ok) {
+      await markTelegramDealsSent(deals, 'digest')
+
+      const previousPin = Number(await getCronState(PIN_KEY))
+      if (Number.isFinite(previousPin) && previousPin > 0) {
+        await unpinTelegramMessage(previousPin)
+      }
+      if (res.messageId) {
+        const pin = await pinTelegramMessage(res.messageId)
+        pinned = pin.ok
+        if (pin.ok) await setCronState(PIN_KEY, String(res.messageId))
+      }
+
       await setCronState(TELEGRAM_KEY, new Date().toISOString())
     }
 
-    return NextResponse.json({ success: true, sent: res.ok, dealsCount: deals.length, error: res.error })
+    return NextResponse.json({
+      success: true,
+      sent: res.ok,
+      dealsCount: deals.length,
+      deals: deals.map(d => d.slug),
+      pinned,
+      error: res.error,
+    })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Error desconocido'
     return NextResponse.json({ error: `Error en telegram: ${message}` }, { status: 500 })

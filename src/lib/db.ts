@@ -246,6 +246,12 @@ export async function initSchema() {
       value TEXT NOT NULL DEFAULT '',
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     )`,
+    `CREATE TABLE IF NOT EXISTS telegram_sent_deals (
+      dealId TEXT PRIMARY KEY,
+      sentAt TEXT NOT NULL DEFAULT (datetime('now')),
+      mode TEXT NOT NULL DEFAULT 'digest'
+    )`,
+    'CREATE INDEX IF NOT EXISTS idx_telegram_sent_sentAt ON telegram_sent_deals(sentAt)',
   ])
 }
 

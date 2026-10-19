@@ -1,5 +1,11 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { buildTelegramMessage, sendTelegramMessage, isTelegramConfigured } from '@/lib/telegram'
+import {
+  buildTelegramMessage,
+  sendTelegramMessage,
+  isTelegramConfigured,
+  telegramDateHeading,
+  unpinTelegramMessage,
+} from '@/lib/telegram'
 
 const deals = [
   {
@@ -25,11 +31,22 @@ describe('buildTelegramMessage', () => {
     const msg = buildTelegramMessage(deals)
     expect(msg).toContain('<b>🎣 Chollos de pesca destacados</b>')
     expect(msg).toContain('https://www.pescatch.es/deals/carrete-nasci-2500')
-    expect(msg).toContain('<b>94.99 €</b>')
-    expect(msg).toContain('<s>109.99 €</s>')
+    expect(msg).toContain('<b>94,99 €</b>')
+    expect(msg).toContain('<s>109,99 €</s>')
     expect(msg).toContain('(-14%)')
-    expect(msg).toContain('Ahorras 15.00 €')
+    expect(msg).toContain('Ahorras 15,00 €')
     expect(msg).toContain('https://www.pescatch.es/search')
+  })
+
+  it('accepts a custom heading with the date', () => {
+    const msg = buildTelegramMessage(deals, { heading: '🎣 Chollos de la semana · 19 oct' })
+    expect(msg).toContain('<b>🎣 Chollos de la semana · 19 oct</b>')
+  })
+
+  it('calculates the discount from prices instead of trusting discountPercent', () => {
+    const msg = buildTelegramMessage([{ ...deals[0], discountPercent: 99 }])
+    expect(msg).toContain('(-14%)')
+    expect(msg).not.toContain('(-99%)')
   })
 
   it('escapes html entities in titles and store names', () => {
@@ -47,6 +64,11 @@ describe('buildTelegramMessage', () => {
   it('returns a friendly message when there are no deals', () => {
     const msg = buildTelegramMessage([])
     expect(msg).toContain('Hoy no hay chollos destacados')
+  })
+
+  it('formats the heading date in Spanish', () => {
+    const heading = telegramDateHeading('Chollos', new Date('2026-10-19T09:00:00Z'))
+    expect(heading).toMatch(/^Chollos · \d{1,2} oct/)
   })
 })
 
@@ -114,6 +136,36 @@ describe('sendTelegramMessage', () => {
     const res = await sendTelegramMessage('mensaje')
     expect(res.ok).toBe(false)
     expect(res.error).toBe('ECONNRESET')
+  })
+})
+
+describe('unpinTelegramMessage', () => {
+  const originalFetch = globalThis.fetch
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch
+    delete process.env.TELEGRAM_BOT_TOKEN
+    delete process.env.TELEGRAM_CHANNEL_ID
+  })
+
+  it('calls unpinChatMessage with the message id', async () => {
+    process.env.TELEGRAM_BOT_TOKEN = '123:token'
+    process.env.TELEGRAM_CHANNEL_ID = '@pescatch'
+    let captured: { url: string; body: Record<string, unknown> } | null = null
+
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      captured = { url: String(input), body: JSON.parse(String(init?.body)) }
+      return new Response(JSON.stringify({ ok: true, result: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }) as typeof fetch
+
+    const res = await unpinTelegramMessage(42)
+    expect(res.ok).toBe(true)
+    expect(captured!.url).toBe('https://api.telegram.org/bot123:token/unpinChatMessage')
+    expect(captured!.body.chat_id).toBe('@pescatch')
+    expect(captured!.body.message_id).toBe(42)
   })
 })
 

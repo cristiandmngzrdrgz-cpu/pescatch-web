@@ -21,6 +21,7 @@ beforeEach(async () => {
     'price_history',
     'price_alerts',
     'cron_state',
+    'telegram_sent_deals',
   ]
   for (const table of tables) {
     try {

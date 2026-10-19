@@ -1,38 +1,37 @@
-// PROPÓSITO: Promo 3×/semana lunes/miércoles/viernes 09:10 — Telegram + X (draft si no hay keys)
-// FECHA: 2026-09-23 — Opción A
+// PROPÓSITO: Promo 3×/semana — lunes/viernes solo X, miércoles Telegram (novedades) + X
+// FECHA: 2026-10-19 — rotación de 21 días y selección compartida con el cron
 import 'dotenv/config'
 import fs from 'fs'
 import path from 'path'
-import { getDb } from '../src/lib/db'
 import { seedDatabase } from '../src/lib/seed'
-import { buildTelegramMessage, isTelegramConfigured, sendTelegramMessage, pinTelegramMessage } from '../src/lib/telegram'
+import {
+  buildTelegramMessage,
+  isTelegramConfigured,
+  sendTelegramMessage,
+  telegramDateHeading,
+} from '../src/lib/telegram'
 import { buildXText, isXConfigured, postTweet } from '../src/lib/x-client'
 import { callGroq } from '../src/lib/ai-providers/groq'
+import {
+  markTelegramDealsSent,
+  selectTelegramDeals,
+  type TelegramDealCandidate,
+} from '../src/lib/telegram-selection'
 
 const BASE_URL = 'https://www.pescatch.es'
 
-type DealRow = { title: string; salePrice: number; originalPrice: number; discountPercent: number; storeName: string; slug: string; commission: number; storeId: string }
-
-async function getTopDeals(): Promise<DealRow[]> {
-  const db = getDb()
-  const res = await db.execute({
-    sql: `SELECT d.title, d.salePrice, d.originalPrice, d.discountPercent, d.storeName, d.slug, d.commission, d.storeId
-          FROM deals d WHERE d.status='published' AND d.discountPercent>0 ORDER BY d.commission DESC, d.discountPercent DESC LIMIT 8`,
-  })
-  let rows = res.rows as unknown as DealRow[]
-  const hasAE = rows.some(r => r.storeId === 'aliexpress')
-  if (!hasAE) {
-    const ae = await db.execute({
-      sql: `SELECT d.title, d.salePrice, d.originalPrice, d.discountPercent, d.storeName, d.slug, d.commission, d.storeId
-            FROM deals d WHERE d.status='published' AND d.storeId='aliexpress' AND d.discountPercent>0 ORDER BY d.commission DESC LIMIT 1`,
-    })
-    if (ae.rows.length) rows = [...rows.slice(0, 7), ...(ae.rows as unknown as DealRow[])]
-  }
-  return rows
+function includesPrice(text: string, price: number): boolean {
+  const compact = text.replace(/\s/g, '')
+  const fixed = price.toFixed(2)
+  return compact.includes(fixed) || compact.includes(fixed.replace('.', ','))
 }
 
-async function buildPromoCopyAI(deals: DealRow[]): Promise<{ telegram: string | null; x: string | null }> {
+async function buildPromoCopyAI(
+  deals: TelegramDealCandidate[],
+  includeTelegram: boolean,
+): Promise<{ telegram: string | null; x: string | null }> {
   if (!process.env.GROQ_API_KEY) return { telegram: null, x: null }
+
   const dealsBlock = deals
     .slice(0, 3)
     .map(d => `- ${d.title} | ${d.salePrice.toFixed(2)}€ (antes ${d.originalPrice.toFixed(2)}€, -${d.discountPercent}%, com ${d.commission}€) ${BASE_URL}/deals/${d.slug} | ${d.storeName}`)
@@ -54,16 +53,25 @@ Responde JSON {"telegram":"...","x":"..."} solo JSON, sin explicaciones.`
     { temperature: 0.7, maxTokens: 2000, reasoningEffort: 'low' }
   )
   if (!raw) return { telegram: null, x: null }
+
   try {
     const cleaned = raw.replace(/```json|```/g, '').trim()
     const start = cleaned.indexOf('{')
     const end = cleaned.lastIndexOf('}')
     const j = JSON.parse(start >= 0 && end > start ? cleaned.slice(start, end + 1) : cleaned)
-    // validación mínima precio real en mensaje
-    const checkPrice = deals.some(d => j.telegram?.includes(d.salePrice.toFixed(2)) || j.telegram?.includes(d.salePrice.toFixed(2).replace('.', ',')))
-    if (!checkPrice) return { telegram: null, x: null }
-    if (j.x && j.x.length > 280) j.x = j.x.slice(0, 280)
-    return { telegram: j.telegram?.slice(0, 1000) ?? null, x: j.x?.slice(0, 280) ?? null }
+
+    const telegram = typeof j.telegram === 'string' ? j.telegram.trim() : ''
+    const x = typeof j.x === 'string' ? j.x.trim() : ''
+    const telegramOk =
+      !includeTelegram ||
+      (telegram.length > 0 && telegram.includes('/deals/') && deals.some(d => includesPrice(telegram, d.salePrice)))
+    const xOk = x.length > 0 && deals.some(d => includesPrice(x, d.salePrice))
+
+    if (!telegramOk || !xOk) return { telegram: null, x: null }
+    return {
+      telegram: includeTelegram ? telegram.slice(0, 1000) : null,
+      x: x.slice(0, 280),
+    }
   } catch {
     return { telegram: null, x: null }
   }
@@ -76,13 +84,13 @@ async function writeDraft(telegram: string, x: string, fallback: boolean) {
   const content = `# Promo draft ${new Date().toISOString().slice(0, 10)} ${fallback ? '(fallback sin IA)' : '(IA)'}
 
 ## Telegram
-${telegram}
+${telegram || '(hoy solo X)'}
 
 ## X
 ${x}
 
 ---
-Generado ${new Date().toISOString()} — ${fallback ? 'Groq no disponible/timeout/precio mismatch → fallback buildTelegramMessage' : 'Groq OK'}
+Generado ${new Date().toISOString()} — ${fallback ? 'Groq no disponible/timeout/precio mismatch → fallback' : 'Groq OK'}
 Para publicar manual: copia el bloque Telegram al canal t.me/pescatch y el bloque X a X.
 `
   fs.writeFileSync(file, content, 'utf-8')
@@ -91,53 +99,56 @@ Para publicar manual: copia el bloque Telegram al canal t.me/pescatch y el bloqu
 
 async function main() {
   const dry = !process.argv.includes('--apply')
-  const force = process.argv.includes('--force') // ignora draft-only, publica aunque no haya X keys
-  console.log(dry ? '\n[DRY-RUN] promo-auto 3×/semana (usa --apply para publicar)' : '\n[APPLY] promo-auto')
+  const forceTelegram = process.argv.includes('--telegram')
+  const sendTelegram = new Date().getUTCDay() === 3 || forceTelegram
+
+  console.log(dry ? '\n[DRY-RUN] promo-auto (usa --apply para publicar)' : '\n[APPLY] promo-auto')
+  console.log(sendTelegram ? '  Canal: Telegram (novedades) + X' : '  Canal: solo X (el digest va el lunes)')
+
   await seedDatabase()
-  const deals = await getTopDeals()
+  const deals = await selectTelegramDeals({ mode: sendTelegram ? 'fresh' : 'digest', limit: 8 })
   if (!deals.length) {
-    console.log('❌ No hay deals published con descuento para promo.')
+    console.log('❌ No hay deals published para promo.')
     return
   }
-  console.log(`Top ${deals.length} por comisión: ${deals.map(d => `${d.slug} ${d.commission}€`).join(', ')}`)
+  console.log(`Seleccionados ${deals.length}: ${deals.map(d => `${d.slug} ${d.commission}€`).join(', ')}`)
 
-  const fallbackTg = buildTelegramMessage(deals.slice(0, 8) as any)
+  const fallbackTg = sendTelegram
+    ? buildTelegramMessage(deals, { heading: telegramDateHeading('🆕 Novedades de pesca') })
+    : ''
   const fallbackX = buildXText(deals)
-  const ai = await buildPromoCopyAI(deals)
-  const telegram = ai.telegram ?? fallbackTg
+  const ai = await buildPromoCopyAI(deals, sendTelegram)
+  const telegram = sendTelegram ? (ai.telegram ?? fallbackTg) : ''
   const x = ai.x ?? fallbackX
-  const usedFallback = !ai.telegram
+  const usedFallback = sendTelegram ? !ai.telegram : !ai.x
 
   if (dry) {
-    console.log('\n— Telegram preview —\n' + telegram.slice(0, 600))
+    if (sendTelegram) console.log('\n— Telegram preview —\n' + telegram.slice(0, 600))
     console.log('\n— X preview —\n' + x)
     await writeDraft(telegram, x, usedFallback)
-    console.log(`\n[DRY] No se publicó. Ejecuta con --apply ${isXConfigured() ? '(X configurado → tuiteará)' : '(X no configurado → solo Telegram, X quedará en draft)'}.`)
+    console.log(`\n[DRY] No se publicó. Ejecuta con --apply ${isXConfigured() ? '(X configurado → tuiteará)' : '(X no configurado → X quedará en draft)'}.`)
     return
   }
 
   await writeDraft(telegram, x, usedFallback)
 
-  // Telegram siempre (si configurado)
-  if (isTelegramConfigured()) {
+  if (sendTelegram && isTelegramConfigured()) {
     console.log('📣 Telegram: enviando...')
     const res = await sendTelegramMessage(telegram)
     if (res.ok) {
+      await markTelegramDealsSent(deals, 'fresh')
       console.log(`  ✅ Telegram OK${res.messageId ? ` id=${res.messageId}` : ''}`)
-      if (res.messageId) {
-        const pin = await pinTelegramMessage(res.messageId)
-        console.log(pin.ok ? '  📌 Fijado' : `  ⚠️ No fijado: ${pin.error}`)
-      }
     } else console.error(`  ❌ Telegram: ${res.error}`)
-  } else console.log('  ⬜ Telegram no configurado (TELEGRAM_BOT_TOKEN/CHANNEL_ID)')
+  } else if (sendTelegram) {
+    console.log('  ⬜ Telegram no configurado (TELEGRAM_BOT_TOKEN/CHANNEL_ID)')
+  }
 
-  // X solo si configurado o --force (force no tuitea sin keys, solo avisa)
   if (isXConfigured()) {
     console.log('🐦 X: posteando...')
     const r = await postTweet(x)
     console.log(r.ok ? `  ✅ X id=${r.id}` : `  ❌ X: ${r.error}`)
   } else {
-    console.log('  ⬜ X no configurado — draft guardado en data/promo-draft-*.md para copia manual. Añade X_API_KEY/SECRET + X_ACCESS_TOKEN/SECRET para auto-post.')
+    console.log('  ⬜ X no configurado — draft guardado en data/promo-draft-*.md para copia manual.')
   }
 }
 

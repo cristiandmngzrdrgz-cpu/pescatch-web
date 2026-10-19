@@ -13,8 +13,10 @@ vi.mock('@/lib/telegram', () => ({
   isTelegramConfigured: () => true,
   buildTelegramMessage: (deals: Array<{ title: string }>) =>
     'MSG:' + deals.map((d) => d.title).join('|'),
-  sendTelegramMessage: vi.fn(async (message: string) => ({ ok: true, mockedMessage: message })),
+  telegramDateHeading: (prefix: string) => `${prefix} · test`,
+  sendTelegramMessage: vi.fn(async (message: string) => ({ ok: true, messageId: 1, mockedMessage: message })),
   pinTelegramMessage: vi.fn(async () => ({ ok: true })),
+  unpinTelegramMessage: vi.fn(async () => ({ ok: true })),
 }))
 
 vi.mock('@/lib/x-client', () => ({

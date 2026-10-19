@@ -14,26 +14,58 @@ export interface TelegramDeal {
   slug: string
 }
 
+export interface TelegramMessageOptions {
+  heading?: string
+}
+
 // <b>, <i>, <a href="..."> y <code> son los únicos tags HTML permitidos por la Bot API.
-export function buildTelegramMessage(deals: TelegramDeal[]): string {
+export function buildTelegramMessage(
+  deals: TelegramDeal[],
+  options: TelegramMessageOptions = {},
+): string {
+  const heading = options.heading || '🎣 Chollos de pesca destacados'
+
   if (deals.length === 0) {
-    return '<b>🎣 PesCatch</b>\nHoy no hay chollos destacados. Vuelve pronto.'
+    return `<b>${escapeTelegram(heading)}</b>\nHoy no hay chollos destacados. Vuelve pronto.`
   }
 
   const lines = deals.map((d, i) => {
+    const pct = realDiscountPercent(d)
     const savings = d.originalPrice - d.salePrice
+    const hasDiscount = pct > 0 && savings > 0
+
     return [
       `${i + 1}. <a href="${BASE_URL}/deals/${d.slug}">${escapeTelegram(d.title)}</a>`,
-      `   💰 <b>${formatPrice(d.salePrice)}</b>${d.originalPrice > d.salePrice ? ` <s>${formatPrice(d.originalPrice)}</s> (-${d.discountPercent}%)` : ''}`,
-      `   🏬 ${escapeTelegram(d.storeName)}${savings > 0 ? ` · Ahorras ${formatPrice(savings)}` : ''}`,
+      `   💰 <b>${formatPrice(d.salePrice)}</b>${hasDiscount ? ` <s>${formatPrice(d.originalPrice)}</s> (-${pct}%)` : ''}`,
+      `   🏬 ${escapeTelegram(d.storeName)}${hasDiscount ? ` · Ahorras ${formatPrice(savings)}` : ''}`,
     ].join('\n')
   })
 
-  return `<b>🎣 Chollos de pesca destacados</b>\n\n${lines.join('\n\n')}\n\n⚡ <a href="${BASE_URL}/top-chollos">Últimas 24h — más rentables primero</a> · <a href="${BASE_URL}/search">Ver todos →</a>`
+  return `<b>${escapeTelegram(heading)}</b>\n\n${lines.join('\n\n')}\n\n⚡ <a href="${BASE_URL}/top-chollos">Últimas 24h — más rentables primero</a> · <a href="${BASE_URL}/search">Ver todos →</a>`
+}
+
+// Cabecera con fecha en español (zona horaria de la web).
+export function telegramDateHeading(prefix: string, date: Date = new Date()): string {
+  const formatted = new Intl.DateTimeFormat('es-ES', {
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'Europe/Madrid',
+  }).format(date)
+  return `${prefix} · ${formatted}`
+}
+
+// El descuento se calcula desde los precios: discountPercent puede venir
+// inflado por la API de AliExpress o desincronizado tras un refresh.
+function realDiscountPercent(d: TelegramDeal): number {
+  if (!(d.originalPrice > d.salePrice) || d.originalPrice <= 0) return 0
+  return Math.round((1 - d.salePrice / d.originalPrice) * 100)
 }
 
 function formatPrice(n: number): string {
-  return `${n.toFixed(2)} €`
+  return `${new Intl.NumberFormat('es-ES', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(n)} €`
 }
 
 function escapeTelegram(s: string): string {
@@ -79,6 +111,24 @@ export async function pinTelegramMessage(messageId: number): Promise<{ ok: boole
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: channel, message_id: messageId, disable_notification: true }),
+    })
+    const data = (await res.json()) as { ok: boolean; description?: string }
+    if (!res.ok || !data.ok) return { ok: false, error: data.description || `HTTP ${res.status}` }
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) }
+  }
+}
+
+export async function unpinTelegramMessage(messageId: number): Promise<{ ok: boolean; error?: string }> {
+  const token = process.env.TELEGRAM_BOT_TOKEN
+  const channel = process.env.TELEGRAM_CHANNEL_ID
+  if (!token || !channel) return { ok: false, error: 'Telegram no configurado' }
+  try {
+    const res = await fetch(`${TELEGRAM_API}/bot${token}/unpinChatMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: channel, message_id: messageId }),
     })
     const data = (await res.json()) as { ok: boolean; description?: string }
     if (!res.ok || !data.ok) return { ok: false, error: data.description || `HTTP ${res.status}` }
