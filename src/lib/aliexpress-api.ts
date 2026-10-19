@@ -120,9 +120,12 @@ function toNumber(value: unknown): number | null {
 
 function mapProduct(input: Record<string, unknown>): AliExpressProductInfo {
   const price = toNumber(input.target_app_sale_price) ?? toNumber(input.sale_price) ?? 0
-  const original = toNumber(input.original_price) ?? toNumber(input.target_app_sale_price)
+  // OJO: `original_price` viene en CNY (original_price_currency) — el precio original
+  // comparable en EUR es `target_original_price`. Usar el de CNY inflaba descuentos ~90%.
+  const original = toNumber(input.target_original_price)
   const rating = toNumber(input.evaluate_rate)
-  const orders = toNumber(input.orders) ?? toNumber(input.pefer_rate)
+  // OJO: la API devuelve el volumen de pedidos en `lastest_volume` (errata oficial de AE).
+  const orders = toNumber(input.lastest_volume) ?? toNumber(input.orders) ?? toNumber(input.pefer_rate)
 
   return {
     productId: String(input.product_id ?? ''),
@@ -155,7 +158,8 @@ const PRODUCT_DETAIL_FIELDS = [
   'available_quantity',
   'evaluate_rate',
   'store_name',
-  'orders',
+  'lastest_volume',
+  'target_original_price',
 ].join(',')
 
 /**
