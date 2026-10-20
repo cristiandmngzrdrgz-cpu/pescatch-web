@@ -7,13 +7,13 @@ function scraped(price: number): ScrapedPrice {
   return { price, stock: 'in_stock', url: 'https://example.com/dp/TEST' }
 }
 
-async function makeDeal(salePrice: number, originalPrice: number) {
+async function makeDeal(salePrice: number, originalPrice: number, storeId = 'amazon') {
   const db = getDb()
   const id = `deal_test_${Math.random().toString(36).slice(2)}`
   await db.execute({
     sql: `INSERT INTO deals (id, title, slug, salePrice, originalPrice, discountPercent, storeId, affiliateUrl, status)
-      VALUES (?, ?, ?, ?, ?, 0, 'amazon', 'https://example.com/dp/TEST', 'published')`,
-    args: [id, 'Test deal', `slug-${id}`, salePrice, originalPrice],
+      VALUES (?, ?, ?, ?, ?, 0, ?, 'https://example.com/dp/TEST', 'published')`,
+    args: [id, 'Test deal', `slug-${id}`, salePrice, originalPrice, storeId],
   })
   return id
 }
@@ -96,5 +96,29 @@ describe('price quarantine', () => {
     expect(status).toBe('updated')
     const d = await readDeal(id)
     expect(d.salePrice).toBe(50)
+  })
+
+  it('Amazon usa el tachado real de la ficha y no conserva el original viejo', async () => {
+    const id = await makeDeal(32, 55)
+    const status = await updateDealInDb(
+      id,
+      { ...scraped(32.9), originalPrice: 34.69 },
+      32,
+    )
+    expect(status).toBe('updated')
+    const d = await readDeal(id)
+    expect(d.salePrice).toBe(32.9)
+    expect(d.originalPrice).toBe(34.69)
+    expect(d.discountPercent).toBe(5)
+  })
+
+  it('Amazon sin tachado real deja 0% de descuento (no fabrica ×1.3)', async () => {
+    const id = await makeDeal(32, 55)
+    const status = await updateDealInDb(id, scraped(32.9), 32)
+    expect(status).toBe('updated')
+    const d = await readDeal(id)
+    expect(d.salePrice).toBe(32.9)
+    expect(d.originalPrice).toBe(32.9)
+    expect(d.discountPercent).toBe(0)
   })
 })

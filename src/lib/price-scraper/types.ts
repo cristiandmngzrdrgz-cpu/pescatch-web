@@ -1,5 +1,7 @@
 export interface ScrapedPrice {
   price: number
+  /** Precio original/tachado real de la ficha. null si la ficha no muestra descuento. */
+  originalPrice?: number | null
   shipping?: number
   stock: 'in_stock' | 'limited' | 'out_of_stock'
   name?: string

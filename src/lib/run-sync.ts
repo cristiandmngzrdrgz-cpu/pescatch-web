@@ -184,20 +184,47 @@ async function processRow(
     for (const store of stores) {
       const apiResult = await store.adapter.lookup(ean, { url: store.manualUrl })
 
-      const price = store.manualPrice ?? apiResult?.price
-      let url = apiResult?.url ?? store.manualUrl
-      if (store.storeId === 'amazon' && row.amazonVariantAsin && url) {
-        url = buildAmazonUrl(url, row.amazonVariantAsin)
+      // Amazon: el precio fiable es el que deja el refresh contra la ficha.
+      // El Sheet solo manda al crear el deal; si se aplica en cada sync,
+      // revierte los precios refrescados a los valores viejos del Sheet.
+      const existingAmazon = store.storeId === 'amazon'
+        ? (await db.execute({
+            sql: 'SELECT salePrice, originalPrice, stockStatus, shippingCost, affiliateUrl FROM deals WHERE productId = ? AND storeId = ?',
+            args: [matched.id, store.storeId],
+          })).rows[0]
+        : undefined
+
+      const price = existingAmazon && Number(existingAmazon.salePrice) > 0
+        ? Number(existingAmazon.salePrice)
+        : store.manualPrice ?? apiResult?.price
+      // La URL también se conserva: el refresh guarda la variante exacta que
+      // muestra el precio (th/psc). Volver a la URL del Sheet puede llevar a
+      // otra variante y descuadrar el precio. El override manual de variante
+      // del Sheet sigue mandando si está relleno.
+      let url = existingAmazon?.affiliateUrl
+        ? String(existingAmazon.affiliateUrl)
+        : apiResult?.url ?? store.manualUrl
+      if (store.storeId === 'amazon' && url) {
+        url = row.amazonVariantAsin
+          ? buildAmazonUrl(url, row.amazonVariantAsin)
+          : buildAmazonUrl(url)
       }
-      const shipping = apiResult?.shipping ?? store.manualShipping ?? 0
-      const stock = apiResult?.stock ?? store.manualStock ?? 'in_stock'
+      const shipping = existingAmazon
+        ? Number(existingAmazon.shippingCost ?? 0)
+        : apiResult?.shipping ?? store.manualShipping ?? 0
+      const stock = existingAmazon
+        ? String(existingAmazon.stockStatus ?? 'in_stock')
+        : apiResult?.stock ?? store.manualStock ?? 'in_stock'
 
       if (!price || !url) { storeIndex++; continue }
 
       const dealSlug = storeIndex === 0 ? pSlug : `${pSlug}_${store.storeId}`
       storeIndex++
 
-      const originalPrice = store.manualOriginalPrice ?? price
+      const preservedOriginal = existingAmazon ? Number(existingAmazon.originalPrice) : 0
+      const originalPrice = preservedOriginal > 0
+        ? Math.max(preservedOriginal, price)
+        : store.manualOriginalPrice ?? price
 
       const dealId = await upsertDeal(
         matched.id,

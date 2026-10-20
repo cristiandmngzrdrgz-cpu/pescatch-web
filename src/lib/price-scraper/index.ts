@@ -23,7 +23,7 @@ export async function scrapeStore(
       const result = await withRetry(
         async () => {
           await amazonLimiter.wait()
-          const r = await scrapeAmazon(asin, productTitle)
+          const r = await scrapeAmazon(asin, productTitle, url)
           if (!r) throw new Error('Amazon scrape returned no result')
           return r
         },
@@ -141,15 +141,24 @@ export async function updateDealInDb(
     }
   }
 
-  // Clamp: si el precio sube por encima del original guardado, el descuento no
-  // puede ser negativo. El original pasa a ser el precio nuevo (0% descuento).
-  // AliExpress: sin original verificado, no fabricar un 30% de descuento; la
-  // regla del proyecto es 0% si la ficha no trae tachado real.
-  const originalPrice = currentOriginalPrice > 0
-    ? Math.max(currentOriginalPrice, newPrice)
-    : storeId === 'aliexpress'
-      ? newPrice
-      : Math.round(newPrice * 1.3 * 100) / 100
+  // Amazon: mandan el precio y el tachado reales de la ficha. Si la ficha no
+  // muestra descuento, el original pasa a ser el precio actual (0%). No se
+  // conserva un original viejo: era la causa de descuentos falsos (55€ sobre
+  // una ficha de 34,69€, etc.).
+  // AliExpress: sin original verificado, no fabricar descuento; la regla del
+  // proyecto es 0% si la ficha no trae tachado real.
+  const scrapedOriginal = scrapedPrice.originalPrice && scrapedPrice.originalPrice > newPrice
+    ? scrapedPrice.originalPrice
+    : 0
+
+  const originalPrice = storeId === 'aliexpress'
+    ? currentOriginalPrice > 0
+      ? Math.max(currentOriginalPrice, newPrice)
+      : newPrice
+    : scrapedOriginal > 0
+      ? Math.max(scrapedOriginal, newPrice)
+      : newPrice
+
   const discountPercent = Math.round(((originalPrice - newPrice) / (originalPrice || 1)) * 100)
 
   await db.execute({
