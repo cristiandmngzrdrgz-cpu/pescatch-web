@@ -9,6 +9,20 @@ import { withRetry } from '@/lib/scraping-utils'
 const amazonLimiter = new RateLimiter(4000)
 const decathlonLimiter = new RateLimiter(3000)
 
+// Los metaTitle/metaDescription se generan con el precio del momento del sync.
+// Cuando el refresh cambia el precio, un texto que menciona el precio viejo
+// queda obsoleto: se limpia y generateMetadata usa el fallback dinámico.
+function hasStalePrice(text: unknown, sale: number, original: number): boolean {
+  if (typeof text !== 'string' || text.length === 0) return false
+  const matches = text.match(/\d+[.,]\d{2}\s*(?:€|\?)/g) || []
+  return matches.some((raw) => {
+    const value = Number(raw.replace(/[^\d,.-]/g, '').replace(',', '.'))
+    return Number.isFinite(value)
+      && Math.abs(value - sale) > 0.005
+      && Math.abs(value - original) > 0.005
+  })
+}
+
 export async function scrapeStore(
   url: string,
   storeId: string,
@@ -111,7 +125,7 @@ export async function updateDealInDb(
   const newPrice = scrapedPrice.price
 
   const existing = await db.execute({
-    sql: 'SELECT originalPrice, pendingPrice, pendingPriceCount, storeId FROM deals WHERE id = ?',
+    sql: 'SELECT originalPrice, pendingPrice, pendingPriceCount, storeId, metaTitle, metaDescription FROM deals WHERE id = ?',
     args: [dealId],
   })
   const currentOriginalPrice = existing.rows.length > 0
@@ -124,6 +138,8 @@ export async function updateDealInDb(
   const pendingCount = existing.rows.length > 0
     ? Number(existing.rows[0].pendingPriceCount ?? 0)
     : 0
+  const currentMetaTitle = existing.rows.length > 0 ? existing.rows[0].metaTitle : null
+  const currentMetaDescription = existing.rows.length > 0 ? existing.rows[0].metaDescription : null
 
   // Sin baseline no hay nada contra lo que validar: se aplica directo.
   const diff = currentPrice > 0 ? Math.abs(newPrice - currentPrice) / currentPrice : 0
@@ -160,12 +176,15 @@ export async function updateDealInDb(
       : newPrice
 
   const discountPercent = Math.round(((originalPrice - newPrice) / (originalPrice || 1)) * 100)
+  const metaTitle = hasStalePrice(currentMetaTitle, newPrice, originalPrice) ? '' : currentMetaTitle
+  const metaDescription = hasStalePrice(currentMetaDescription, newPrice, originalPrice) ? '' : currentMetaDescription
 
   await db.execute({
     sql: `UPDATE deals SET
       salePrice = ?, originalPrice = ?, discountPercent = ?,
       shippingCost = ?, stockStatus = ?, updatedAt = ?,
-      priceAlert = ?, pendingPrice = NULL, pendingPriceCount = 0
+      priceAlert = ?, pendingPrice = NULL, pendingPriceCount = 0,
+      metaTitle = ?, metaDescription = ?
     WHERE id = ?`,
     args: [
       newPrice,
@@ -175,6 +194,8 @@ export async function updateDealInDb(
       scrapedPrice.stock,
       now,
       hasBigChange ? 1 : 0,
+      metaTitle,
+      metaDescription,
       dealId,
     ],
   })

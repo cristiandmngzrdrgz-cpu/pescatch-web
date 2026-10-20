@@ -21,7 +21,7 @@ async function makeDeal(salePrice: number, originalPrice: number, storeId = 'ama
 async function readDeal(id: string) {
   const db = getDb()
   const r = await db.execute({
-    sql: 'SELECT salePrice, originalPrice, discountPercent, priceAlert, pendingPrice, pendingPriceCount FROM deals WHERE id = ?',
+    sql: 'SELECT salePrice, originalPrice, discountPercent, priceAlert, pendingPrice, pendingPriceCount, metaTitle, metaDescription FROM deals WHERE id = ?',
     args: [id],
   })
   return r.rows[0] as unknown as {
@@ -31,6 +31,8 @@ async function readDeal(id: string) {
     priceAlert: number
     pendingPrice: number | null
     pendingPriceCount: number
+    metaTitle: string | null
+    metaDescription: string | null
   }
 }
 
@@ -120,5 +122,18 @@ describe('price quarantine', () => {
     expect(d.salePrice).toBe(32.9)
     expect(d.originalPrice).toBe(32.9)
     expect(d.discountPercent).toBe(0)
+  })
+
+  it('limpia metadatos con precio viejo al actualizar el precio', async () => {
+    const id = await makeDeal(22.94, 44.99)
+    await getDb().execute({
+      sql: 'UPDATE deals SET metaTitle = ?, metaDescription = ? WHERE id = ?',
+      args: ['HAWKERS 22,94 €', 'Descubre HAWKERS por 22,94 € en Amazon.', id],
+    })
+    const status = await updateDealInDb(id, { ...scraped(22.49), originalPrice: 44.99 }, 22.94)
+    expect(status).toBe('updated')
+    const d = await readDeal(id)
+    expect(d.metaTitle).toBe('')
+    expect(d.metaDescription).toBe('')
   })
 })
