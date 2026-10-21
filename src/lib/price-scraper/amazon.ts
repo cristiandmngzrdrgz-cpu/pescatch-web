@@ -28,6 +28,9 @@ export async function scrapeAmazon(
         'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
       },
       redirect: 'follow',
+      // Sin timeout, un fetch colgado bloquea el refresh entero (el bucle es
+      // secuencial y el limiter no ayuda si la conexión no responde).
+      signal: AbortSignal.timeout(10000),
     })
 
     if (!res.ok) {
