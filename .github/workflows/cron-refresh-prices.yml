@@ -5,8 +5,10 @@
 name: cron-refresh-prices
 
 on:
-  schedule:
-    - cron: '0 * * * *'
+  # Pausado 21-oct-2026: Amazon bloquea el scrape desde la IP de Vercel
+  # (20/20 fallos con "Amazon scrape returned no result"). El refresh fiable
+  # corre en local con la tarea PesCatch-RefreshPrices (08:00).
+  # Re-activar el schedule si se añade proxy/PA-API o Amazon deja de bloquear.
   workflow_dispatch: {}
 
 concurrency:
@@ -31,6 +33,12 @@ jobs:
           remaining=$(jq -r '.remaining // 0' response.json)
           if [ "$code" = "200" ] && [ "$processed" -eq 0 ] && [ "$remaining" -gt 0 ]; then
             echo "::error::El refresh procesó 0 deals pero quedan $remaining elegibles (cursor atascado)"
+            exit 1
+          fi
+
+          failed=$(jq -r '.failed // 0' response.json)
+          if [ "$code" = "200" ] && [ "$processed" -gt 0 ] && [ "$failed" -eq "$processed" ]; then
+            echo "::error::Todos los deals del chunk fallaron ($failed/$processed): Amazon probablemente bloquea el scrape desde Vercel"
             exit 1
           fi
 
