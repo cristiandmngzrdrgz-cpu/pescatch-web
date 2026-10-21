@@ -41,7 +41,7 @@ export function buildTelegramMessage(
     ].join('\n')
   })
 
-  return `<b>${escapeTelegram(heading)}</b>\n\n${lines.join('\n\n')}\n\n⚡ <a href="${BASE_URL}/top-chollos">Últimas 24h — más rentables primero</a> · <a href="${BASE_URL}/search">Ver todos →</a>`
+  return `<b>${escapeTelegram(heading)}</b>\n\n${lines.join('\n\n')}\n\n⚡ <a href="${BASE_URL}/top-chollos">Top chollos — descuentos y popularidad</a> · <a href="${BASE_URL}/search">Ver todos →</a>`
 }
 
 // Cabecera con fecha en español (zona horaria de la web).

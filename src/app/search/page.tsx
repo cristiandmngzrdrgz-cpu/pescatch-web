@@ -19,11 +19,12 @@ const PAGE_SIZE = 12
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Mas recientes' },
   { value: 'discount', label: 'Mayor descuento' },
-  { value: 'commission', label: 'Más comisión' },
   { value: 'price_asc', label: 'Precio: menor a mayor' },
   { value: 'price_desc', label: 'Precio: mayor a menor' },
   { value: 'popular', label: 'Mas votados' },
 ] as const
+
+const PUBLIC_SORT_VALUES = new Set<string>(SORT_OPTIONS.map((option) => option.value))
 
 const DISCOUNT_OPTIONS = [
   { value: '10', label: '>10%' },
@@ -126,7 +127,8 @@ export default async function SearchPage({
   const minDiscount = getParam('minDiscount')
   const minPrice = getParam('minPrice')
   const maxPrice = getParam('maxPrice')
-  const sortBy = getParam('sortBy') || 'newest'
+  const requestedSort = getParam('sortBy')
+  const sortBy = PUBLIC_SORT_VALUES.has(requestedSort) ? requestedSort : 'newest'
   const page = Math.max(1, Number(getParam('page')) || 1)
 
   const currentParams: Record<string, string> = {

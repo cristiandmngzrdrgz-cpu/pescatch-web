@@ -41,17 +41,15 @@ const categoryIcons: Record<string, React.ComponentType<{ className?: string }>>
 }
 
 export default async function HomePage() {
-  const [featured, latestResult, topDiscountsResult, highCommissionResult, posts, clickStats] = await Promise.all([
+  const [featured, latestResult, topDiscountsResult, posts, clickStats] = await Promise.all([
     getFeaturedDeals(),
     getDealsPaginated({ sortBy: 'newest' }, 1, 20),
-    getDealsPaginated({ sortBy: 'discount' }, 1, 5),
-    getDealsPaginated({ sortBy: 'commission' }, 1, 8),
+    getDealsPaginated({ sortBy: 'discount' }, 1, 12),
     getPosts(4),
     getClickStats(),
   ])
   const latest = latestResult.items
   const topDiscounts = topDiscountsResult.items
-  const highCommission = highCommissionResult.items
   const totalDeals = latestResult.total
   const categoryDealCounts = new Map(Object.entries(await getDealCountsByCategory()))
 
@@ -64,7 +62,8 @@ export default async function HomePage() {
     return bDate - aDate
   })
   const groupedTopDiscounts = groupDealsByProduct(topDiscounts)
-  const groupedHighCommission = groupDealsByProduct(highCommission)
+    .sort((a, b) => b.discountPercent - a.discountPercent)
+    .slice(0, 4)
 
   const itemListSchema = generateCollectionPageSchema({
     title: 'Chollos de material de pesca - PesCatch',
@@ -343,32 +342,36 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* High commission — qué más te hace ganar (P1 monetización) */}
-      {groupedHighCommission.length > 0 && (
+      {/* Top discounts — ahorro real para el usuario */}
+      {groupedTopDiscounts.length > 0 && (
         <section className="py-16 md:py-20" style={{ background: '#0A1326', borderTop: '1px solid #1E3A5F', borderBottom: '1px solid #1E3A5F' }}>
           <div className="mx-auto max-w-7xl px-4">
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider"
                 style={{ background: 'rgba(38,222,129,0.1)', border: '1px solid rgba(38,222,129,0.2)', color: '#26DE81' }}>
                 <TrendingUp className="h-3 w-3" />
-                Más rentables
+                Ahorro real
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: '#E8F0FE' }}>Chollos que más te hacen ahorrar</h2>
-              <p className="mt-2 text-lg" style={{ color: '#8BA3C7' }}>Priorizamos los que más comisión generan — tú ganas más por la misma venta</p>
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: '#E8F0FE' }}>Chollos con mayor descuento</h2>
+              <p className="mt-2 text-lg" style={{ color: '#8BA3C7' }}>Descuentos reales sobre el precio original, con precio y stock verificados</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {groupedHighCommission.slice(0,4).map(group => (
+              {groupedTopDiscounts.map(group => (
                 <Link key={group.productId || group.slug} href={`/deals/${group.slug}`}
                   className="rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(38,222,129,0.12)]"
                   style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
-                  <div className="text-xs font-bold px-2 py-1 rounded-full w-fit mb-2" style={{ background: 'rgba(38,222,129,0.15)', color: '#26DE81' }}>{group.commission ? `${group.commission.toFixed(2)}€ comisión` : ''} · {group.bestPrice ? `${formatPrice(group.bestPrice)}` : ''}</div>
+                  <div className="text-xs font-bold px-2 py-1 rounded-full w-fit mb-2" style={{ background: 'rgba(38,222,129,0.15)', color: '#26DE81' }}>
+                    {group.discountPercent > 0 ? `-${group.discountPercent}%` : 'Precio'} · {formatPrice(group.bestPrice)}
+                  </div>
                   <h3 className="font-semibold text-sm line-clamp-2" style={{ color: '#E8F0FE' }}>{group.title}</h3>
-                  <div className="text-xs mt-2" style={{ color: '#4A6080' }}>{group.bestStore} · {group.storeCount} tiendas</div>
+                  <div className="text-xs mt-2" style={{ color: '#4A6080' }}>
+                    {group.storeCount === 1 ? group.bestStore : `${group.bestStore} · ${group.storeCount} tiendas`}
+                  </div>
                 </Link>
               ))}
             </div>
             <div className="text-center mt-6">
-              <Link href="/search?sortBy=commission" className="text-sm font-semibold" style={{ color: '#26DE81' }}>Ver todos por comisión →</Link>
+              <Link href="/search?sortBy=discount" className="text-sm font-semibold" style={{ color: '#26DE81' }}>Ver todos con descuento →</Link>
             </div>
           </div>
         </section>
@@ -500,46 +503,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Top Discounts */}
-      {groupedTopDiscounts.length > 0 && (
-        <section className="py-16 md:py-20" style={{ background: '#0B1120' }}>
-          <div className="mx-auto max-w-7xl px-4">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider"
-                style={{ background: 'rgba(255,71,87,0.1)', border: '1px solid rgba(255,71,87,0.2)', color: '#FF4757' }}>
-                <Zap className="h-3 w-3" />
-                Hot
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: '#E8F0FE' }}>Mayores Descuentos</h2>
-              <p className="mt-2 text-lg" style={{ color: '#8BA3C7' }}>Los chollos con los porcentajes de ahorro más brutales</p>
-            </div>
-            <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
-              {groupedTopDiscounts.map((group) => (
-                <Link key={group.productId || group.slug} href={`/deals/${group.slug}`}
-                  className="flex-shrink-0 w-[260px] snap-start p-6 text-center rounded-2xl transition-all duration-300 hover:-translate-y-1 glow-amber"
-                  style={{ background: '#111827', border: '1px solid #1E3A5F' }}>
-                  {group.discountPercent > 0 && (
-                  <span className="inline-block font-extrabold text-2xl px-5 py-2 rounded-full mb-4"
-                    style={{ background: '#FFB800', color: '#0B1120', boxShadow: '0 0 20px rgba(255,184,0,0.3)' }}>
-                    -{group.discountPercent}%
-                  </span>
-                  )}
-                  <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-[#00D4FF] transition-colors" style={{ color: '#E8F0FE' }}>{group.title}</h3>
-                  <div className="mt-3">
-                    <span className="font-bold text-xl" style={{ color: '#FFB800', textShadow: '0 0 10px rgba(255,184,0,0.2)' }}>{formatPrice(group.bestPrice)}</span>
-                  </div>
-                  {group.storeCount > 1 && (
-                  <div className="mt-2 text-xs" style={{ color: '#4A6080' }}>
-                    {group.storeCount} tiendas · Mejor en {group.bestStore}
-                  </div>
-                  )}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* CTA: Newsletter + Telegram */}
       <section className="py-16 md:py-20" style={{ background: 'linear-gradient(180deg, #0B1120 0%, #0A1326 100%)' }}>
