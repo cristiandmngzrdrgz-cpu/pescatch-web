@@ -154,8 +154,30 @@ describe('GET /api/cron/refresh-prices (chunked)', () => {
 
     const body = await res.json()
     expect(body.chunk).toBe(2)
+    expect(body.processed).toBe(2)
     expect(body.updated).toBe(2)
+    expect(body.cursorReset).toBe(false)
     expect(await getCursor()).not.toBe('')
+  })
+
+  it('recupera un cursor huérfano y reinicia el ciclo desde el principio', async () => {
+    await seedDeal()
+    await seedDeal()
+    const { setCronState } = await import('@/lib/cron-state')
+    // Cursor que ya no existe o apunta a un deal no elegible (p. ej. AliExpress
+    // excluido del refresh): la consulta devuelve 0 y antes se quedaba muerto.
+    await setCronState('refresh_prices_cursor', 'zzzz')
+    vi.mocked(scrapeStore).mockImplementation(async (url: string) => okPrice(url))
+
+    const { GET } = await cronRoutes['refresh-prices']()
+    const res = await GET(cronRequest('/api/cron/refresh-prices?limit=2'))
+    expect(res.status).toBe(200)
+
+    const body = await res.json()
+    expect(body.processed).toBe(2)
+    expect(body.updated).toBe(2)
+    expect(body.cursorReset).toBe(true)
+    expect(await getCursor()).not.toBe('zzzz')
   })
 
   it('al agotar el ciclo resetea el cursor para empezar de nuevo', async () => {

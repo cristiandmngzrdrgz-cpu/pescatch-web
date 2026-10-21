@@ -28,6 +28,9 @@ async function handle(request: NextRequest) {
     return NextResponse.json({
       success: true,
       chunk: limit ?? 'full',
+      processed: result.processed,
+      remaining: result.remaining,
+      cursorReset: result.cursorReset,
       updated: result.updated,
       skipped: result.skipped,
       failed: result.failed,

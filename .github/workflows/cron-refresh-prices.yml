@@ -26,4 +26,12 @@ jobs:
             --max-time 330)
           echo "HTTP $code"
           cat response.json
+
+          processed=$(jq -r '.processed // 0' response.json)
+          remaining=$(jq -r '.remaining // 0' response.json)
+          if [ "$code" = "200" ] && [ "$processed" -eq 0 ] && [ "$remaining" -gt 0 ]; then
+            echo "::error::El refresh procesó 0 deals pero quedan $remaining elegibles (cursor atascado)"
+            exit 1
+          fi
+
           exit $([ "$code" = "200" ] && echo 0 || echo 1)

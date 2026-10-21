@@ -33,6 +33,12 @@ interface RefreshResult {
   removed: number
   removedIds: string[]
   alerts: number
+  // Diagnóstico del ciclo chunked: deals intentados en esta pasada, deals
+  // elegibles que quedan después del cursor y si hubo que recuperar un cursor
+  // huérfano (p. ej. tras excluir una tienda del refresh).
+  processed: number
+  remaining: number
+  cursorReset: boolean
 }
 
 export interface RefreshOptions {
@@ -42,20 +48,11 @@ export interface RefreshOptions {
   resetCursor?: boolean
 }
 
-export async function refreshAllPrices(options: RefreshOptions = {}): Promise<RefreshResult> {
-  const db = getDb()
-  const { limit, resetCursor } = options
-
-  let afterId = ''
-  if (limit) {
-    if (resetCursor) {
-      await setCronState(REFRESH_CURSOR_KEY, '')
-      afterId = ''
-    } else {
-      afterId = await getCronState(REFRESH_CURSOR_KEY)
-    }
-  }
-
+async function selectDeals(
+  db: ReturnType<typeof getDb>,
+  afterId: string,
+  limit?: number,
+): Promise<DealRow[]> {
   const clauses: InValue[] = []
   let cursorClause = ''
   if (afterId) {
@@ -76,8 +73,36 @@ export async function refreshAllPrices(options: RefreshOptions = {}): Promise<Re
      ORDER BY id${limitClause}`,
     args: clauses,
   })
+  return result.rows as unknown as DealRow[]
+}
 
-  const deals = result.rows as unknown as DealRow[]
+export async function refreshAllPrices(options: RefreshOptions = {}): Promise<RefreshResult> {
+  const db = getDb()
+  const { limit, resetCursor } = options
+
+  let afterId = ''
+  if (limit) {
+    if (resetCursor) {
+      await setCronState(REFRESH_CURSOR_KEY, '')
+      afterId = ''
+    } else {
+      afterId = await getCronState(REFRESH_CURSOR_KEY)
+    }
+  }
+
+  let deals = await selectDeals(db, afterId, limit)
+  let cursorReset = false
+
+  // Un cursor huérfano (deal borrado/expirado o tienda excluida del filtro
+  // después de fijarlo) deja la consulta en 0 para siempre: sin este reset,
+  // el refresh chunked se queda muerto. Si no hay nada después del cursor,
+  // empezamos un ciclo nuevo desde el principio.
+  if (limit && afterId && deals.length === 0) {
+    await setCronState(REFRESH_CURSOR_KEY, '')
+    afterId = ''
+    deals = await selectDeals(db, '', limit)
+    cursorReset = true
+  }
   let updated = 0
   let skipped = 0
   let failed = 0
@@ -183,17 +208,38 @@ export async function refreshAllPrices(options: RefreshOptions = {}): Promise<Re
     })
   }
 
-  if (limit && deals.length > 0) {
-    // Persiste el cursor del ciclo chunked. Fin de ciclo = no quedan deals
-    // elegibles más allá del último procesado (comprobación explícita: si el
-    // chunk encaja exacto con el total, length === limit y aun así termina).
-    const lastId = String(deals[deals.length - 1].id)
-    const more = await db.execute({
-      sql: `SELECT COUNT(*) as n FROM deals WHERE ${ELIGIBLE_DEALS_WHERE} AND id > ?`,
-      args: [lastId],
-    })
-    await setCronState(REFRESH_CURSOR_KEY, Number(more.rows[0].n) > 0 ? lastId : '')
+  let remaining = 0
+  if (limit) {
+    if (deals.length > 0) {
+      // Persiste el cursor del ciclo chunked. Fin de ciclo = no quedan deals
+      // elegibles más allá del último procesado (comprobación explícita: si el
+      // chunk encaja exacto con el total, length === limit y aun así termina).
+      const lastId = String(deals[deals.length - 1].id)
+      const more = await db.execute({
+        sql: `SELECT COUNT(*) as n FROM deals WHERE ${ELIGIBLE_DEALS_WHERE} AND id > ?`,
+        args: [lastId],
+      })
+      remaining = Number(more.rows[0].n)
+      await setCronState(REFRESH_CURSOR_KEY, remaining > 0 ? lastId : '')
+    } else {
+      // Sin deals en el chunk: si el catálogo tiene elegibles, el workflow
+      // debe fallar para que no pasemos por alto otro cursor roto.
+      const total = await db.execute({
+        sql: `SELECT COUNT(*) as n FROM deals WHERE ${ELIGIBLE_DEALS_WHERE}`,
+      })
+      remaining = Number(total.rows[0].n)
+    }
   }
 
-  return { updated, skipped, failed, removed, removedIds, alerts }
+  return {
+    updated,
+    skipped,
+    failed,
+    removed,
+    removedIds,
+    alerts,
+    processed: deals.length,
+    remaining,
+    cursorReset,
+  }
 }
