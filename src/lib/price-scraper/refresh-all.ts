@@ -9,6 +9,11 @@ import { getCronState, setCronState } from '@/lib/cron-state'
 
 const REFRESH_CURSOR_KEY = 'refresh_prices_cursor'
 
+// Si Amazon devuelve captcha/bloqueo, todos los scrapes fallan. Sin este
+// circuit breaker el refresh sigue machacando la ficha 115 veces (y el
+// bloqueo se prolonga). Se aborta el chunk y se avisa al admin.
+const MAX_CONSECUTIVE_FAILURES = 10
+
 // Condiciones compartidas entre la consulta del chunk y el chequeo "¿quedan más?".
 // AliExpress queda FUERA del refresh automático: su API de afiliados devuelve el
 // precio de app (`target_app_sale_price`), no el de la ficha web, y descuentos/MSRP
@@ -109,11 +114,14 @@ export async function refreshAllPrices(options: RefreshOptions = {}): Promise<Re
   let removed = 0
   const removedIds: string[] = []
   let alerts = 0
+  let attempted = 0
+  let consecutiveScrapeFailures = 0
 
   const storeStats = new Map<string, { success: number; fail: number; errors: string[] }>()
 
   for (let i = 0; i < deals.length; i++) {
     const deal = deals[i]
+    attempted = i + 1
 
     if (!storeStats.has(deal.storeId)) {
       storeStats.set(deal.storeId, { success: 0, fail: 0, errors: [] })
@@ -135,9 +143,15 @@ export async function refreshAllPrices(options: RefreshOptions = {}): Promise<Re
       failed++
       stats.fail++
       if (scrapeResult.error) stats.errors.push(scrapeResult.error)
+      consecutiveScrapeFailures++
+      if (consecutiveScrapeFailures >= MAX_CONSECUTIVE_FAILURES) {
+        console.log(`  ⛔ ${consecutiveScrapeFailures} fallos consecutivos: se aborta el refresh (posible captcha/bloqueo de Amazon)`)
+        break
+      }
       continue
     }
 
+    consecutiveScrapeFailures = 0
     const p = scrapeResult.price
     if (p.notAvailable) {
       removed++
@@ -208,13 +222,25 @@ export async function refreshAllPrices(options: RefreshOptions = {}): Promise<Re
     })
   }
 
+  if (attempted > 0 && failed === attempted && isEmailConfigured()) {
+    await sendAdminNotification(
+      'Refresh de precios bloqueado',
+      buildAdminNotificationHtml('Refresh de precios bloqueado', `
+        <p>Los ${attempted} deals intentados fallaron. Amazon está devolviendo captcha o bloqueando el scrape.</p>
+        <p>El refresh se detuvo para no insistir. Revisa una ficha manualmente o usa BrightData/PA-API.</p>
+      `),
+    )
+  }
+
   let remaining = 0
   if (limit) {
-    if (deals.length > 0) {
+    if (attempted > 0) {
       // Persiste el cursor del ciclo chunked. Fin de ciclo = no quedan deals
       // elegibles más allá del último procesado (comprobación explícita: si el
       // chunk encaja exacto con el total, length === limit y aun así termina).
-      const lastId = String(deals[deals.length - 1].id)
+      // Si el circuit breaker abortó, el cursor avanza solo hasta el último
+      // deal intentado: el resto se reintenta en la siguiente pasada.
+      const lastId = String(deals[attempted - 1].id)
       const more = await db.execute({
         sql: `SELECT COUNT(*) as n FROM deals WHERE ${ELIGIBLE_DEALS_WHERE} AND id > ?`,
         args: [lastId],
@@ -238,7 +264,7 @@ export async function refreshAllPrices(options: RefreshOptions = {}): Promise<Re
     removed,
     removedIds,
     alerts,
-    processed: deals.length,
+    processed: attempted,
     remaining,
     cursorReset,
   }

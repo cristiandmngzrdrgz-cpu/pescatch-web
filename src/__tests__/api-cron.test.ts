@@ -40,7 +40,7 @@ vi.mock('@/lib/email', () => ({
 }))
 
 const { scrapeStore, updateDealInDb } = await import('@/lib/price-scraper/index')
-const { sendEmail } = await import('@/lib/email')
+const { sendEmail, sendAdminNotification } = await import('@/lib/email')
 const { sendTelegramMessage } = await import('@/lib/telegram')
 
 // Imports estáticos: vite no resuelve import() con ruta en variable.
@@ -178,6 +178,22 @@ describe('GET /api/cron/refresh-prices (chunked)', () => {
     expect(body.updated).toBe(2)
     expect(body.cursorReset).toBe(true)
     expect(await getCursor()).not.toBe('zzzz')
+  })
+
+  it('aborta tras 10 fallos consecutivos y avisa al admin', async () => {
+    for (let i = 0; i < 12; i++) await seedDeal()
+    vi.mocked(scrapeStore).mockResolvedValue({ success: false, storeId: 'amazon', error: 'Amazon captcha' })
+
+    const { GET } = await cronRoutes['refresh-prices']()
+    const res = await GET(cronRequest('/api/cron/refresh-prices?limit=12'))
+    expect(res.status).toBe(200)
+
+    const body = await res.json()
+    expect(body.processed).toBe(10)
+    expect(body.failed).toBe(10)
+    expect(body.updated).toBe(0)
+    expect(body.remaining).toBeGreaterThan(0)
+    expect(sendAdminNotification).toHaveBeenCalled()
   })
 
   it('al agotar el ciclo resetea el cursor para empezar de nuevo', async () => {
