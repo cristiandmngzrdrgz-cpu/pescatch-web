@@ -2,7 +2,7 @@
 
 > Web de chollos de material de pesca. Dominio: `pescatch.es`
 > Tech stack: Next.js 16 + TypeScript + Tailwind CSS 4 + shadcn/ui + SQLite/Turso
-> **Última actualización:** 2026-10-15
+> **Última actualización:** 2026-10-24
 
 ---
 
@@ -111,6 +111,7 @@
 - **Mantenimiento 22 Oct 2026**: `backup` 22 Oct, `clean-expired` 0, `refresh-prices:prod --apply` **102 updated / 13 failed / 0 removed** (Amazon devolvía "no result" en oleadas; el circuit breaker no llegó a disparar) + push 1 a Turso. `candidates` 10 pending → **6** (4 rechazados: duplicado FX XT más caro 30,96€ vs 20,99€, duplicado Okuma Aria, 2 "SHIMANO" sin modelo) en local + Turso. `test` 220/220, `lint` 22w 0e, `build` 53/53.
 - **Fix categorías 22 Oct 2026**: `categorizeProduct` evaluaba Carretes primero con `/spin/i` → cualquier caña "Spinning" caía en carretes (27 de 57 fichas de la categoría no eran carretes). Reescrito con normalización de tildes (Aliexpress manda NFD), prioridad ropa→cañas→carretes→señuelos, overrides de accesorios ("grasa para carretes", "estuche", "soporte") y contenedores solo al inicio del título ("combo … + bolsa de transporte" sigue siendo caña). **74 deals reclasificados** (17 carretes→cañas, 14 accesorios→carretes, 11 carretes→accesorios…), **207 filas del Sheet normalizadas** (había categorías sueltas: "Feeder", "Carretes", "Cañas", "Spinning" → el sync las volvía accesorios) y **70 deals + productos en Turso** (los IDs de Turso son distintos a local: el emparejamiento va por slug). Script idempotente `scripts/fix-categories.ts` (local + Sheet + Turso, reintenta 429 de Sheets) + 6 tests nuevos en `src/__tests__/categorizer.test.ts`. Distribución final: canas 57 / accesorios 49 / carretes 38 / senuelos 33 / ropa 12 (local).
 - **Blog 22 Oct 2026 (roundup semanal)**: `chollos-pesca-semana-43-2026` (post 30) — PENN Surfblaster III 99,99€ −38%, Shimano FX XT 20,99€ −44%, Rapala Original 12,62€ −30%, Mitchell MX1 24,49€ −18% + 4 novedades AliExpress verificadas contra ficha con navegador (Seasir Salminus 41,59€, Seasir Riveria BFS 31,79€, set 8 EGI UV 23,79€, gafas 4 lentes 7,19€). Sin repetir ninguno del roundup 42. FAQ con `###` para que genere FAQPage JSON-LD; `metaTitle` sin "| PesCatch" (lo añade la plantilla). Push a Turso OK, render 200, 16 CTAs. **BrightData 401 (token caducado)**: verificación AE hecha con Playwright.
+- **Candidatos + roundup semana 44 (24 Oct 2026)**: 6 pendientes Okuma/Daiwa verificados contra ficha de Amazon (5 aprobados; precios ajustados a céntimo y ratings reales 4,2-4,5★). La Daiwa Exceler 802M se descartó: es variante de un deal ya publicado más barato (Exceler 762L 47,99€) y su fila se borró del Sheet. Nuevo flag `--ids=` en `auto-approve-curated.ts` para aprobar a mano candidatos con score <75 (salta `isCurated`, mantiene el anti-dup) → Sheet → `sync`/`sync:prod` (5 deals nuevos). **`chollos-pesca-semana-44-2026` en borrador** para publicar el jueves 29 oct: 5 Amazon (23BG SW 194,44€, Convector 158,13€, Prorex X LT 92,41€, Magda Pro 83,17€, Trout Rod 51,41€) + Navis −15% 75,65€ + 2 AE verificados con navegador (Leydun 3,39€, caja 6,19€). Solo 1 tachado real; el resto a 0% declarado. Fix de badges en el post: `green`→`#22C55E` (el sufijo alfa generaba `green30`, CSS inválido). `test` 220/220, `lint` 22w 0e, `build` OK.
 
 ---
 

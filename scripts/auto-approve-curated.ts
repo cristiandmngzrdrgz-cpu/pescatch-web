@@ -1,6 +1,9 @@
 // PROPÓSITO: Auto-aprobar candidatos curados (score≥75, Shimano/Daiwa/Okuma, reviews≥30) → Sheet
 // FECHA: 2026-09-19 — Parte de spec monetización B+C P0.2 (automatización C)
-// Uso: npx tsx scripts/auto-approve-curated.ts [--apply] [--dry-run]
+// Uso: npx tsx scripts/auto-approve-curated.ts [--apply] [--dry-run] [--ids=1990,2063]
+//
+// --ids=  aprueba manualmente esos IDs tras revisión (salta el filtro isCurated,
+//         mantiene el pre-check anti-dup). Útil para candidatos de score <75.
 //
 // Pre-check anti-dup (2026-10-17): antes de aprobar descarta lo que ya es deal
 // (ASIN/PID/URL en la DB local), lo que ya está en el Sheet (sync pendiente) o
@@ -138,6 +141,10 @@ function describeReason(reason: DupReason): string {
 async function main() {
   const apply = process.argv.includes('--apply')
   const dryRun = !apply
+  const idsArg = process.argv.find(a => a.startsWith('--ids='))
+  const manualIds = idsArg
+    ? new Set(idsArg.slice('--ids='.length).split(',').map(s => Number(s.trim())).filter(n => Number.isFinite(n) && n > 0))
+    : null
 
   await initSchema()
   await migrateSchema()
@@ -145,14 +152,20 @@ async function main() {
 
   const res = await db.execute("SELECT * FROM pending_candidates WHERE status='pending' ORDER BY score DESC")
   const all = res.rows as unknown as CandidateRow[]
-  const curated = all.filter(isCurated)
-  const nonCurated = all.filter(c => !isCurated(c))
+  const curated = manualIds ? all.filter(c => manualIds.has(c.id)) : all.filter(isCurated)
+  const nonCurated = manualIds ? all.filter(c => !manualIds.has(c.id)) : all.filter(c => !isCurated(c))
 
-  console.log(`\n=== Auto-approve curados (score≥${CURATED_MIN_SCORE}, premium, reviews≥30, 12-450€) ===`)
-  console.log(`Total pending: ${all.length} | Curados: ${curated.length} | No-curados: ${nonCurated.length}\n`)
+  if (manualIds) {
+    console.log(`\n=== Aprobación manual revisada (--ids: ${[...manualIds].join(', ')}) ===`)
+    const missing = [...manualIds].filter(id => !all.some(c => c.id === id))
+    if (missing.length) console.log(`⚠️ IDs no encontrados entre los pending: ${missing.join(', ')}`)
+  } else {
+    console.log(`\n=== Auto-approve curados (score≥${CURATED_MIN_SCORE}, premium, reviews≥30, 12-450€) ===`)
+  }
+  console.log(`Total pending: ${all.length} | A aprobar: ${curated.length} | Resto: ${nonCurated.length}\n`)
 
   if (curated.length === 0) {
-    console.log('No hay curados para auto-aprobar. Revisa manualmente en /admin/candidates.')
+    console.log(manualIds ? 'Ninguno de los IDs indicados sigue pendiente.' : 'No hay curados para auto-aprobar. Revisa manualmente en /admin/candidates.')
     if (nonCurated.length > 0) {
       console.log('\nTop no-curados (quedan pending):')
       for (const c of nonCurated.slice(0, 5)) {
@@ -194,7 +207,7 @@ async function main() {
     else toApprove.push(c)
   }
 
-  console.log('Curados encontrados:')
+  console.log(manualIds ? 'Candidatos a aprobar (revisión manual):' : 'Curados encontrados:')
   for (const c of toApprove) {
     console.log(`  ✓ ${c.asin || '(AE)'} | ${c.title.slice(0,65)} | ${c.brand} | ${c.reviews} rev ${c.rating}★ | ${c.price}€ | score ${c.score}`)
   }
