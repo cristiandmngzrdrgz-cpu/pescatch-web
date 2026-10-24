@@ -1,6 +1,17 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        // El slug antiguo se quedó con el título/imagen del Ninja X 2,70 m tras un cruce de sync.
+        // Se redirige a la ficha correcta para no perder enlaces ni posicionamiento.
+        source: '/deals/daiwa-caa-de-pescar-spinning-ninja-x-spin',
+        destination: '/deals/daiwa-ninja-x-spin-270-m-15-50-g',
+        permanent: true,
+      },
+    ]
+  },
   async headers() {
     return [
       {
