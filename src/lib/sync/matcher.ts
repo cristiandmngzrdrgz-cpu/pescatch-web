@@ -1,5 +1,6 @@
 import { getDb } from '../db'
 import type { InValue } from '@libsql/client'
+import { extractAsin } from '../amazon-affiliate'
 
 export interface MatchedProduct {
   id: string
@@ -32,6 +33,25 @@ export async function matchBySlug(slug: string): Promise<MatchedProduct | null> 
   }
 
   return null
+}
+
+/**
+ * Identidad real de la variante: si ya existe un deal Amazon con ese ASIN, ese
+ * es su producto, diga lo que diga el nombre. Evita que un renombrado (o dos
+ * variantes con el mismo nombre) creen fichas duplicadas al sincronizar.
+ */
+export async function matchByAmazonAsin(asin: string): Promise<MatchedProduct | null> {
+  if (!asin) return null
+  const db = getDb()
+  const result = await db.execute({
+    sql: `SELECT productId FROM deals
+      WHERE storeId = 'amazon' AND (asin = ? OR affiliateUrl LIKE ?)
+      LIMIT 1`,
+    args: [asin, `%${asin}%`],
+  })
+
+  if (result.rows.length === 0) return null
+  return { id: String(result.rows[0].productId), exists: true }
 }
 
 export async function insertProduct(
@@ -122,6 +142,9 @@ export async function upsertDeal(
 
   const store = getStoreInfo(storeId)
   const commission = Math.round(salePrice * (store.commissionRate || 0) * 100) / 100
+  // Guardar el ASIN ya resuelto: es la identidad real de la variante y evita
+  // que un nombre parecido haga fusionar dos variantes distintas.
+  const asin = extractAsin(affiliateUrl) || ''
 
   // Check if a deal for this product+store already exists (for returning the id)
   const existing = await db.execute({
@@ -142,10 +165,10 @@ export async function upsertDeal(
       await db.execute({
          sql: `UPDATE deals SET
           title = ?, slug = ?, originalPrice = ?, salePrice = ?, shippingCost = ?, discountPercent = ?,
-          stockStatus = ?, affiliateUrl = ?, storeName = ?, storeUrl = ?,
+          stockStatus = ?, affiliateUrl = ?, asin = ?, storeName = ?, storeUrl = ?,
           storeReputation = ?, storeCommissionRate = ?, commission = ?, expiresAt = ?, updatedAt = ?
         WHERE id = ?`,
-         args: [title, finalSlug, originalPrice, salePrice, shippingCost, discountPercent, stockStatus, affiliateUrl, storeName, store.url || '', store.reputation, store.commissionRate || 0, commission, null, now, dealId],
+         args: [title, finalSlug, originalPrice, salePrice, shippingCost, discountPercent, stockStatus, affiliateUrl, asin, storeName, store.url || '', store.reputation, store.commissionRate || 0, commission, null, now, dealId],
       })
     } catch (e) {
       const msg = (e as Error).message || ''
@@ -154,10 +177,10 @@ export async function upsertDeal(
         await db.execute({
            sql: `UPDATE deals SET
           title = ?, slug = ?, originalPrice = ?, salePrice = ?, shippingCost = ?, discountPercent = ?,
-          stockStatus = ?, affiliateUrl = ?, storeName = ?, storeUrl = ?,
+          stockStatus = ?, affiliateUrl = ?, asin = ?, storeName = ?, storeUrl = ?,
           storeReputation = ?, storeCommissionRate = ?, commission = ?, expiresAt = ?, updatedAt = ?
         WHERE id = ?`,
-           args: [title, finalSlug, originalPrice, salePrice, shippingCost, discountPercent, stockStatus, affiliateUrl, storeName, store.url || '', store.reputation, store.commissionRate || 0, commission, null, now, dealId],
+           args: [title, finalSlug, originalPrice, salePrice, shippingCost, discountPercent, stockStatus, affiliateUrl, asin, storeName, store.url || '', store.reputation, store.commissionRate || 0, commission, null, now, dealId],
         })
       } else throw e
     }
@@ -197,7 +220,7 @@ export async function upsertDeal(
           stockStatus, 0, 0, 0,
           '{}', '', '[]', '[]',
           0, 0, 0, commission,
-          '', '', null, now, now, now,
+          '', asin, null, now, now, now,
         ] as InValue[],
       })
       return dealId
@@ -228,4 +251,25 @@ export function getStoreInfo(storeId: string): { id: string; name: string; url?:
     aliexpress: { id: 'aliexpress', name: 'AliExpress', url: 'https://aliexpress.com', reputation: 'neutral', commissionRate: 0.08 },
   }
   return stores[storeId] || { id: storeId, name: storeId, url: '', reputation: 'neutral', commissionRate: 0 }
+}
+
+/**
+ * Un producto del catálogo modela UNA variante de Amazon. Si el deal Amazon ya
+ * sincronizado apunta a otro ASIN, un nombre casi idéntico (misma marca y misma
+ * familia) no es el mismo producto: fusionarlo deja el deal con el título de una
+ * variante y la URL/precio de otra. Casos reales: Daiwa Ninja X 2,10/2,70 m y
+ * Shimano Socorro SW / Saragosa SW.
+ */
+export async function amazonAsinConflict(productId: string, asin: string): Promise<boolean> {
+  if (!asin) return false
+  const db = getDb()
+  const result = await db.execute({
+    sql: `SELECT asin, affiliateUrl FROM deals WHERE productId = ? AND storeId = 'amazon'`,
+    args: [productId],
+  })
+
+  return result.rows.some((row) => {
+    const existing = String(row.asin ?? '').trim() || extractAsin(String(row.affiliateUrl ?? '')) || ''
+    return existing !== '' && existing !== asin
+  })
 }

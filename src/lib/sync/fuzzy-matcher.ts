@@ -26,6 +26,10 @@ function extractKeyWords(text: string): string[] {
   return normalized.split(' ').filter(w => w.length > 2 && !stopWords.has(w))
 }
 
+// Solapamiento mínimo de palabras entre dos nombres para considerarlos el mismo
+// producto, antes de sumar los bonus de marca/categoría.
+const MIN_NAME_OVERLAP = 0.6
+
 function jaccardSimilarity(set1: Set<string>, set2: Set<string>): number {
   const intersection = new Set([...set1].filter(x => set2.has(x)))
   const union = new Set([...set1, ...set2])
@@ -71,13 +75,20 @@ export async function findFuzzyMatch(
   }
 
   const normalizedCategory = normalizeCategory(category)
-  let bestMatch: { id: string; confidence: number } | null = null
+  let bestMatch: { id: string; confidence: number; overlap: number } | null = null
 
   for (const row of result.rows) {
     const existingName = row.name as string
     const existingBrand = row.brand as string
     const existingCategory = normalizeCategory(row.category as string)
 
+    // El bonus por marca (+0,3) y categoría (+0,1) hace que dos modelos
+    // distintos de la misma marca parezcan el mismo producto (Saragosa vs
+    // Socorro: 95%). Se exige además un solapamiento real de palabras.
+    const overlap = jaccardSimilarity(
+      new Set(extractKeyWords(name)),
+      new Set(extractKeyWords(existingName)),
+    )
     let similarity = calculateSimilarity(name, existingName, brand, existingBrand)
 
     if (normalizedCategory && existingCategory === normalizedCategory) {
@@ -85,12 +96,16 @@ export async function findFuzzyMatch(
     }
 
     if (!bestMatch || similarity > bestMatch.confidence) {
-      bestMatch = { id: row.id as string, confidence: similarity }
+      bestMatch = { id: row.id as string, confidence: similarity, overlap }
     }
   }
 
   if (!bestMatch) {
     return { productId: '', confidence: 0, matchType: 'none' }
+  }
+
+  if (bestMatch.overlap < MIN_NAME_OVERLAP) {
+    return { productId: '', confidence: bestMatch.confidence, matchType: 'none' }
   }
 
   if (bestMatch.confidence >= 0.85) {

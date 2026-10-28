@@ -1,5 +1,5 @@
 import { getDb, initSchema, migrateSchema } from './db'
-import { matchByEan, matchBySlug, insertProduct, updateProduct, upsertDeal, recordPricePoint } from './sync/matcher'
+import { matchByEan, matchBySlug, matchByAmazonAsin, insertProduct, updateProduct, upsertDeal, recordPricePoint, amazonAsinConflict } from './sync/matcher'
 import { readJsonFile } from './sync/reader-json'
 import { readGoogleSheets } from './sync/reader-sheets'
 import { amazonAdapter } from './sync/amazon-adapter'
@@ -113,6 +113,13 @@ async function processRow(
       matched = await matchByEan(ean)
     }
 
+    const rowAsin = (row.amazonVariantAsin || '').trim() || extractAsin(row.amazonUrl || '') || ''
+
+    if (!matched) {
+      matched = await matchByAmazonAsin(rowAsin)
+      if (matched) console.log(`  🎯 Match por ASIN (${rowAsin}): "${row.name}"`)
+    }
+
     if (!matched) {
       matched = await matchBySlug(slug)
       // fallback: si el slug desambiguado no matchea pero el slug base sí, intentar match por nombre normalizado
@@ -130,6 +137,17 @@ async function processRow(
       } else if (fuzzyMatch.matchType === 'fuzzy') {
         console.log(`  ⚠️ Possible duplicate (${Math.round(fuzzyMatch.confidence * 100)}%): "${row.name}" - creating new product`)
       }
+    }
+
+    // Dos variantes del mismo modelo (tallas/potencias) comparten marca y casi
+    // todo el nombre, así que el slug base y el fuzzy las dan por iguales. Si el
+    // producto ya tiene un deal Amazon con otro ASIN, este row es otra variante:
+    // no se fusiona (dejaría título de una y URL/precio de otra) ni se duplica
+    // el catálogo; se omite la fila.
+    if (matched && !ean && await amazonAsinConflict(matched.id, rowAsin)) {
+      console.log(`  ⛔ Variante con otro ASIN (${rowAsin}): "${row.name}" - fila omitida, ya hay una variante publicada`)
+      result.skipped++
+      return
     }
 
     if (!matched) {

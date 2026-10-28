@@ -10,6 +10,13 @@ const nextConfig: NextConfig = {
         destination: '/deals/daiwa-ninja-x-spin-270-m-15-50-g',
         permanent: true,
       },
+      {
+        // El deal se titulaba "Socorro SW" pero apuntaba al ASIN del Saragosa.
+        // Al separarlos, la ficha de Socorro pasa a llevar la talla en el slug.
+        source: '/deals/shimano-socorro-sw-carrete-de-pesca-de-agua-salada',
+        destination: '/deals/shimano-socorro-sw-10000',
+        permanent: true,
+      },
     ]
   },
   async headers() {
