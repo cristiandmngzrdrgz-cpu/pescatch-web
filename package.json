@@ -12,6 +12,7 @@
     "sync": "npx tsx scripts/sync.ts",
     "sync:prod": "npx tsx scripts/sync-prod.ts",
     "publish:prod": "npx tsx scripts/publish-to-prod.ts",
+    "publish:post": "npx tsx scripts/publish-post.ts",
     "push-prices:prod": "npx tsx scripts/push-prices-to-prod.ts",
     "refresh-prices": "npx tsx scripts/refresh-prices.ts",
     "refresh-prices:prod": "npx tsx scripts/refresh-prices-prod.ts",
