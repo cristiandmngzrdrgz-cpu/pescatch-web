@@ -88,9 +88,9 @@ function isValidAE(c: ScoredCandidate): boolean {
   if (c.reviews < 30) return false                              // pedidos reales (lastest_volume)
   const r = c.rating > 5 ? c.rating / 20 : c.rating             // evaluate_rate % → estrellas
   if (!r || r < 4.4) return false
-  if (!c.originalPrice || c.originalPrice <= c.price) return false
-  const discount = ((c.originalPrice - c.price) / c.originalPrice) * 100
-  if (discount < 15) return false                               // descuento real (EUR vs EUR)
+  // Sin filtro de descuento: la API de AE infla el precio y el original (MSRP falso) y la
+  // ficha real da descuentos de 0-9%. Exigir ≥15% seleccionaba justo los precios inventados.
+  // El precio y el tachado se verifican a mano en la ficha antes de publicar (AGENTS.md).
   return true
 }
 
@@ -124,7 +124,7 @@ async function main() {
   }))
 
   const valid = scored.filter(isValidAE)
-  console.log(`Válidos AE (pedidos≥30, 4.4★, descuento real≥15%, 5-600€): ${valid.length}`)
+  console.log(`Válidos AE (pedidos≥30, 4.4★, relevancia pesquera, 5-600€): ${valid.length}`)
 
   // Diagnóstico de distribución (señales AE)
   const bucket = (n: number) => n === 0 ? '0' : n < 10 ? '1-9' : n < 30 ? '10-29' : n < 100 ? '30-99' : n < 500 ? '100-499' : '500+'
@@ -138,7 +138,7 @@ async function main() {
     return r >= 4.4 && c.reviews >= 30
   })
   const withDiscount = withRating.filter(c => c.originalPrice && c.originalPrice > c.price && ((c.originalPrice - c.price) / c.originalPrice) >= 0.15)
-  console.log(`Pedidos≥30 + 4.4★: ${withRating.length} | + descuento real≥15%: ${withDiscount.length} | + precio 5-600€: ${valid.length}`)
+  console.log(`Pedidos≥30 + 4.4★: ${withRating.length} | de esos, con descuento API≥15%: ${withDiscount.length} (informativo, ya no filtra) | válidos finales: ${valid.length}`)
 
   const seenTitle = new Set<string>()
   const unique = valid.filter(c => {
@@ -157,8 +157,10 @@ async function main() {
   if (process.argv.includes('--dry-run')) {
     console.log(`\n[DRY-RUN] Top ${Math.min(40, ranked.length)} por score (sin guardar):`)
     for (const c of ranked.slice(0, 40)) {
-      const disc = ((c.originalPrice! - c.price) / c.originalPrice! * 100).toFixed(0)
-      console.log(`  [${c.score}] ${c.title.slice(0, 60)} | ${c.brand ?? 'sin marca'} | ${c.price.toFixed(2)}€ (orig ${c.originalPrice!.toFixed(2)}€, -${disc}%) | ${(c.rating > 5 ? c.rating / 20 : c.rating).toFixed(1)}★/${c.reviews} | ${c.category}`)
+      const disc = c.originalPrice && c.originalPrice > c.price
+        ? `orig ${c.originalPrice.toFixed(2)}€, -${(((c.originalPrice - c.price) / c.originalPrice) * 100).toFixed(0)}%`
+        : 'sin tachado API'
+      console.log(`  [${c.score}] ${c.title.slice(0, 60)} | ${c.brand ?? 'sin marca'} | ${c.price.toFixed(2)}€ (${disc}) | ${(c.rating > 5 ? c.rating / 20 : c.rating).toFixed(1)}★/${c.reviews} | ${c.category}`)
     }
     return
   }

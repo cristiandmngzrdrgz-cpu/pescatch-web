@@ -57,6 +57,10 @@ function isCuratedStrict(c: AmazonCandidate): boolean {
   return true
 }
 
+// Relevancia pesquera para candidatos de AliExpress (la API devuelve ruido:
+// cerámica, acuarios, insecticidas). Mismo criterio que scripts/discover/auto-aliexpress.ts.
+const FISHING_TERM_RE = /(pesca|pescar|carrete|ca[ñn]a\b|\bcana\b|se[ñn]uelo|anzuelo|sedal|flotador|\bboya\b|\bplomo|jigging|spinning|surfcasting|carpfishing|\bfeeder\b|eging|vinilo|cucharilla|moscas?\b|cebos?\b|trenzad|monofilamento|fluorocarbono)/i
+
 function isValidForSave(c: ScoredCandidate): boolean {
   if (isFakeBrand(c.brand)) return false
   if (c.reviews < 10) return false
@@ -116,30 +120,35 @@ async function discoverAuto() {
   const keywordBatchSize = batchArg ? Math.max(1, parseInt(batchArg.split('=')[1], 10) || KEYWORD_BATCH_SIZE) : KEYWORD_BATCH_SIZE
 
   if (braveAvailable()) {
-    const keywordPool: KeywordEntry[] = [...flattenKeywords(CATEGORIES), ...AMAZON_BRAND_KEYWORDS]
-    let keywordBatch = keywordPool
-    let nextKeywordCursor: number | null = null
+    try {
+      const keywordPool: KeywordEntry[] = [...flattenKeywords(CATEGORIES), ...AMAZON_BRAND_KEYWORDS]
+      let keywordBatch = keywordPool
+      let nextKeywordCursor: number | null = null
 
-    if (scanAll) {
-      console.log(`── FASE 1: Amazon keywords (stealth) — catálogo completo (${keywordPool.length}) ──`)
-    } else {
-      const cursor = parseInt(await getCronState(KEYWORD_CURSOR_KEY), 10) || 0
-      const picked = pickBatch(keywordPool, cursor, keywordBatchSize)
-      keywordBatch = picked.batch
-      nextKeywordCursor = picked.nextCursor
-      console.log(`── FASE 1: Amazon keywords (stealth) — lote ${keywordBatch.length}/${keywordPool.length} ──`)
-      console.log(`   Cursor ${cursor} → ${nextKeywordCursor} · ciclo completo en ~${Math.ceil(keywordPool.length / keywordBatchSize)} días (usa --all para escanear todo)`)
+      if (scanAll) {
+        console.log(`── FASE 1: Amazon keywords (stealth) — catálogo completo (${keywordPool.length}) ──`)
+      } else {
+        const cursor = parseInt(await getCronState(KEYWORD_CURSOR_KEY), 10) || 0
+        const picked = pickBatch(keywordPool, cursor, keywordBatchSize)
+        keywordBatch = picked.batch
+        nextKeywordCursor = picked.nextCursor
+        console.log(`── FASE 1: Amazon keywords (stealth) — lote ${keywordBatch.length}/${keywordPool.length} ──`)
+        console.log(`   Cursor ${cursor} → ${nextKeywordCursor} · ciclo completo en ~${Math.ceil(keywordPool.length / keywordBatchSize)} días (usa --all para escanear todo)`)
+      }
+
+      const amazonResults = await searchAmazonAll(groupKeywords(keywordBatch))
+      for (const r of amazonResults) {
+        if (seenAsins.has(r.asin)) continue
+        seenAsins.add(r.asin)
+        allCandidates.push({ ...r, score: scoreCandidate(r), source: `Amazon: ${r.keyword || 'keywords'}` })
+      }
+      console.log(`  ${amazonResults.length} productos encontrados`)
+
+      if (nextKeywordCursor !== null) await setCronState(KEYWORD_CURSOR_KEY, String(nextKeywordCursor))
+    } catch (err) {
+      // Un fallo del navegador no debe tumbar el barrido: bestsellers y AliExpress van aparte.
+      console.log(`  ⚠️ Keywords Amazon falló (${err instanceof Error ? err.message : err}). Sigo con Fase 2 y 3.`)
     }
-
-    const amazonResults = await searchAmazonAll(groupKeywords(keywordBatch))
-    for (const r of amazonResults) {
-      if (seenAsins.has(r.asin)) continue
-      seenAsins.add(r.asin)
-      allCandidates.push({ ...r, score: scoreCandidate(r), source: `Amazon: ${r.keyword || 'keywords'}` })
-    }
-    console.log(`  ${amazonResults.length} productos encontrados`)
-
-    if (nextKeywordCursor !== null) await setCronState(KEYWORD_CURSOR_KEY, String(nextKeywordCursor))
   } else {
     console.log('  ❌ Brave no disponible. Saltando scrapers de navegador.')
   }
@@ -228,21 +237,24 @@ async function discoverAuto() {
 
   const curated = allCandidates.filter(isCuratedStrict)
   const valid = allCandidates.filter(isValidForSave)
-  let pool: ScoredCandidate[]
-  if (curated.length >= 3) {
-    pool = curated
-    console.log(`\n✓ Filtro estricto premium: ${curated.length} candidatos (Shimano/Daiwa/Okuma)`)
-  } else if (valid.length >= 5) {
-    pool = valid
-    console.log(`\n✓ Filtro válido: ${valid.length} candidatos (score>=50, reviews>=10, brand ok) — curated solo ${curated.length}`)
-  } else if (valid.length > 0) {
-    pool = valid
-    console.log(`\n⚠️ Solo ${valid.length} candidatos válidos (<5), guardando solo válidos (evita junk)`)
-  } else {
+  if (valid.length === 0) {
     console.log(`\n❌ 0 candidatos válidos (score>=50, reviews>=10, brand ok). No se guarda junk. Total escaneado: ${allCandidates.length}`)
     console.log(`   Curated premium: ${curated.length} | Válidos: ${valid.length}`)
     return
   }
+  // Los curados (Shimano/Daiwa/Okuma) encabezan la cola, pero NO excluyen al resto.
+  // Antes, con >=3 curados se descartaban los demás válidos y, si esos 3 eran
+  // duplicados, el barrido acababa en 0 guardados (28-oct: 2.400 productos → 0).
+  const seenKeys = new Set<string>()
+  const pool = [...curated, ...valid].filter(c => {
+    // AliExpress devuelve ruido (cerámica, acuarios, insecticidas): exigir término de pesca.
+    if (!c.asin && !FISHING_TERM_RE.test(c.title)) return false
+    const key = (c.asin || c.url || c.title).toLowerCase()
+    if (seenKeys.has(key)) return false
+    seenKeys.add(key)
+    return true
+  })
+  console.log(`\n✓ Pool: ${curated.length} curados (Shimano/Daiwa/Okuma) + ${valid.length} válidos → ${pool.length} únicos`)
 
   const ranked = pool.sort((a, b) => b.score - a.score).slice(0, 50)
 

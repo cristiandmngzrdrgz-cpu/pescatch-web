@@ -189,21 +189,21 @@ async function discoverAmazonOnly() {
 
   const curated = allCandidates.filter(isCuratedStrict)
   const valid = allCandidates.filter(isValidForSave)
-  let pool: ScoredCandidate[]
-  if (curated.length >= 3) {
-    pool = curated
-    console.log(`\n✓ Filtro estricto premium: ${curated.length} candidatos (Shimano/Daiwa/Okuma)`)
-  } else if (valid.length >= 5) {
-    pool = valid
-    console.log(`\n✓ Filtro válido: ${valid.length} candidatos (score>=50, reviews>=10, brand ok) — curated solo ${curated.length}`)
-  } else if (valid.length > 0) {
-    pool = valid
-    console.log(`\n⚠️ Solo ${valid.length} candidatos válidos (<5), guardando solo válidos (evita junk)`)
-  } else {
+  if (valid.length === 0) {
     console.log(`\n❌ 0 candidatos válidos (score>=50, reviews>=10, brand ok). No se guarda junk. Total escaneado: ${allCandidates.length}`)
     console.log(`   Curated premium: ${curated.length} | Válidos: ${valid.length}`)
     return
   }
+  // Los curados (Shimano/Daiwa/Okuma) encabezan la cola, pero NO excluyen al resto
+  // (con >=3 curados se descartaban los demás válidos → barridos de 0 guardados).
+  const seenKeys = new Set<string>()
+  const pool = [...curated, ...valid].filter(c => {
+    const key = (c.asin || c.url || c.title).toLowerCase()
+    if (seenKeys.has(key)) return false
+    seenKeys.add(key)
+    return true
+  })
+  console.log(`\n✓ Pool: ${curated.length} curados (Shimano/Daiwa/Okuma) + ${valid.length} válidos → ${pool.length} únicos`)
 
   const ranked = pool.sort((a, b) => b.score - a.score).slice(0, 50)
 
