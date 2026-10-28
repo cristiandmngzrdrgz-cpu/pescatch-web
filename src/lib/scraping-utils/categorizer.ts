@@ -12,7 +12,7 @@ export function extractBrand(title: string): string | null {
 /** Accesorios que nunca son caña/carrete aunque los mencionen ("grasa para carretes"). */
 const HARD_ACCESSORY: RegExp[] = [
   /grasa/, /lubricante/, /\baceite\b/, /kit de rodamiento|juego de rodamiento/,
-  /repuesto/, /recambio/, /\bspare\b/, /manivela/, /\bmango\b/,
+  /repuesto/, /recambio/, /\bspare\b/, /manivela/, /mango (de )?(repuesto|recambio|suelto|carrete)/,
   /hilos?\b/, /monofilamento|monofilament|fluorocarbono|trenzad/, /\bsedal\b/,
   /alicate/, /cuchillo/, /bascula/, /salabre/, /linterna/, /paraguas/, /toolbox/,
 ]

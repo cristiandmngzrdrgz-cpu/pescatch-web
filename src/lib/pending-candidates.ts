@@ -1,5 +1,28 @@
 import { getDb } from './db'
 import { dealMatchSimilarity } from './sync/fuzzy-matcher'
+import { categorizeProduct } from './scraping-utils/categorizer'
+import { normalizeCategory, normalizeText } from './normalize-category'
+import { CATEGORIES } from '@/types'
+
+/** Categoría del sitio a partir de un valor ya canónico (slug o nombre), si lo es. */
+function canonicalFromValue(value: string): string | null {
+  const norm = normalizeText(value)
+  const hit = CATEGORIES.find((c) => c.slug === norm || normalizeText(c.name) === norm)
+  return hit ? hit.slug : null
+}
+
+/**
+ * Categoría del sitio para un candidato. El descubrimiento mezcla taxonomías
+ * propias ("Marcas", "Embarcación", "Equipo") con las canónicas; si no es una
+ * categoría conocida se deduce del título, que es lo que hace el sync con las
+ * filas del Sheet sin categoría. Sin esto, todo acababa publicado en accesorios.
+ */
+export function toSiteCategory(raw: string | null | undefined, title: string): string {
+  const value = (raw || '').trim()
+  const known = value ? canonicalFromValue(value) : null
+  if (known) return known
+  return normalizeCategory(categorizeProduct(title))
+}
 
 export interface PendingCandidate {
   id: number
@@ -149,7 +172,7 @@ export async function savePendingCandidates(candidates: Omit<PendingCandidate, '
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         c.asin, c.title, c.price, c.originalPrice, c.rating, c.reviews,
-        c.url, c.keyword, c.category, c.imageUrl, c.brand, c.ean, c.score, source,
+        c.url, c.keyword, toSiteCategory(c.category, c.title), c.imageUrl, c.brand, c.ean, c.score, source,
       ],
     })
     saved++
