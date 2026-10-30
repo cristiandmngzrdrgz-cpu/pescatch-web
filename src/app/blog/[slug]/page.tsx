@@ -13,6 +13,7 @@ import {
   BADGE_COLORS,
 } from '@/lib/blog-renderer'
 import { generateBlogPostingSchema, generateBreadcrumbSchema, generateFAQSchema, buildMetadata, BASE_URL, JsonLd } from '@/lib/seo/schemas'
+import { getExistingDealSlugs } from '@/data/queries'
 
 // Artículos de blog: revalidar cada 10 minutos
 export const revalidate = 600
@@ -87,6 +88,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   if (!post) notFound()
 
   const { products, clean } = extractProducts(post.content)
+
+  // Solo enlazamos deals que existen y están publicados: los posts guardan el
+  // slug del producto y muchos apuntan a fichas ya retiradas → 404 en producción.
+  const liveDealSlugs = new Set(
+    await getExistingDealSlugs(products.map((p) => p.slug).filter((s): s is string => Boolean(s)))
+  )
+  const hasDeal = (productSlug?: string): boolean => Boolean(productSlug && liveDealSlugs.has(productSlug))
 
   function badgeLabel(i: number): string {
     return products[i]?.badge ?? BADGE_LABELS[i] ?? ''
@@ -212,7 +220,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                         <span className="text-xs" style={{ color: '#A0B8D8' }}>{best.name}</span>
                         <span className="text-sm font-bold" style={{ color: '#FFB800' }}>{best.price}</span>
                       </a>
-                      {p.slug && (
+                      {hasDeal(p.slug) && (
                         <Link href={`/deals/${p.slug}`}
                           className="flex items-center justify-center gap-1 mt-1.5 text-[0.55rem] font-bold uppercase tracking-wider rounded-lg py-1.5 transition-all no-underline hover:bg-[#1A2535]"
                           style={{ color: '#00D4FF', border: '1px solid rgba(0,212,255,0.15)' }}>
@@ -229,7 +237,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
           {/* Article */}
           <div className="text-base leading-relaxed mb-10" style={{ color: '#8BA3C7' }}>
-            <div dangerouslySetInnerHTML={{ __html: mdToHtml(clean, products) }} />
+            <div dangerouslySetInnerHTML={{ __html: mdToHtml(clean, products.map((p) => ({ ...p, slug: hasDeal(p.slug) ? p.slug : undefined }))) }} />
           </div>
 
           {/* Scores */}
@@ -296,7 +304,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                           <td className="p-4 text-center hidden sm:table-cell" style={{ color: '#8BA3C7' }}>{best.name}</td>
                           <td className="p-4 text-right">
                             <div className="flex items-center justify-end gap-2">
-                              {p.slug && (
+                              {hasDeal(p.slug) && (
                                 <Link href={`/deals/${p.slug}`}
                                   className="text-[0.55rem] font-bold uppercase tracking-wider px-2 py-1 rounded-full no-underline transition-all hover:bg-[#1A2535]"
                                   style={{ color: '#00D4FF', border: '1px solid rgba(0,212,255,0.15)' }}>
@@ -359,7 +367,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                           </div>
                         </a>
                       ))}
-                      {p.slug && (
+                      {hasDeal(p.slug) && (
                         <Link href={`/deals/${p.slug}`}
                           className="flex items-center justify-center gap-1 mt-2 text-[0.55rem] font-bold uppercase tracking-wider py-1.5 rounded-lg transition-all no-underline hover:bg-[#1A2535]"
                           style={{ color: '#00D4FF', border: '1px solid rgba(0,212,255,0.15)' }}>

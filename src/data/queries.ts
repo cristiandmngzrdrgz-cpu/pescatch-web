@@ -313,6 +313,28 @@ export async function getDealBySlug(slug: string, includeHidden = false): Promis
   return loadDeal(sql, params)
 }
 
+/**
+ * Devuelve, de la lista dada, los slugs que existen como deal publicado.
+ * Los posts del blog llevan `slug` en su PRODUCTS_DATA y muchos apuntan a
+ * deals ya retirados (fichas descatalogadas o purgadas): sin esta comprobación
+ * el renderer pinta "Ver en PesCatch" y el usuario aterriza en un 404.
+ */
+export async function getExistingDealSlugs(slugs: string[]): Promise<string[]> {
+  const unique = [...new Set(slugs.filter(Boolean))]
+  if (unique.length === 0) return []
+
+  const db = getDb()
+  await seedDatabase()
+
+  const placeholders = unique.map(() => '?').join(',')
+  const result = await db.execute({
+    sql: `SELECT slug FROM deals WHERE slug IN (${placeholders}) AND status = 'published'${storeFilterClause(false)}`,
+    args: [...unique, ...DISABLED_STORES],
+  })
+
+  return result.rows.map((row) => String(row.slug))
+}
+
 export async function getDealById(id: string): Promise<Deal | undefined> {
   return loadDeal('SELECT * FROM deals WHERE id = ?', [id])
 }
