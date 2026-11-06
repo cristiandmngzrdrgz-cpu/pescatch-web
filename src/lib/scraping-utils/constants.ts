@@ -24,6 +24,16 @@ export const NON_FISHING_WORDS = [
   'alimentador gato', 'alimentador perro', 'dispensador comida',
   'food dispenser', 'caja herramientas', 'tool box', 'toolbox',
   'cuchillo cocina', 'kitchen knife', 'chef knife', 'makeup',
+  // Herramientas de jardín y bricolaje: Amazon las devuelve al buscar marcas
+  // de pesca poco específicas (caso real: "carrete ryobi" → tijeras de podar).
+  'jardinería', 'jardineria', 'tijeras de podar', 'podadora', 'desbrozadora',
+  'cortasetos', 'motoazada', 'cortacésped', 'cortacesped', 'robot cortacésped',
+  'sopladora', 'motosierra', 'taladro', 'sierra circular', 'amoladora',
+  'hidrolimpiadora', 'generador eléctrico', 'generador electrico', 'soldador',
+  'compresor', 'atornillador', 'lijadora', 'fresadora', 'bordeadora',
+  'escarificador', 'biotrituradora', '18v one+', 'one+',
+  // Recambios de desbrozadora Ryobi (RLT4xxx) que se cuelan como "carrete".
+  'rlt4',
 ]
 
 export const POPULAR_BRANDS = [

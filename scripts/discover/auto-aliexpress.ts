@@ -7,6 +7,7 @@
 import 'dotenv/config'
 import { scrapeAliExpressAll } from './aliexpress-scraper'
 import { savePendingCandidates } from '../../src/lib/pending-candidates'
+import { isOffTopic } from '../../src/lib/scraping-utils'
 import { initSchema, migrateSchema } from '../../src/lib/db'
 
 interface ScoredCandidate {
@@ -83,6 +84,7 @@ function scoreCandidate(c: { rating: number; reviews: number; originalPrice: num
 const FISHING_TERM_RE = /(pesca|pescar|carrete|ca[ñn]a\b|\bcana\b|se[ñn]uelo|anzuelo|sedal|flotador|\bboya\b|\bplomo|jigging|spinning|surfcasting|carpfishing|\bfeeder\b|eging|vinilo|cucharilla|moscas?\b|cebos?\b|trenzad|monofilamento|fluorocarbono)/i
 
 function isValidAE(c: ScoredCandidate): boolean {
+  if (isOffTopic(c.title)) return false
   if (!FISHING_TERM_RE.test(c.title)) return false
   if (c.price < 5 || c.price > 600) return false
   if (c.reviews < 30) return false                              // pedidos reales (lastest_volume)

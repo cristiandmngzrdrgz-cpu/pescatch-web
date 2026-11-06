@@ -4,6 +4,7 @@ import { scrapeAmazonBestsellers, scrapeAmazonNewReleases, type AmazonCandidate 
 import { braveAvailable } from './decathlon-scraper'
 import { searchAmazonAll } from './amazon-scraper'
 import { savePendingCandidates } from '../../src/lib/pending-candidates'
+import { isOffTopic } from '../../src/lib/scraping-utils'
 import { initSchema, migrateSchema } from '../../src/lib/db'
 import { getCronState, setCronState } from '../../src/lib/cron-state'
 
@@ -60,6 +61,7 @@ function isCuratedStrict(c: AmazonCandidate): boolean {
 
 function isValidForSave(c: ScoredCandidate): boolean {
   if (isFakeBrand(c.brand)) return false
+  if (isOffTopic(c.title)) return false
   if (c.reviews < 10) return false
   if (c.score < 50) return false
   if (c.price < 5 || c.price > 600) return false

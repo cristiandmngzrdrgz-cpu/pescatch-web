@@ -45,10 +45,14 @@ const RULES: Array<[string, RegExp[]]> = [
   ['cañas', [
     /canas?\b/, /angelrute/, /spinnrute/, /\brods?\b/, /blank/,
     /telescopica/, /casting weight/, /jig training/, /carp rod/, /surf rod/,
+    /barra de pesca/,
   ]],
   ['carretes', [
     /carrete/, /\breels?\b/, /angelrolle/, /spinnrolle/, /freno delantero/,
     /\bbobina\b/, /\bbaitcaster\b/, /\bmultiplier\b/,
+    // Fichas de carrete cuyo título no dice "carrete": describen el marco o son
+    // solo marca + modelo (Okuma Komodo SS / Okuma Ceymar).
+    /marco de aluminio/, /\bceymar\b/, /\bkomodo\b/,
   ]],
   ['nautica', [
     /kayak/, /canoa/, /\bbote\b/, /inflable/, /\bremo\b/, /nautic/,

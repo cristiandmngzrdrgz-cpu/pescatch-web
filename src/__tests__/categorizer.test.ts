@@ -15,6 +15,12 @@ describe('categorizeProduct', () => {
     expect(categorizeProduct('Caña de Pescar MIFINE JIG TRAINING SPIN, Señuelo 3-14g')).toBe('canas')
     expect(categorizeProduct('Shimano FX XT 2,10 m Angelrute Spinnrute Forelle Barsch')).toBe('canas')
     expect(categorizeProduct('NUEVA Caña de Pescar Telescópica para Spinning, Fly, Carpa y Feeder')).toBe('canas')
+    expect(categorizeProduct('DAIWA SHRS423H-AD Seahunter Surf 14 pies, 3,50-8,80 onzas, barra de pesca')).toBe('canas')
+  })
+
+  it('reconoce carretes cuyo título no dice "carrete"', () => {
+    expect(categorizeProduct('Okuma Komodo SS - Marco de Aluminio de Gran Capacidad')).toBe('carretes')
+    expect(categorizeProduct('Okuma Ceymar')).toBe('carretes')
   })
 
   it('manda a accesorios los complementos que mencionan caña o carrete', () => {

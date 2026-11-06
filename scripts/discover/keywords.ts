@@ -105,15 +105,22 @@ export const CATEGORIES: Record<string, string[]> = {
 export const BRANDS = [
   'shimano', 'daiwa', 'abu garcia', 'mitchell', 'penn',
   'shakespeare', 'okuma', 'rapala', 'savage gear',
-  'grauvell', 'yuki', 'lineaeffe', 'ryobi',
+  'grauvell', 'yuki', 'lineaeffe',
   'kastking', 'piscifun', 'cinnetic', 'kali kunnan',
   'trabucco', 'vercelli', 'zeox',
 ]
 
-export const AMAZON_BRAND_KEYWORDS: KeywordEntry[] = BRANDS.flatMap(brand => [
-  { category: 'Marcas', keyword: `carrete ${brand}` },
-  { category: 'Marcas', keyword: `caña ${brand}` },
-])
+export const AMAZON_BRAND_KEYWORDS: KeywordEntry[] = [
+  ...BRANDS.flatMap(brand => [
+    { category: 'Marcas', keyword: `carrete ${brand}` },
+    { category: 'Marcas', keyword: `caña ${brand}` },
+  ]),
+  // Ryobi en Amazon.es es sobre todo herramienta de jardín: "carrete ryobi" y
+  // "caña ryobi" devolvían cortacéspedes y tijeras de podar. Sus reels de pesca
+  // se buscan por línea (Ranmi) para no arrastrar el catálogo de bricolaje.
+  { category: 'Marcas', keyword: 'ryobi pesca' },
+  { category: 'Marcas', keyword: 'ryobi ranmi' },
+]
 
 // Subnodos de la categoría "Pesca" de Amazon.es (/gp/bestsellers|new-releases/sports/<nodo>).
 // "Pesca en hielo" (2928952031) se excluye: sin mercado en España.
