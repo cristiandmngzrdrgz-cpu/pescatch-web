@@ -17,6 +17,19 @@ const nextConfig: NextConfig = {
         destination: '/deals/shimano-socorro-sw-10000',
         permanent: true,
       },
+      {
+        // La ficha del Sienna FG 4000 quedó titulada como 2500 por una fila residual
+        // de Decathlon. El slug bueno es el del 4000; el viejo se conserva con 308.
+        source: '/deals/shimano-carrete-spinning-sienna-fg-2500',
+        destination: '/deals/shimano-sienna-fg-4000---carrete-spinning',
+        permanent: true,
+      },
+      {
+        // Variante sin los guiones del nombre ("- Carrete") usada en un post del blog.
+        source: '/deals/shimano-sienna-fg-4000',
+        destination: '/deals/shimano-sienna-fg-4000---carrete-spinning',
+        permanent: true,
+      },
     ]
   },
   async headers() {

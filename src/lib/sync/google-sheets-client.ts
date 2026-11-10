@@ -87,24 +87,25 @@ export async function deleteDataRows(dataIndices: number[]) {
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   })
   const sheets = google.sheets({ version: 'v4', auth })
+  // Un solo batchUpdate: borrar fila a fila agota la cuota de 60 escrituras/minuto.
+  // Los índices van de mayor a menor porque cada borrado desplaza las filas de abajo.
   const sorted = [...dataIndices].sort((a, b) => b - a)
-  for (const idx of sorted) {
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId: SHEET_ID,
-      requestBody: {
-        requests: [{
-          deleteDimension: {
-            range: {
-              sheetId: 0,
-              dimension: 'ROWS',
-              startIndex: idx + 1, // +1 por la fila de cabecera
-              endIndex: idx + 2,
-            },
+  if (sorted.length === 0) return
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: SHEET_ID,
+    requestBody: {
+      requests: sorted.map((idx) => ({
+        deleteDimension: {
+          range: {
+            sheetId: 0,
+            dimension: 'ROWS',
+            startIndex: idx + 1, // +1 por la fila de cabecera
+            endIndex: idx + 2,
           },
-        }],
-      },
-    })
-  }
+        },
+      })),
+    },
+  })
 }
 
 export async function ensureHeaders(headers: string[]) {

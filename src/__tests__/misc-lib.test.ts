@@ -205,6 +205,45 @@ describe('pending-candidates anti-duplicados', () => {
       await db.execute({ sql: 'DELETE FROM pending_candidates WHERE url = ?', args: ['https://www.amazon.es/dp/B0DISTINTO'] })
     }
   })
+
+  it('no guarda el mismo producto AliExpress dos veces si cambian los enlaces s.click', async () => {
+    const { savePendingCandidates } = await import('@/lib/pending-candidates')
+    const title = 'Sougayilang Combo Test Anti Dup - caña y carrete de 5 secciones'
+    const baseAe = { ...base, asin: '', title, brand: 'Sougayilang', price: 30 }
+
+    const saved = await savePendingCandidates([
+      { ...baseAe, url: 'https://s.click.aliexpress.com/s/AAAA1111' },
+      { ...baseAe, price: 29.8, url: 'https://s.click.aliexpress.com/s/BBBB2222' },
+    ])
+
+    expect(saved).toBe(1)
+  })
+
+  it('re-guarda por título un AliExpress rechazado si el precio cae ≥10%', async () => {
+    const { savePendingCandidates, getPendingCandidates, rejectCandidate } = await import('@/lib/pending-candidates')
+    const title = 'Okuma Avenger Test Reentrada - carrete de cebo'
+    const baseAe = { ...base, asin: '', title, brand: 'Okuma', price: 50 }
+
+    await savePendingCandidates([{ ...baseAe, url: 'https://s.click.aliexpress.com/s/CCCC3333' }])
+    const first = (await getPendingCandidates(50)).find((c) => c.title === title)!
+    await rejectCandidate(first.id)
+
+    const saved = await savePendingCandidates([{ ...baseAe, price: 40, url: 'https://s.click.aliexpress.com/s/DDDD4444' }])
+    expect(saved).toBe(1)
+
+    const reentry = (await getPendingCandidates(50)).find((c) => c.title === title)!
+    expect(reentry.price).toBe(40)
+    expect(reentry.source).toContain('revisado -20%')
+  })
+
+  it('sí guarda productos AliExpress distintos con títulos distintos', async () => {
+    const { savePendingCandidates } = await import('@/lib/pending-candidates')
+    const saved = await savePendingCandidates([
+      { ...base, asin: '', title: 'Shimano FX Test Distinto - carrete 4000', brand: 'Shimano', price: 25, url: 'https://s.click.aliexpress.com/s/EEEE5555' },
+      { ...base, asin: '', title: 'Mustad Kit Plomos Test Distinto - 100 piezas', brand: 'Mustad', price: 12, url: 'https://s.click.aliexpress.com/s/FFFF6666' },
+    ])
+    expect(saved).toBe(2)
+  })
 })
 
 describe('rate-limit', () => {

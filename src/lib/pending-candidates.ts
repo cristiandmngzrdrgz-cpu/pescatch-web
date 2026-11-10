@@ -61,6 +61,11 @@ interface KnownRow {
   price: number
 }
 
+interface CandidateTitleRow extends KnownRow {
+  title: string
+  brand: string
+}
+
 interface DealTitle {
   title: string
   brand: string
@@ -86,6 +91,30 @@ function isDealClone(
 }
 
 /**
+ * Los enlaces de afiliado de AliExpress (`s.click`) cambian en cada búsqueda, así
+ * que el mismo producto entra con URLs distintas y sin PID. Cuando el candidato no
+ * tiene una clave estable (ASIN/PID) se deduplica por título contra los candidatos
+ * ya vistos, con el mismo umbral que los clones de deals.
+ */
+function findKnownByTitle(
+  candidate: { title: string; brand: string | null },
+  rows: CandidateTitleRow[],
+): KnownRow | undefined {
+  if (!candidate.title) return undefined
+  let best: CandidateTitleRow | undefined
+  let bestScore = 0
+  for (const row of rows) {
+    if (!row.title) continue
+    const score = dealMatchSimilarity(candidate.title, candidate.brand ?? '', row.title, row.brand)
+    if (score > bestScore) {
+      bestScore = score
+      best = row
+    }
+  }
+  return bestScore >= CLONE_THRESHOLD ? best : undefined
+}
+
+/**
  * Snapshot de lo ya conocido: candidatos en cualquier estado + ASINs/PIDs y
  * títulos de deals activos. Sirve para no volver a guardar lo que ya se trió,
  * publicó o es una variante clara de un deal existente.
@@ -95,21 +124,28 @@ async function loadKnown(): Promise<{
   byKey: Map<string, KnownRow>
   dealKeys: Set<string>
   dealTitles: DealTitle[]
+  candidateTitles: CandidateTitleRow[]
 }> {
   const db = getDb()
   const [candidateRows, dealRows] = await Promise.all([
-    db.execute('SELECT url, asin, status, price FROM pending_candidates ORDER BY id DESC'),
+    db.execute('SELECT url, asin, title, brand, status, price FROM pending_candidates ORDER BY id DESC'),
     db.execute("SELECT asin, affiliateUrl, storeUrl, title, brand FROM deals WHERE status != 'expired'"),
   ])
 
   const byUrl = new Map<string, KnownRow>()
   const byKey = new Map<string, KnownRow>()
+  const candidateTitles: CandidateTitleRow[] = []
 
   for (const row of candidateRows.rows) {
     const known: KnownRow = {
       status: row.status as PendingCandidate['status'],
       price: Number(row.price) || 0,
     }
+    candidateTitles.push({
+      title: String(row.title || ''),
+      brand: String(row.brand ?? ''),
+      ...known,
+    })
     const url = String(row.url || '').trim().toLowerCase()
     if (url && !byUrl.has(url)) byUrl.set(url, known)
 
@@ -131,12 +167,12 @@ async function loadKnown(): Promise<{
     dealTitles.push({ title: String(row.title || ''), brand: String(row.brand ?? '') })
   }
 
-  return { byUrl, byKey, dealKeys, dealTitles }
+  return { byUrl, byKey, dealKeys, dealTitles, candidateTitles }
 }
 
 export async function savePendingCandidates(candidates: Omit<PendingCandidate, 'id' | 'status' | 'created_at' | 'updated_at'>[]): Promise<number> {
   const db = getDb()
-  const { byUrl, byKey, dealKeys, dealTitles } = await loadKnown()
+  const { byUrl, byKey, dealKeys, dealTitles, candidateTitles } = await loadKnown()
   let saved = 0
 
   for (const c of candidates) {
@@ -148,7 +184,7 @@ export async function savePendingCandidates(candidates: Omit<PendingCandidate, '
     // Ya es un deal (publicado o draft): el refresh de precios es el que manda.
     if (key && dealKeys.has(key)) continue
 
-    const known = byUrl.get(urlKey) ?? (key ? byKey.get(key) : undefined)
+    const known = byUrl.get(urlKey) ?? (key ? byKey.get(key) : findKnownByTitle(c, candidateTitles))
     let source = c.source
 
     if (known) {
@@ -181,6 +217,7 @@ export async function savePendingCandidates(candidates: Omit<PendingCandidate, '
     const seen: KnownRow = { status: 'pending', price: c.price }
     byUrl.set(urlKey, seen)
     if (key) byKey.set(key, seen)
+    else candidateTitles.push({ title: c.title, brand: c.brand ?? '', ...seen })
   }
 
   return saved
