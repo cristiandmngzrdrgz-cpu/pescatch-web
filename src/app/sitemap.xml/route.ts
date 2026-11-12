@@ -2,6 +2,8 @@ import { getDeals, getBrands } from '@/data/queries'
 import { getPosts } from '@/data/blog-queries'
 import { CATEGORIES } from '@/types'
 
+export const dynamic = 'force-dynamic'
+
 const BASE_URL = 'https://www.pescatch.es'
 
 export async function GET() {

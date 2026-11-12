@@ -1,5 +1,7 @@
 import { getDeals } from '@/data/queries'
 
+export const dynamic = 'force-dynamic'
+
 const BASE_URL = 'https://www.pescatch.es'
 
 function escapeXml(text: string): string {
